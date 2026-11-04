@@ -1,0 +1,24 @@
+pipeline:
+  default_confidence_threshold: 0.8
+  idempotency_keys:
+    - _file_name
+    - _file_sha256
+
+snowflake:
+  mode: local_simulation  # Set to 'snowflake' when live credentials are provided
+  account: "<your-snowflake-account>"
+  user: "<your-user>"
+  role: "DATA_ENGINEER_ROLE"
+  warehouse: "COMPUTE_WH"
+  database: "ENTERPRISE_DW"
+  schema_raw: "RAW"
+  schema_staging: "STAGING"
+  schema_curated: "CURATED"
+  schema_ops: "OPS"
+  adls_stage: "@RAW.ADLS_XML_STAGE"
+
+datahub:
+  mode: local_file_emitter  # Set to 'rest' when DataHub GMS server is reachable
+  gms_server: "http://localhost:8080"
+  platform: "snowflake"
+  env: "PROD"

@@ -1,0 +1,30 @@
+dataset: orders
+version: 0.1.0
+root_element: /Order
+required_xpaths:
+- /Order/@currency
+- /Order/OrderId
+- /Order/CustomerId
+- /Order/OrderDate
+- /Order/OrderTimestamp
+- /Order/IsExpedited
+- /Order/TotalAmount
+- /Order/LineItems/LineItem/ProductCode
+- /Order/LineItems/LineItem/Quantity
+- /Order/LineItems/LineItem/UnitPrice
+type_assertions:
+  /Order/@currency: VARCHAR
+  /Order/OrderId: NUMBER(18,0)
+  /Order/CustomerId: VARCHAR
+  /Order/OrderDate: DATE
+  /Order/OrderTimestamp: TIMESTAMP_NTZ
+  /Order/IsExpedited: BOOLEAN
+  /Order/TotalAmount: NUMBER(18,4)
+  /Order/DiscountAmount: NUMBER(18,4)
+  /Order/ShippingNotes: VARCHAR
+  /Order/LineItems/LineItem/ProductCode: VARCHAR
+  /Order/LineItems/LineItem/Quantity: NUMBER(18,0)
+  /Order/LineItems/LineItem/UnitPrice: NUMBER(18,4)
+expected_rows_per_file_min: 1
+expected_rows_per_file_max: 15
+allow_unknown_elements: true

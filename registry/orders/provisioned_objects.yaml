@@ -1,0 +1,14 @@
+dataset: orders
+version: 0.2.0
+snowflake_ddl_file: C:\Databricks_project\xml_to_snowflake\registry\orders\ddl.sql
+local_warehouse_db: C:\Databricks_project\xml_to_snowflake\registry\orders\local_warehouse.db
+provisioned_objects:
+- raw_orders
+- staging_orders
+- curated_orders
+- quarantine_orders
+- dq_results_orders
+- pipe_orders (PAUSED)
+- stream_raw_orders
+- task_flatten_orders
+- task_scd2_orders

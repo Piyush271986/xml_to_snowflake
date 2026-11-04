@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XML to Snowflake — Onboarding & Control Plane</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #0f172a; color: #f8fafc; }
+    .glass-card { background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(148, 163, 184, 0.16); }
+    .code-box { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 12.5px; line-height: 1.55; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- TOP HEADER -->
+  <header class="border-b border-slate-800 bg-slate-900/90 sticky top-0 z-30 backdrop-blur">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center font-bold text-lg shadow-lg shadow-indigo-600/30">
+          ❄️
+        </div>
+        <div>
+          <div class="flex items-center gap-2.5">
+            <h1 class="text-lg font-bold tracking-tight text-white">XML to Snowflake Pipeline</h1>
+            <span id="hdr-status" class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">PUBLISHED</span>
+            <span id="hdr-version" class="px-2 py-0.5 text-xs font-mono rounded bg-slate-800 text-indigo-300 border border-slate-700">v0.1.0</span>
+          </div>
+          <p class="text-xs text-slate-400">Zero-XSD Schema Bootstrap (C0) · Quality Gates (G1–G3) · Drift Control (C1–C3) · DataHub Catalog</p>
+        </div>
+      </div>
+
+      <!-- KPI PILLS & DATASET SELECTOR -->
+      <div class="flex items-center gap-3 flex-wrap">
+        <div class="flex items-center gap-2 bg-slate-800/90 border border-slate-700 rounded-lg px-3 py-1.5 text-xs">
+          <span class="text-slate-400">Dataset:</span>
+          <select id="dataset-select" onchange="switchDataset(this.value)" class="bg-transparent font-semibold text-white focus:outline-none"></select>
+        </div>
+
+        <div class="grid grid-cols-4 gap-2 text-xs">
+          <div class="bg-slate-800/70 border border-slate-700/80 rounded-lg px-3 py-1.5 text-center">
+            <div class="text-slate-400 text-[10px] uppercase">D2 Raw Files</div>
+            <div id="kpi-raw" class="font-bold text-indigo-300 text-sm">0</div>
+          </div>
+          <div class="bg-slate-800/70 border border-slate-700/80 rounded-lg px-3 py-1.5 text-center">
+            <div class="text-slate-400 text-[10px] uppercase">D3 Staged</div>
+            <div id="kpi-staging" class="font-bold text-purple-300 text-sm">0</div>
+          </div>
+          <div class="bg-slate-800/70 border border-slate-700/80 rounded-lg px-3 py-1.5 text-center">
+            <div class="text-slate-400 text-[10px] uppercase">D4 Curated (SCD2)</div>
+            <div id="kpi-curated" class="font-bold text-emerald-300 text-sm">0</div>
+          </div>
+          <div class="bg-slate-800/70 border border-slate-700/80 rounded-lg px-3 py-1.5 text-center">
+            <div class="text-slate-400 text-[10px] uppercase">O3 Quarantine</div>
+            <div id="kpi-quarantine" class="font-bold text-rose-400 text-sm">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10-STAGE MIRO ONBOARDING WORKFLOW STEPPER -->
+    <div class="max-w-7xl mx-auto px-6 pb-3">
+      <div id="workflow-stepper" class="grid grid-cols-5 md:grid-cols-10 gap-1.5 text-[11px]"></div>
+    </div>
+
+    <!-- NAVIGATION TABS -->
+    <div class="max-w-7xl mx-auto px-6 flex gap-1 border-t border-slate-800/80 pt-2">
+      <button onclick="showTab('tab-intake')" id="btn-tab-intake" class="tab-btn px-4 py-2.5 text-xs font-semibold rounded-t-lg border-b-2 transition">
+        ① & ② Intake & C0 Bootstrap
+      </button>
+      <button onclick="showTab('tab-schema')" id="btn-tab-schema" class="tab-btn px-4 py-2.5 text-xs font-semibold rounded-t-lg border-b-2 transition">
+        ③ C3 Schema Review & C4 Registry
+      </button>
+      <button onclick="showTab('tab-provision')" id="btn-tab-provision" class="tab-btn px-4 py-2.5 text-xs font-semibold rounded-t-lg border-b-2 transition">
+        ④–⑩ Provision, DDL, Smoke Test & Go-Live
+      </button>
+      <button onclick="showTab('tab-ops')" id="btn-tab-ops" class="tab-btn px-4 py-2.5 text-xs font-semibold rounded-t-lg border-b-2 transition">
+        ⚡ Runtime: C1/C2 Drift Control & O3 Quarantine
+      </button>
+    </div>
+  </header>
+
+  <!-- TOAST BANNER -->
+  <div id="toast" class="hidden fixed bottom-5 right-5 z-50 max-w-md px-4 py-3 rounded-xl shadow-2xl border text-xs font-medium transition-all"></div>
+
+  <!-- MAIN CONTENT -->
+  <main class="max-w-7xl w-full mx-auto px-6 py-6 flex-1 space-y-6">
+
+    <!-- =================================================================== -->
+    <!-- TAB 1: INTAKE (A0) & SCHEMA BOOTSTRAP (C0)                          -->
+    <!-- =================================================================== -->
+    <section id="tab-intake" class="tab-panel space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 glass-card rounded-2xl p-6 space-y-5">
+          <div class="flex items-center justify-between border-b border-slate-700/70 pb-4">
+            <div>
+              <h2 class="text-base font-bold text-white">Stage ① A0: Intake & Stage ② C0: Schema Bootstrap</h2>
+              <p class="text-xs text-slate-400">Onboard a new XML dataset from representative sample XMLs — no XSD document required.</p>
+            </div>
+            <span class="px-2.5 py-1 text-[11px] font-semibold rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30">Agent: A0 + C0</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <div>
+              <label class="block text-slate-300 font-medium mb-1">Dataset Name</label>
+              <input id="in-dataset" type="text" value="orders" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-slate-300 font-medium mb-1">Source System</label>
+              <input id="in-source" type="text" value="erp_orders" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none" />
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-slate-300 font-medium mb-1">D1: ADLS Landing Zone Path</label>
+              <input id="in-adls" type="text" value="abfss://landing@enterpriseadls.dfs.core.windows.net/xml/orders/" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono focus:border-indigo-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-slate-300 font-medium mb-1">Sample XML Directory</label>
+              <input id="in-sample-dir" type="text" value="samples/orders" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono focus:border-indigo-500 focus:outline-none" />
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-slate-300 font-medium mb-1">SLA Freshness (hrs)</label>
+                <input id="in-sla" type="number" value="24" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-slate-300 font-medium mb-1">C0 Confidence Threshold</label>
+                <input id="in-conf" type="number" step="0.05" value="0.80" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-slate-300 font-medium mb-1">Data Steward Owner (Control & Metadata Plane)</label>
+              <input id="in-steward" type="text" value="data-steward@enterprise.io" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-slate-300 font-medium mb-1">Data Engineering Owner (Data Plane)</label>
+              <input id="in-eng" type="text" value="data-eng@enterprise.io" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none" />
+            </div>
+          </div>
+
+          <!-- Optional Custom Sample Upload -->
+          <details class="bg-slate-900/70 border border-slate-800 rounded-xl p-3.5 text-xs">
+            <summary class="cursor-pointer font-semibold text-indigo-300">+ Optional: Add an Extra Sample XML File Before Bootstrapping</summary>
+            <div class="mt-3 space-y-3">
+              <input id="in-custom-xml-name" type="text" placeholder="e.g. order_011.xml" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white font-mono" />
+              <textarea id="in-custom-xml-body" rows="5" placeholder="<Order currency=&quot;USD&quot;>...</Order>" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white code-box"></textarea>
+            </div>
+          </details>
+
+          <div class="flex items-center justify-end gap-3 pt-2">
+            <button onclick="runBootstrap()" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition">
+              ▶ Run ① A0 Intake & ② C0 Schema Bootstrap
+            </button>
+          </div>
+        </div>
+
+        <!-- RIGHT SIDE: WHAT C0 INFERS CARD -->
+        <div class="glass-card rounded-2xl p-6 space-y-4">
+          <h3 class="text-sm font-bold text-amber-300">What C0 Infers from Sample XMLs</h3>
+          <ul class="space-y-3 text-xs text-slate-300">
+            <li class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+              <div class="font-semibold text-white">1. Element & Attribute Inventory</div>
+              <p class="text-slate-400 mt-0.5">Unions all XPaths across every sample file. Elements present in &lt;100% of samples are marked <code class="text-amber-300">required: false</code>.</p>
+            </li>
+            <li class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+              <div class="font-semibold text-white">2. Narrowest Snowflake Type Ladder</div>
+              <p class="text-slate-400 mt-0.5">Tests <code class="text-indigo-300">NUMBER(18,0) → NUMBER(18,4) → DATE → TIMESTAMP_NTZ → BOOLEAN → VARCHAR</code> across all values.</p>
+            </li>
+            <li class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+              <div class="font-semibold text-white">3. Array & LATERAL FLATTEN Detection</div>
+              <p class="text-slate-400 mt-0.5">Repeating nodes under the same parent set <code class="text-purple-300">is_array: true</code> and generate <code class="text-purple-300">LATERAL FLATTEN</code> in DDL.</p>
+            </li>
+            <li class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+              <div class="font-semibold text-white">4. Confidence Scoring for C3 Review</div>
+              <p class="text-slate-400 mt-0.5">Fields below threshold (e.g. <code class="text-amber-300">0.50</code>) are highlighted for the Data Steward at Stage ③.</p>
+            </li>
+          </ul>
+          <div id="intake-manifest-summary" class="p-3.5 rounded-xl bg-indigo-950/40 border border-indigo-500/30 text-xs space-y-1"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 2: STAGE 3 — C3 SCHEMA REVIEW & C4 REGISTRY EDITOR              -->
+    <!-- =================================================================== -->
+    <section id="tab-schema" class="tab-panel hidden space-y-6">
+      <div class="glass-card rounded-2xl p-6 space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-700/70 pb-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-base font-bold text-white">Stage ③ C3: Data Steward Schema Review (`mapping.yaml`)</h2>
+              <span class="px-2.5 py-0.5 text-[11px] font-semibold rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">Human Gate 1 · Owner: Data Steward</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">Inspect C0 inferred fields, adjust low-confidence columns or types, select SCD Type 2 business keys, and approve to provision Snowflake objects.</p>
+          </div>
+          <div class="flex items-center gap-2.5">
+            <button onclick="saveSchemaOverrides()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-semibold text-white transition">
+              💾 Save Overrides & Recompile DDL
+            </button>
+            <button onclick="approveAndProvision()" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-lg shadow-blue-600/30 transition">
+              ✅ Approve Schema (C3) & Provision Pipeline (Stages ④–⑧)
+            </button>
+          </div>
+        </div>
+
+        <!-- EDITABLE MAPPING TABLE -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-slate-700 text-slate-400 uppercase text-[10px]">
+                <th class="py-2.5 px-3">XML XPath</th>
+                <th class="py-2.5 px-3">Snowflake Column</th>
+                <th class="py-2.5 px-3">Snowflake Type</th>
+                <th class="py-2.5 px-3 text-center">Required (G2)</th>
+                <th class="py-2.5 px-3 text-center">SCD2 Business Key</th>
+                <th class="py-2.5 px-3">Cardinality</th>
+                <th class="py-2.5 px-3">Confidence</th>
+                <th class="py-2.5 px-3">Sample Values</th>
+              </tr>
+            </thead>
+            <tbody id="schema-table-body" class="divide-y divide-slate-800/80"></tbody>
+          </table>
+        </div>
+
+        <!-- G3 BUSINESS RULES SUMMARY -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-slate-800 text-xs">
+          <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 space-y-2">
+            <div class="font-bold text-purple-300">G2 Contract Baseline (`contract.yaml`)</div>
+            <div id="g2-contract-summary" class="text-slate-300 space-y-1"></div>
+          </div>
+          <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 space-y-2">
+            <div class="font-bold text-emerald-300">G3 Business Quality Rules (`quality_rules.yaml`)</div>
+            <div id="g3-rules-summary" class="text-slate-300 space-y-1"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 3: STAGES 4-10 — PROVISIONING, DDL, LINEAGE, SMOKE TEST & LIVE  -->
+    <!-- =================================================================== -->
+    <section id="tab-provision" class="tab-panel hidden space-y-6">
+      <!-- TOP BANNER: SMOKE TEST & GO-LIVE GATE -->
+      <div class="glass-card rounded-2xl p-6 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="text-base font-bold text-white">Stage ⑧ A5: Smoke Test & Stage ⑨ C3: Go-Live Sign-Off</h2>
+            <span class="px-2.5 py-0.5 text-[11px] font-semibold rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">Human Gate 2 · Owner: Data Engineering</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-0.5">Verify all onboarding sample XMLs pass G1, G2, and G3 with 0 quarantined records before enabling production Snowpipe.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="approveAndProvision()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-semibold text-white transition">
+            🔄 Re-Run Provision & Smoke Test (A1–A5)
+          </button>
+          <button onclick="approveGoLive()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white shadow-lg shadow-emerald-600/30 transition">
+            🚀 Approve Go-Live (Stage ⑨) & Enable Snowpipe
+          </button>
+        </div>
+      </div>
+
+      <!-- 3 COLUMNS: A1 PROVISIONED OBJECTS, A2 DATAHUB LINEAGE, A4 RUNBOOK -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 text-xs">
+        <div class="glass-card rounded-2xl p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-amber-300 text-sm">④ A1: Snowflake Objects</h3>
+            <span class="text-[11px] text-slate-400">D2 · D3 · D4 · O1 · O3</span>
+          </div>
+          <ul id="a1-objects-list" class="space-y-1.5 text-slate-300 font-mono text-[11.5px]"></ul>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-emerald-300 text-sm">⑤ A2: DataHub Catalog & Lineage</h3>
+            <span class="text-[11px] text-slate-400">Metadata Plane</span>
+          </div>
+          <div id="a2-lineage-list" class="space-y-2 text-slate-300"></div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-purple-300 text-sm">⑦ A4: Operator Runbook (O4)</h3>
+            <span class="text-[11px] text-slate-400">Operations Plane</span>
+          </div>
+          <div id="a4-runbook-list" class="space-y-2 max-h-64 overflow-y-auto pr-1"></div>
+        </div>
+      </div>
+
+      <!-- COMPILED SNOWFLAKE DDL & MONITORING SQL -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="glass-card rounded-2xl p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white">Compiled Snowflake DDL (`ddl.sql`)</h3>
+            <span class="text-[11px] font-mono text-indigo-300">VARIANT · LATERAL FLATTEN · SCD Type 2</span>
+          </div>
+          <pre id="ddl-sql-viewer" class="bg-slate-950 border border-slate-800 rounded-xl p-4 overflow-x-auto max-h-96 text-slate-200 code-box"></pre>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white">O2 Monitoring & O5 SLA Dashboard SQL (`monitoring.sql`)</h3>
+            <span class="text-[11px] font-mono text-emerald-300">Freshness · Latency · Quarantine</span>
+          </div>
+          <pre id="monitoring-sql-viewer" class="bg-slate-950 border border-slate-800 rounded-xl p-4 overflow-x-auto max-h-96 text-slate-200 code-box"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 4: RUNTIME OPERATIONS — DRIFT CONTROL (C1/C2) & QUARANTINE (O3) -->
+    <!-- =================================================================== -->
+    <section id="tab-ops" class="tab-panel hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- LEFT: INGEST & DRIFT SIMULATOR -->
+        <div class="glass-card rounded-2xl p-5 space-y-4">
+          <div>
+            <h3 class="text-sm font-bold text-white">Ingest XML & Trigger C1/C2 Drift Agent</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Test incoming XML files against G1–G3 quality gates and the Schema Drift Control Plane.</p>
+          </div>
+
+          <div class="space-y-3 text-xs">
+            <div>
+              <label class="block text-slate-300 font-medium mb-1">Select Sample / Drift Test XML File</label>
+              <select id="ops-file-select" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono"></select>
+            </div>
+
+            <div class="grid grid-cols-1 gap-2">
+              <button onclick="ingestSelectedFile()" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/25 transition">
+                ⚡ Ingest Selected XML File (C1/C2 + G1–G3)
+              </button>
+            </div>
+
+            <div class="pt-2 border-t border-slate-800 space-y-2">
+              <div class="font-semibold text-slate-300">Quick Scenario Presets:</div>
+              <button onclick="quickScenario('samples/orders_drift/order_additive_drift.xml')" class="w-full text-left p-2.5 rounded-lg bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-500/30 text-emerald-200 transition">
+                ➕ <b>Additive Drift:</b> <code>order_additive_drift.xml</code> (Adds <code>PromoCode</code> &amp; <code>LoyaltyTier</code> → Auto-Applied!)
+              </button>
+              <button onclick="quickScenario('samples/orders_drift/order_breaking_drift.xml')" class="w-full text-left p-2.5 rounded-lg bg-amber-950/40 hover:bg-amber-900/50 border border-amber-500/30 text-amber-200 transition">
+                🛑 <b>Breaking Drift:</b> <code>order_breaking_drift.xml</code> (Type mismatch &amp; missing <code>OrderDate</code> → Held for C3 + O3 Quarantine!)
+              </button>
+              <button onclick="quickScenario('samples/orders_drift/order_malformed.xml')" class="w-full text-left p-2.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/50 border border-rose-500/30 text-rose-200 transition">
+                ❌ <b>G1 File Failure:</b> <code>order_malformed.xml</code> (Broken XML syntax → Rejected at G1 into O3 Quarantine!)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT 2 COLS: C2 DRIFT PROPOSALS & O3 QUARANTINE -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- C2 PROPOSALS INBOX -->
+          <div class="glass-card rounded-2xl p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-bold text-amber-300">C1 & C2 Schema Drift Proposals (`registry/proposals/`)</h3>
+                <p class="text-xs text-slate-400">Additive changes auto-apply; breaking changes await C3 Data Steward approval with DataHub impact analysis.</p>
+              </div>
+            </div>
+            <div id="proposals-container" class="space-y-3 max-h-80 overflow-y-auto pr-1"></div>
+          </div>
+
+          <!-- O3 QUARANTINE TABLE -->
+          <div class="glass-card rounded-2xl p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-bold text-rose-400">O3: Quarantine Table (`quarantine_orders`)</h3>
+                <p class="text-xs text-slate-400">Failed files & records held with gate ID (`G1`, `G2`, `G3`) and failure reason.</p>
+              </div>
+              <button onclick="replayQuarantine()" class="px-3.5 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-300 text-xs font-semibold transition">
+                🔁 Mark All Quarantined Records Replayed
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="border-b border-slate-700 text-slate-400 uppercase text-[10px]">
+                    <th class="py-2 px-3">File Name</th>
+                    <th class="py-2 px-3">Gate</th>
+                    <th class="py-2 px-3">Failure Reason</th>
+                    <th class="py-2 px-3">Quarantined At</th>
+                    <th class="py-2 px-3">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="quarantine-table-body" class="divide-y divide-slate-800"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- D4 CURATED SCD TYPE 2 DATA BROWSER -->
+      <div class="glass-card rounded-2xl p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-bold text-emerald-300">D4: Curated SCD Type 2 Dataset (`curated_orders`)</h3>
+            <p class="text-xs text-slate-400">Flattened XML rows with temporal validity (`is_valid_start`, `is_valid_end`, `is_current`) and SHA-256 change hash.</p>
+          </div>
+        </div>
+        <div class="overflow-x-auto max-h-80">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead id="curated-thead" class="border-b border-slate-700 text-slate-400 uppercase text-[10px] sticky top-0 bg-slate-900"></thead>
+            <tbody id="curated-tbody" class="divide-y divide-slate-800/70 font-mono text-[11px]"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    let currentState = null;
+    let activeTab = 'tab-intake';
+
+    const STAGES = [
+      { num: '①', name: 'A0: Intake', tab: 'tab-intake', role: 'agent' },
+      { num: '②', name: 'C0: Bootstrap', tab: 'tab-intake', role: 'agent' },
+      { num: '③', name: 'C3: Schema Gate', tab: 'tab-schema', role: 'human' },
+      { num: '④', name: 'A1: Provision', tab: 'tab-provision', role: 'agent' },
+      { num: '⑤', name: 'A2: Catalog', tab: 'tab-provision', role: 'agent' },
+      { num: '⑥', name: 'A3: DQ Gates', tab: 'tab-provision', role: 'agent' },
+      { num: '⑦', name: 'A4: Monitor', tab: 'tab-provision', role: 'agent' },
+      { num: '⑧', name: 'A5: Smoke Test', tab: 'tab-provision', role: 'agent' },
+      { num: '⑨', name: 'C3: Go-Live', tab: 'tab-provision', role: 'human' },
+      { num: '⑩', name: 'Dataset Live', tab: 'tab-ops', role: 'live' },
+    ];
+
+    function showToast(msg, isError = false) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.className = `fixed bottom-5 right-5 z-50 max-w-md px-4 py-3 rounded-xl shadow-2xl border text-xs font-semibold transition-all ${
+        isError ? 'bg-rose-950 border-rose-500 text-rose-200' : 'bg-emerald-950 border-emerald-500 text-emerald-200'
+      }`;
+      el.classList.remove('hidden');
+      setTimeout(() => el.classList.add('hidden'), 4500);
+    }
+
+    function showTab(tabId) {
+      activeTab = tabId;
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+      document.getElementById(tabId).classList.remove('hidden');
+
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('border-indigo-500', 'text-white', 'bg-slate-800/60');
+        b.classList.add('border-transparent', 'text-slate-400');
+      });
+      const activeBtn = document.getElementById('btn-' + tabId);
+      if (activeBtn) {
+        activeBtn.classList.add('border-indigo-500', 'text-white', 'bg-slate-800/60');
+        activeBtn.classList.remove('border-transparent', 'text-slate-400');
+      }
+    }
+
+    function getCompletedStageIndex(status) {
+      switch (status) {
+        case 'DRAFT': return 1;
+        case 'BOOTSTRAPPED': return 2;
+        case 'APPROVED': return 3;
+        case 'PROVISIONED': return 8;
+        case 'PUBLISHED': return 10;
+        default: return 0;
+      }
+    }
+
+    function renderStepper(status) {
+      const doneIdx = getCompletedStageIndex(status);
+      const container = document.getElementById('workflow-stepper');
+      container.innerHTML = STAGES.map((s, idx) => {
+        const stepNum = idx + 1;
+        const isDone = stepNum <= doneIdx;
+        const isCurrent = stepNum === doneIdx + 1;
+        let bg = 'bg-slate-900 border-slate-800 text-slate-400';
+        if (isDone) {
+          bg = s.role === 'human'
+            ? 'bg-blue-950/70 border-blue-500/40 text-blue-200'
+            : s.role === 'live'
+            ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-200'
+            : 'bg-indigo-950/60 border-indigo-500/40 text-indigo-200';
+        } else if (isCurrent) {
+          bg = 'bg-amber-950/80 border-amber-400 text-amber-200 ring-1 ring-amber-400/50';
+        }
+        return `
+          <button onclick="showTab('${s.tab}')" class="px-2.5 py-1.5 rounded-lg border text-left transition hover:brightness-125 ${bg}">
+            <div class="flex items-center justify-between font-bold">
+              <span>${s.num} ${s.name}</span>
+              <span>${isDone ? '✓' : isCurrent ? '●' : ''}</span>
+            </div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function renderAll(data) {
+      const datasets = data.datasets || ['orders'];
+      const st = data.state;
+      currentState = st;
+
+      const dsSelect = document.getElementById('dataset-select');
+      dsSelect.innerHTML = datasets.map(d => `<option value="${d}" ${d === st.dataset ? 'selected' : ''}>${d}</option>`).join('');
+
+      if (!st || !st.exists) return;
+
+      const status = st.manifest?.status || 'DRAFT';
+      const version = st.mapping?.version || '0.1.0';
+      document.getElementById('hdr-status').textContent = status;
+      document.getElementById('hdr-version').textContent = `v${version}`;
+
+      const wc = st.warehouse_counts || {};
+      document.getElementById('kpi-raw').textContent = wc.raw_rows ?? 0;
+      document.getElementById('kpi-staging').textContent = wc.staging_rows ?? 0;
+      document.getElementById('kpi-curated').textContent = wc.curated_current_rows ?? 0;
+      document.getElementById('kpi-quarantine').textContent = wc.quarantine_open_rows ?? 0;
+
+      renderStepper(status);
+
+      // Populate Tab 1 inputs
+      if (st.manifest) {
+        document.getElementById('in-dataset').value = st.manifest.dataset;
+        document.getElementById('in-source').value = st.manifest.source_system;
+        document.getElementById('in-adls').value = st.manifest.adls_landing_path;
+        document.getElementById('in-steward').value = st.manifest.data_steward;
+        document.getElementById('in-eng').value = st.manifest.engineering_owner;
+        document.getElementById('in-sla').value = st.manifest.freshness_sla_hours;
+
+        document.getElementById('intake-manifest-summary').innerHTML = `
+          <div class="font-bold text-indigo-300">Current Intake Manifest (\`onboarding_manifest.yaml\`)</div>
+          <div>Valid Samples: <b class="text-white">${(st.manifest.valid_sample_files || []).length} XML files</b></div>
+          <div>Root Element: <code class="text-amber-300">${st.mapping?.root_element || '/Order'}</code></div>
+          <div>Inferred Fields: <b class="text-white">${(st.mapping?.fields || []).length} columns</b></div>
+          <div>Status: <span class="text-emerald-300 font-semibold">${st.manifest.status}</span></div>
+        `;
+      }
+
+      // Populate Tab 2: C3 Schema Review Table
+      const fields = st.mapping?.fields || [];
+      const bkeys = new Set(st.mapping?.business_keys || []);
+      const sfTypes = ['NUMBER(18,0)', 'NUMBER(18,4)', 'VARCHAR', 'DATE', 'TIMESTAMP_NTZ', 'BOOLEAN'];
+
+      document.getElementById('schema-table-body').innerHTML = fields.map((f, idx) => {
+        const lowConf = f.confidence < 0.8;
+        const confBadge = lowConf
+          ? `<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold">⚠️ ${(f.confidence * 100).toFixed(0)}%</span>`
+          : `<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold">✅ ${(f.confidence * 100).toFixed(0)}%</span>`;
+
+        const arrayBadge = f.is_array
+          ? `<span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 font-mono text-[10px]">LATERAL FLATTEN</span>`
+          : `<span class="text-slate-500">Scalar</span>`;
+
+        return `
+          <tr class="${lowConf ? 'bg-amber-950/20' : ''} hover:bg-slate-800/50">
+            <td class="py-2.5 px-3 font-mono text-indigo-300">
+              ${f.xpath}
+              <div class="text-[10px] text-slate-500">${f.origin} (v${f.added_in_version})</div>
+            </td>
+            <td class="py-2.5 px-3">
+              <input data-idx="${idx}" data-field="column" value="${f.column}" class="schema-input bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white font-mono w-44" />
+            </td>
+            <td class="py-2.5 px-3">
+              <select data-idx="${idx}" data-field="snowflake_type" class="schema-input bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white font-mono">
+                ${sfTypes.map(t => `<option value="${t}" ${t === f.snowflake_type ? 'selected' : ''}>${t}</option>`).join('')}
+              </select>
+            </td>
+            <td class="py-2.5 px-3 text-center">
+              <input type="checkbox" data-idx="${idx}" data-field="required" ${f.required ? 'checked' : ''} class="schema-input w-4 h-4 accent-indigo-500" />
+            </td>
+            <td class="py-2.5 px-3 text-center">
+              <input type="checkbox" data-col="${f.column}" ${bkeys.has(f.column) ? 'checked' : ''} class="bkey-input w-4 h-4 accent-emerald-500" />
+            </td>
+            <td class="py-2.5 px-3">${arrayBadge}</td>
+            <td class="py-2.5 px-3">${confBadge}</td>
+            <td class="py-2.5 px-3 font-mono text-slate-400 text-[11px]">${(f.sample_values || []).slice(0, 3).join(', ')}</td>
+          </tr>
+        `;
+      }).join('');
+
+      // G2 & G3 summaries
+      if (st.contract) {
+        document.getElementById('g2-contract-summary').innerHTML = `
+          <div>Required XPaths: <b>${(st.contract.required_xpaths || []).length}</b></div>
+          <div>Expected Rows / File: <b>${st.contract.expected_rows_per_file_min} – ${st.contract.expected_rows_per_file_max}</b></div>
+          <div>Unknown Elements Policy: <span class="text-indigo-300">Allow &amp; Signal C1 Drift Agent</span></div>
+        `;
+      }
+      if (st.quality_rules) {
+        const av = st.quality_rules.accepted_values || {};
+        const avText = Object.entries(av).map(([k, v]) => `${k}: [${v.join(', ')}]`).join(' | ') || 'None';
+        document.getElementById('g3-rules-summary').innerHTML = `
+          <div>Primary Keys (SCD2): <code class="text-emerald-300">${(st.quality_rules.primary_keys || []).join(', ')}</code></div>
+          <div>Accepted Domains: <code class="text-slate-200">${avText}</code></div>
+          <div>Non-Negative Range Rules: <b>${(st.quality_rules.numeric_ranges || []).length} numeric columns</b></div>
+        `;
+      }
+
+      // Tab 3: Provisioning, Lineage, Runbook, DDL
+      const targets = st.mapping?.targets || {};
+      document.getElementById('a1-objects-list').innerHTML = [
+        `D2 Raw Table: <b>${targets.raw_table}</b> (VARIANT)`,
+        `Snowpipe: <b>pipe_${st.dataset}</b> (${status === 'PUBLISHED' ? 'ACTIVE' : 'PAUSED'})`,
+        `Stream: <b>stream_${targets.raw_table}</b>`,
+        `D3 Staging: <b>${targets.staging_table}</b> (LATERAL FLATTEN)`,
+        `D4 Curated: <b>${targets.curated_table}</b> (SCD Type 2)`,
+        `O3 Quarantine: <b>${targets.quarantine_table}</b>`,
+        `O1 DQ Log: <b>${targets.dq_results_table}</b>`,
+      ].map(item => `<li class="p-2 rounded bg-slate-900/90 border border-slate-800">${item}</li>`).join('');
+
+      const dh = st.datahub || {};
+      const lineageEdges = dh.upstream_lineage || [];
+      document.getElementById('a2-lineage-list').innerHTML = lineageEdges.length
+        ? lineageEdges.map(e => `
+            <div class="p-2.5 rounded bg-slate-900/90 border border-slate-800 space-y-1">
+              <div class="text-[11px] font-mono text-emerald-300 truncate">${e.upstream.split(',')[1] || e.upstream}</div>
+              <div class="text-[10px] text-slate-400">↓ via ${e.mechanism}</div>
+              <div class="text-[11px] font-mono text-indigo-300 truncate">${e.downstream.split(',')[1] || e.downstream}</div>
+            </div>
+          `).join('')
+        : '<div class="text-slate-500">Run Stage ④–⑧ Provisioning to register DataHub lineage.</div>';
+
+      const rb = st.monitoring_config?.o4_operator_runbook || [];
+      document.getElementById('a4-runbook-list').innerHTML = rb.length
+        ? rb.map(r => `
+            <div class="p-2.5 rounded bg-slate-900/90 border border-slate-800">
+              <div class="font-semibold text-white">${r.signal}</div>
+              <div class="text-slate-400 text-[11px]">${r.first_action}</div>
+              <div class="text-[10px] text-purple-300 mt-0.5">Owner: ${r.owner}</div>
+            </div>
+          `).join('')
+        : '<div class="text-slate-500">Run Stage ⑦ Monitoring Agent to generate runbook.</div>';
+
+      document.getElementById('ddl-sql-viewer').textContent = st.ddl_sql || '-- No DDL generated yet';
+      document.getElementById('monitoring-sql-viewer').textContent = st.monitoring_sql || '-- Run Provisioning (Stages 4-8) to generate monitoring.sql';
+
+      // Tab 4: Runtime Operations
+      const testFiles = st.available_test_files || [];
+      const fileSel = document.getElementById('ops-file-select');
+      fileSel.innerHTML = testFiles.map(f => `<option value="${f}" ${f.includes('drift') ? 'selected' : ''}>${f}</option>`).join('');
+
+      const proposals = st.proposals || [];
+      document.getElementById('proposals-container').innerHTML = proposals.length
+        ? proposals.map(p => {
+            const isAuto = p.markdown.includes('AUTO_APPLIED');
+            return `
+              <details class="rounded-xl border p-3.5 text-xs ${isAuto ? 'bg-emerald-950/20 border-emerald-500/30' : 'bg-amber-950/30 border-amber-500/40'}" open>
+                <summary class="cursor-pointer font-bold flex items-center justify-between">
+                  <span>📄 ${p.name} (Schema v${p.version})</span>
+                  <span class="px-2 py-0.5 rounded text-[10px] ${isAuto ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}">
+                    ${isAuto ? 'AUTO_APPLIED (Additive)' : 'PENDING_C3_APPROVAL (Breaking)'}
+                  </span>
+                </summary>
+                <pre class="mt-3 p-3 rounded bg-slate-950 text-slate-200 overflow-x-auto code-box">${p.markdown.replace(/</g, '&lt;')}</pre>
+              </details>
+            `;
+          }).join('')
+        : '<div class="text-xs text-slate-500">No schema drift proposals triggered yet. Use the simulator on the left to test additive or breaking XML drift.</div>';
+
+      const qRows = st.quarantine_rows || [];
+      document.getElementById('quarantine-table-body').innerHTML = qRows.length
+        ? qRows.map(q => `
+            <tr class="hover:bg-slate-800/40">
+              <td class="py-2 px-3 font-mono text-white">${q.file_name}</td>
+              <td class="py-2 px-3"><span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold">${q.gate_id}</span></td>
+              <td class="py-2 px-3 text-rose-200">${q.failure_reason}</td>
+              <td class="py-2 px-3 text-slate-400 font-mono text-[11px]">${q.quarantined_at}</td>
+              <td class="py-2 px-3">${q.replayed ? '<span class="text-emerald-400">Replayed</span>' : '<span class="text-rose-400 font-semibold">Held in O3</span>'}</td>
+            </tr>
+          `).join('')
+        : '<tr><td colspan="5" class="py-4 text-center text-slate-500">✅ O3 Quarantine is empty (0 failed records)</td></tr>';
+
+      const cRows = st.curated_rows || [];
+      if (cRows.length > 0) {
+        const cols = Object.keys(cRows[0]);
+        document.getElementById('curated-thead').innerHTML = `<tr>${cols.map(c => `<th class="py-2 px-2.5">${c}</th>`).join('')}</tr>`;
+        document.getElementById('curated-tbody').innerHTML = cRows.map(r => `
+          <tr class="hover:bg-slate-800/40">
+            ${cols.map(c => `<td class="py-1.5 px-2.5 whitespace-nowrap">${r[c] ?? '<span class="text-slate-600">NULL</span>'}</td>`).join('')}
+          </tr>
+        `).join('');
+      } else {
+        document.getElementById('curated-thead').innerHTML = '';
+        document.getElementById('curated-tbody').innerHTML = '<tr><td class="py-4 text-center text-slate-500">No curated rows loaded yet.</td></tr>';
+      }
+    }
+
+    async function fetchState(dataset = '') {
+      const url = dataset ? `/api/state?dataset=${encodeURIComponent(dataset)}` : '/api/state';
+      const res = await fetch(url);
+      const data = await res.json();
+      renderAll(data);
+    }
+
+    function switchDataset(ds) {
+      fetchState(ds);
+    }
+
+    async function runBootstrap() {
+      const payload = {
+        dataset: document.getElementById('in-dataset').value,
+        source_system: document.getElementById('in-source').value,
+        adls_landing_path: document.getElementById('in-adls').value,
+        sample_dir: document.getElementById('in-sample-dir').value,
+        data_steward: document.getElementById('in-steward').value,
+        engineering_owner: document.getElementById('in-eng').value,
+        freshness_sla_hours: Number(document.getElementById('in-sla').value),
+        confidence_threshold: Number(document.getElementById('in-conf').value),
+        custom_xml_name: document.getElementById('in-custom-xml-name').value,
+        custom_xml_content: document.getElementById('in-custom-xml-body').value,
+      };
+      const res = await fetch('/api/bootstrap', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        await fetchState(payload.dataset);
+        showTab('tab-schema');
+        showToast('Stage ① A0 Intake & Stage ② C0 Bootstrap complete! Ready for C3 Steward Schema Review.');
+      }
+    }
+
+    function collectSchemaEdits() {
+      const fields = JSON.parse(JSON.stringify(currentState.mapping.fields));
+      document.querySelectorAll('.schema-input').forEach(el => {
+        const idx = Number(el.dataset.idx);
+        const key = el.dataset.field;
+        if (el.type === 'checkbox') {
+          fields[idx][key] = el.checked;
+        } else {
+          fields[idx][key] = el.value;
+        }
+      });
+      const bkeys = [];
+      document.querySelectorAll('.bkey-input').forEach((el, idx) => {
+        if (el.checked) {
+          bkeys.push(fields[idx].column);
+        }
+      });
+      return { fields, business_keys: bkeys.length ? bkeys : currentState.mapping.business_keys };
+    }
+
+    async function saveSchemaOverrides() {
+      const edits = collectSchemaEdits();
+      const res = await fetch('/api/save-schema', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          dataset: currentState.dataset,
+          fields: edits.fields,
+          business_keys: edits.business_keys,
+        }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        await fetchState(currentState.dataset);
+        showToast('Saved C3 Steward overrides to mapping.yaml, contract.yaml, quality_rules.yaml & recompiled ddl.sql!');
+      }
+    }
+
+    async function approveAndProvision() {
+      if (currentState?.mapping?.fields) {
+        await saveSchemaOverrides();
+      }
+      const res = await fetch('/api/provision', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dataset: currentState.dataset }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        await fetchState(currentState.dataset);
+        showTab('tab-provision');
+        const st = data.smoke_test;
+        showToast(`Stages ③–⑧ Complete! Smoke Test: ${st.files_passed}/${st.files_processed} files passed, ${st.curated_current_rows} SCD2 rows loaded, ${st.quarantine_open_rows} quarantined.`);
+      }
+    }
+
+    async function approveGoLive() {
+      const res = await fetch('/api/go-live', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dataset: currentState.dataset }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        await fetchState(currentState.dataset);
+        showToast('Stage ⑨ & ⑩ Complete! Dataset marked PUBLISHED (v1.0.0-live), Snowpipe enabled, C1 Drift Agent active.');
+      }
+    }
+
+    async function ingestSelectedFile() {
+      const xmlFile = document.getElementById('ops-file-select').value;
+      await runIngestCall(xmlFile);
+    }
+
+    async function quickScenario(xmlFile) {
+      document.getElementById('ops-file-select').value = xmlFile;
+      await runIngestCall(xmlFile);
+    }
+
+    async function runIngestCall(xmlFile) {
+      const res = await fetch('/api/ingest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          dataset: currentState.dataset,
+          xml_file: xmlFile,
+        }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        await fetchState(currentState.dataset);
+        const r = data.result;
+        const isQuar = r.ingest_metrics.files_quarantined > 0;
+        showToast(
+          `File ${r.file}: Drift=${r.proposal_status} (${r.drift_findings_count} findings) | ${isQuar ? 'Held in O3 Quarantine' : 'Loaded to Curated SCD2'}`,
+          isQuar
+        );
+      }
+    }
+
+    async function replayQuarantine() {
+      const res = await fetch('/api/replay-quarantine', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dataset: currentState.dataset }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        await fetchState(currentState.dataset);
+        showToast('Marked all O3 Quarantined records as Replayed / Resolved.');
+      }
+    }
+
+    // Initialize UI
+    showTab('tab-intake');
+    fetchState();
+  </script>
+</body>
+</html>

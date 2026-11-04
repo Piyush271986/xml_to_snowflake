@@ -1,0 +1,34 @@
+dataset: orders
+configured_at: '2026-11-04T12:29:15.280141+00:00'
+o2_alerts:
+  freshness_sla_hours: 24
+  quarantine_threshold: 0
+  routing_source: DataHub_Owner_Lookup
+o5_sla_dashboard_view: v_sla_dashboard_orders
+o4_operator_runbook:
+- signal: File fails G1 checks
+  meaning: Malformed XML or a duplicate file
+  first_action: Open O3 (quarantine_orders), fix the source file, then replay
+  owner: data-eng@enterprise.io
+- signal: Additive drift flagged by C1
+  meaning: New optional XML element found
+  first_action: Auto-applied to mapping.yaml & DDL. Review in the weekly drift report
+  owner: data-steward@enterprise.io
+- signal: Breaking drift flagged by C1
+  meaning: Element renamed, removed, or retyped
+  first_action: Review the C2 proposal at C3, then approve or reject
+  owner: data-steward@enterprise.io
+- signal: Load is late (O2 alert)
+  meaning: No new files within 24h, or pipe_orders is paused
+  first_action: Check D1 (abfss://landing@enterpriseadls.dfs.core.windows.net/xml/orders/)
+    for new files, then resume pipe_orders
+  owner: platform-oncall@enterprise.io
+- signal: Row counts differ (G2 alert)
+  meaning: Flattening dropped records
+  first_action: Compare D2 (raw_orders) and D3 (staging_orders), fix mapping, replay
+  owner: data-eng@enterprise.io
+- signal: Records fail G2 or G3 checks
+  meaning: Missing element, bad type, or broken key
+  first_action: Open O3 (quarantine_orders) for the reason, fix mapping or source,
+    then replay
+  owner: data-eng@enterprise.io
