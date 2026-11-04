@@ -1,0 +1,64 @@
+dataset: orders
+deployed_at: '2026-11-04T12:29:15.269983+00:00'
+gates:
+  G1_Files:
+    sits_between: D1 (ADLS) -> D2 (Raw)
+    checks:
+    - file_non_empty
+    - sha256_idempotency
+    - well_formed_xml
+    on_failure: Reject and hold in O3 Quarantine
+  G2_Contract:
+    sits_between: D2 (Raw) -> D3 (Typed Staging)
+    required_xpaths:
+    - /Order/@currency
+    - /Order/OrderId
+    - /Order/CustomerId
+    - /Order/OrderDate
+    - /Order/OrderTimestamp
+    - /Order/IsExpedited
+    - /Order/TotalAmount
+    - /Order/LineItems/LineItem/ProductCode
+    - /Order/LineItems/LineItem/Quantity
+    - /Order/LineItems/LineItem/UnitPrice
+    type_assertions_count: 14
+    row_count_bounds:
+    - 1
+    - 15
+    on_failure: Hold in O3 Quarantine and send drift to C1
+  G3_Business:
+    sits_between: D3 (Typed Staging) -> D4 (Curated SCD2)
+    primary_keys:
+    - order_id
+    - line_item_product_code
+    not_null_columns:
+    - currency_code
+    - order_id
+    - customer_id
+    - order_date
+    - order_timestamp
+    - is_expedited
+    - total_amount
+    - line_item_product_code
+    - line_item_quantity
+    - line_item_unit_price
+    accepted_values:
+      currency_code:
+      - CAD
+      - EUR
+      - GBP
+      - USD
+    numeric_ranges:
+    - column: total_amount
+      min_value: 0.0
+      max_value: null
+    - column: discount_amount
+      min_value: 0.0
+      max_value: null
+    - column: line_item_quantity
+      min_value: 0.0
+      max_value: null
+    - column: line_item_unit_price
+      min_value: 0.0
+      max_value: null
+    on_failure: Hold failed records in O3 Quarantine

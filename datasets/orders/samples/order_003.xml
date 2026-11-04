@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Order currency="USD">
+    <OrderId>10003</OrderId>
+    <CustomerId>CUST-503</CustomerId>
+    <OrderDate>2026-10-16</OrderDate>
+    <OrderTimestamp>2026-10-16T11:45:10</OrderTimestamp>
+    <IsExpedited>true</IsExpedited>
+    <TotalAmount>420.00</TotalAmount>
+    <DiscountAmount>20.00</DiscountAmount>
+    <ShippingNotes>Signature required</ShippingNotes>
+    <LineItems>
+        <LineItem>
+            <ProductCode>SKU-101</ProductCode>
+            <Quantity>3</Quantity>
+            <UnitPrice>100.00</UnitPrice>
+        </LineItem>
+        <LineItem>
+            <ProductCode>SKU-410</ProductCode>
+            <Quantity>2</Quantity>
+            <UnitPrice>60.00</UnitPrice>
+        </LineItem>
+    </LineItems>
+</Order>
