@@ -178,3 +178,10 @@ GRANT ROLE DATA_STEWARD_ROLE  TO USER "welcometopiyush";
 
 -- Verification Output
 SELECT CURRENT_ROLE(), CURRENT_WAREHOUSE(), CURRENT_DATABASE();
+
+CREATE USER svc_datahub_usr
+  PASSWORD = '<>'
+  LOGIN_NAME = 'svc_datahub_usr'
+  MUST_CHANGE_PASSWORD = FALSE;
+
+  grant role DATAHUB_READER_ROLE to user "SVC_DATAHUB_USR";
