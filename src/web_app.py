@@ -13,7 +13,7 @@ import uvicorn
 import yaml
 from starlette.applications import Starlette
 from starlette.requests import Request
-from starlette.responses import HTMLResponse, JSONResponse
+from starlette.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from starlette.routing import Route
 
 from src.agents.a0_intake import run_a0_intake
@@ -30,6 +30,7 @@ from src.dq_report_generator import generate_compliance_certificate
 from src.entity_model import build_entity_model, render_er_diagram
 from src.hierarchical_dq import audit_xml_hierarchical_integrity
 from src.llm.anthropic_client import load_llm_config
+from src.metrics_collector import collect_pipeline_metrics, format_prometheus_metrics
 from src.models import (
     ContractSpec,
     DatasetMapping,
@@ -742,6 +743,14 @@ async def api_approve_child_entity(request: Request) -> JSONResponse:
     )
 
 
+async def api_get_metrics(request: Request) -> PlainTextResponse:
+    """Prometheus / OpenTelemetry metrics endpoint for live pipeline health and DQ tracking."""
+    dataset = request.query_params.get("dataset", "analytics")
+    metrics = collect_pipeline_metrics(dataset=dataset, registry_root=REGISTRY_ROOT)
+    prom_text = format_prometheus_metrics(metrics)
+    return PlainTextResponse(prom_text, media_type="text/plain; version=0.0.4; charset=utf-8")
+
+
 async def api_get_alerts(request: Request) -> JSONResponse:
     """Retrieve recent alerts from the dataset's persistent alert_history.jsonl."""
     dataset = request.query_params.get("dataset", "analytics")
@@ -893,6 +902,8 @@ routes = [
     Route("/api/approve-child-entity", api_approve_child_entity, methods=["POST"]),
     Route("/api/alerts", api_get_alerts, methods=["GET"]),
     Route("/api/alerts/test", api_send_test_alert, methods=["POST"]),
+    Route("/metrics", api_get_metrics, methods=["GET"]),
+    Route("/api/metrics", api_get_metrics, methods=["GET"]),
     Route("/api/export/dbt", api_export_dbt, methods=["GET", "POST"]),
     Route("/api/export/openapi", api_export_openapi, methods=["GET"]),
     Route("/api/export/json-schema", api_export_json_schema, methods=["GET"]),
