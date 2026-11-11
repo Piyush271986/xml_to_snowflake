@@ -25,6 +25,7 @@ from src.agents.c0_bootstrap import run_data_steward_agent
 from src.agents.c1_drift_agent import detect_schema_drift
 from src.agents.c2_proposal_agent import handle_drift_findings
 from src.agents.ddl_generator_agent import run_ddl_generator_agent
+from src.agents.hierarchical_evolution import detect_new_child_entities
 from src.archival_manager import archive_ingested_file
 from src.dq_report_generator import generate_compliance_certificate
 from src.hierarchical_dq import audit_xml_hierarchical_integrity
@@ -215,11 +216,37 @@ def process_runtime_file_with_drift_control(
         except Exception:
             pass
 
+    # Automatically detect if incoming XML introduces new repeating child entities
+    child_entity_proposals = []
+    mapping_file = ds_registry / "mapping.yaml"
+    if mapping_file.exists():
+        try:
+            from src.models import DatasetMapping
+            mapping_dict = yaml.safe_load(mapping_file.read_text(encoding="utf-8"))
+            if mapping_dict:
+                mapping_obj = DatasetMapping(**mapping_dict)
+                raw_proposals = detect_new_child_entities(xml_file, mapping_obj)
+                child_entity_proposals = [
+                    {
+                        "container_tag": p.container_tag,
+                        "record_tag": p.record_tag,
+                        "entity_name": p.entity_name,
+                        "table_name": p.table_name,
+                        "columns": p.columns,
+                        "staging_ddl": p.staging_ddl,
+                        "curated_ddl": p.curated_ddl,
+                    }
+                    for p in raw_proposals
+                ]
+        except Exception:
+            pass
+
     return {
         "file": xml_file.name,
         "drift_findings_count": len(findings),
         "proposal_status": proposal.status if proposal else "NO_DRIFT",
         "proposed_version": proposal.proposed_version if proposal else None,
+        "child_entity_proposals": child_entity_proposals,
         "ingest_metrics": ingest_metrics,
         "reconciliation": recon_audit,
         "compliance_certificate": cert_meta,

@@ -1652,6 +1652,10 @@
           `Ingested ${r.file}: Drift=${r.proposal_status} (${r.drift_findings_count} findings), Passed=${r.ingest_metrics.files_passed}, Quarantined=${r.ingest_metrics.files_quarantined}${reconMsg}`,
           isErr
         );
+        if (r.child_entity_proposals && r.child_entity_proposals.length > 0) {
+          const names = r.child_entity_proposals.map(p => `<${p.container_tag}> (${p.columns.length} columns)`).join(', ');
+          alert(`✨ Automatic Hierarchy Detection:\nDiscovered ${r.child_entity_proposals.length} new repeating child entity set(s):\n${names}\n\nSnowflake Dynamic Table DDL compiled automatically. Check Tab ② C3 Approval Gate to review.`);
+        }
       }
     }
 

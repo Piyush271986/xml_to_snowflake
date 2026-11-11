@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ASSETS ASOF_DATE="5/11/2026" CREATE_DATE="5/11/2026" RECORDS="1">
+  <ASSET>
+    <BND_CORP>
+      <ACCRUAL_DT>1/22/2024</ACCRUAL_DT>
+      <AMT_ISU>525000000</AMT_ISU>
+      <COUNTRY>GB</COUNTRY>
+      <RATING_set SIZE="2">
+        <RATING_record>
+          <AGENCY>MOODYS</AGENCY>
+          <RATING>Baa1</RATING>
+          <RATING_DATE>2026-01-15</RATING_DATE>
+        </RATING_record>
+        <RATING_record>
+          <AGENCY>SP</AGENCY>
+          <RATING>BBB+</RATING>
+          <RATING_DATE>2026-02-01</RATING_DATE>
+        </RATING_record>
+      </RATING_set>
+    </BND_CORP>
+  </ASSET>
+</ASSETS>

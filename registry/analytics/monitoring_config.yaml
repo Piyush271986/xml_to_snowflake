@@ -1,5 +1,5 @@
 dataset: analytics
-configured_at: '2026-11-11T13:55:47.068137+00:00'
+configured_at: '2026-11-11T15:16:39.729720+00:00'
 o2_alerts:
   freshness_sla_hours: 24
   quarantine_threshold: 0
