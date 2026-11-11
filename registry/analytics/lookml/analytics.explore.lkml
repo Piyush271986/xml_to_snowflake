@@ -13,19 +13,19 @@ explore: assets {
   join: country_classification {
     type: left_outer
     relationship: one_to_many
-    sql_on: ${TABLE}.asset_pk = ${country_classification}.asset_fk ;;
+    sql_on: ${asset}.asset_pk = ${country_classification}.asset_fk ;;
   }
 
   join: cusip2 {
     type: left_outer
     relationship: one_to_many
-    sql_on: ${TABLE}.asset_pk = ${cusip2}.asset_fk ;;
+    sql_on: ${asset}.asset_pk = ${cusip2}.asset_fk ;;
   }
 
   join: cusip_alias {
     type: left_outer
     relationship: one_to_many
-    sql_on: ${TABLE}.asset_pk = ${cusip_alias}.asset_fk ;;
+    sql_on: ${asset}.asset_pk = ${cusip_alias}.asset_fk ;;
   }
 
 }

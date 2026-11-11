@@ -92,11 +92,12 @@ def export_lookml_project(entity_model: EntityModel, output_dir: Path) -> dict[s
 
     for ent in entity_model.entities:
         if ent != root_ent and ent.parent:
+            parent_ref = "${TABLE}" if ent.parent == root_ent else f"${{{ent.parent.name}}}"
             explore_lines.extend([
                 f"  join: {ent.name} {{",
                 "    type: left_outer",
                 "    relationship: one_to_many",
-                f"    sql_on: ${{TABLE}}.{ent.parent.name}_pk = ${{{ent.name}}}.{ent.parent.name}_fk ;;",
+                f"    sql_on: {parent_ref}.{ent.parent.name}_pk = ${{{ent.name}}}.{ent.parent.name}_fk ;;",
                 "  }",
                 "",
             ])

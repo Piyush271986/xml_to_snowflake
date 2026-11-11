@@ -1,5 +1,5 @@
 dataset: analytics
-version: 0.4.0
+version: 0.1.0
 layer: RAW
 table_type: NORMAL_TABLE
 tables:
@@ -70,4 +70,4 @@ tables:
     pii_category: null
     suggested_name: null
 generated_by: step1_data_steward_agent
-ddl_generated: true
+ddl_generated: false
