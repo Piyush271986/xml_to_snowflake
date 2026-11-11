@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from contextlib import closing
+import json
 import os
 import sqlite3
 from datetime import datetime, timezone
@@ -23,6 +24,7 @@ from src.agents.a4_monitoring import run_a4_monitoring
 from src.agents.a5_smoke_test import run_a5_smoke_test
 from src.agents.c0_bootstrap import _build_three_layer_data_model, run_c0_bootstrap
 from src.agents.ddl_generator_agent import run_ddl_generator_agent
+from src.alert_dispatcher import AlertNotification, dispatch_alert
 from src.dbt_exporter import export_dbt_project
 from src.dq_report_generator import generate_compliance_certificate
 from src.entity_model import build_entity_model, render_er_diagram
@@ -740,6 +742,40 @@ async def api_approve_child_entity(request: Request) -> JSONResponse:
     )
 
 
+async def api_get_alerts(request: Request) -> JSONResponse:
+    """Retrieve recent alerts from the dataset's persistent alert_history.jsonl."""
+    dataset = request.query_params.get("dataset", "analytics")
+    ds_reg = REGISTRY_ROOT / dataset
+    history_file = ds_reg / "alert_history.jsonl"
+    alerts = []
+    if history_file.exists():
+        try:
+            for line in history_file.read_text(encoding="utf-8").strip().splitlines():
+                if line.strip():
+                    alerts.append(json.loads(line))
+        except Exception:
+            pass
+    alerts.reverse()  # most recent first
+    return JSONResponse({"ok": True, "dataset": dataset, "alerts": alerts, "count": len(alerts)})
+
+
+async def api_send_test_alert(request: Request) -> JSONResponse:
+    """Dispatches a test alert notification to test multi-channel webhook formatting."""
+    body = await request.json()
+    dataset = body.get("dataset", "analytics")
+    severity = body.get("severity", "HIGH")
+    notif = AlertNotification(
+        dataset=dataset,
+        event_type="GATE_FAILURE",
+        severity=severity,
+        title=f"Test Connectivity Alert: `{dataset}`",
+        summary=f"This is an automated test alert triggered from the Control Plane UI at {datetime.now(timezone.utc).strftime('%H:%M:%S UTC')}.",
+        details={"origin": "Control_Plane_UI_Test", "triggered_by": "data_steward"},
+    )
+    res = dispatch_alert(notif, dry_run=True, registry_root=REGISTRY_ROOT)
+    return JSONResponse({"ok": True, "dataset": dataset, "result": res})
+
+
 async def api_export_dbt(request: Request) -> JSONResponse:
     dataset = request.query_params.get("dataset", "analytics")
     ds_reg = REGISTRY_ROOT / dataset
@@ -855,6 +891,8 @@ routes = [
     Route("/api/ingest", api_ingest_xml, methods=["POST"]),
     Route("/api/replay-quarantine", api_replay_quarantine, methods=["POST"]),
     Route("/api/approve-child-entity", api_approve_child_entity, methods=["POST"]),
+    Route("/api/alerts", api_get_alerts, methods=["GET"]),
+    Route("/api/alerts/test", api_send_test_alert, methods=["POST"]),
     Route("/api/export/dbt", api_export_dbt, methods=["GET", "POST"]),
     Route("/api/export/openapi", api_export_openapi, methods=["GET"]),
     Route("/api/export/json-schema", api_export_json_schema, methods=["GET"]),
