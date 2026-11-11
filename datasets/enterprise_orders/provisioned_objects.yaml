@@ -1,0 +1,19 @@
+dataset: enterprise_orders
+version: 0.1.0
+deployed_by: step3_pipeline_deployment_agent
+snowflake_ddl_file: C:\Databricks_project\xml_to_snowflake\datasets\enterprise_orders\ddl.sql
+deployment_manifest: C:\Databricks_project\xml_to_snowflake\datasets\enterprise_orders\pipeline_deployment_manifest.yaml
+local_warehouse_db: C:\Databricks_project\xml_to_snowflake\datasets\enterprise_orders\local_warehouse.db
+pipeline_topology:
+  adls_to_raw: Snowpipe (pipe_enterprise_orders) -> Normal Table (raw_enterprise_orders)
+  raw_to_stage: Dynamic Table (staging_enterprise_orders, TARGET_LAG = '5 minutes')
+  stage_to_gold: Dynamic Table (curated_enterprise_orders, TARGET_LAG = '15 minutes')
+provisioned_objects:
+- raw_enterprise_orders
+- staging_enterprise_orders
+- curated_enterprise_orders
+- quarantine_enterprise_orders
+- dq_results_enterprise_orders
+- pipe_enterprise_orders (PAUSED)
+- dynamic_table_staging_enterprise_orders
+- dynamic_table_curated_enterprise_orders

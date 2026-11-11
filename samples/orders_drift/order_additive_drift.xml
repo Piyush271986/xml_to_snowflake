@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Order currency="USD">
+    <OrderId>10011</OrderId>
+    <CustomerId>CUST-511</CustomerId>
+    <OrderDate>2026-10-20</OrderDate>
+    <OrderTimestamp>2026-10-20T10:15:00</OrderTimestamp>
+    <IsExpedited>true</IsExpedited>
+    <TotalAmount>175.00</TotalAmount>
+    <PromoCode>AUTUMN25</PromoCode>
+    <LoyaltyTier>GOLD</LoyaltyTier>
+    <LineItems>
+        <LineItem>
+            <ProductCode>SKU-101</ProductCode>
+            <Quantity>1</Quantity>
+            <UnitPrice>175.00</UnitPrice>
+        </LineItem>
+    </LineItems>
+</Order>

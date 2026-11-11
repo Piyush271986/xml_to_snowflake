@@ -29,15 +29,17 @@ def run_a4_monitoring(dataset: str, registry_root: Path) -> dict[str, Any]:
 -- =============================================================================
 
 -- O5: SLA Dashboard View (Latency, Volume, Quarantine & Drift Trends)
-CREATE OR REPLACE VIEW v_sla_dashboard_{dataset} AS
+CREATE SCHEMA IF NOT EXISTS OPS;
+
+CREATE OR REPLACE VIEW OPS.v_sla_dashboard_{dataset} AS
 SELECT
     DATE_TRUNC('HOUR', r._load_ts)                          AS load_hour,
     COUNT(DISTINCT r._file_name)                            AS files_ingested,
     COUNT(c.{mapping.business_keys[0]})                     AS curated_active_rows,
     AVG(DATEDIFF('SECOND', r._load_ts, c.system_start_time)) AS avg_e2e_latency_sec,
-    (SELECT COUNT(*) FROM {mapping.targets.quarantine_table} q WHERE q.replayed = FALSE) AS open_quarantine_count
-FROM {mapping.targets.raw_table} r
-LEFT JOIN {mapping.targets.curated_table} c
+    (SELECT COUNT(*) FROM OPS.{mapping.targets.quarantine_table} q WHERE q.replayed = FALSE) AS open_quarantine_count
+FROM RAW.{mapping.targets.raw_table} r
+LEFT JOIN CURATED.{mapping.targets.curated_table} c
   ON c._source_file = r._file_name AND c.is_current = TRUE
 GROUP BY 1;
 
@@ -46,7 +48,7 @@ SELECT
     '{dataset}' AS dataset,
     DATEDIFF('HOUR', MAX(_load_ts), CURRENT_TIMESTAMP()) AS hours_since_last_load,
     '{manifest.platform_oncall}' AS alert_owner
-FROM {mapping.targets.raw_table}
+FROM RAW.{mapping.targets.raw_table}
 HAVING hours_since_last_load > {manifest.freshness_sla_hours};
 """
     (ds_registry / "monitoring.sql").write_text(monitoring_sql, encoding="utf-8")

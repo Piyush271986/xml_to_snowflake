@@ -16,7 +16,136 @@ class OnboardingManifest(BaseModel):
     freshness_sla_hours: int = 24
     valid_sample_files: list[str] = Field(default_factory=list)
     quarantined_sample_files: list[str] = Field(default_factory=list)
-    status: Literal["DRAFT", "BOOTSTRAPPED", "APPROVED", "PROVISIONED", "PUBLISHED"] = "DRAFT"
+    status: Literal[
+        "DRAFT",
+        "BOOTSTRAPPED",
+        "PENDING_HUMAN_APPROVAL",
+        "APPROVED",
+        "DDL_GENERATED",
+        "PROVISIONED",
+        "PUBLISHED",
+    ] = "DRAFT"
+    created_at: str
+
+
+PiiCategory = Literal["NONE", "CONTACT", "FINANCIAL", "GOVERNMENT_ID", "LOCATION", "OTHER"]
+
+
+class LayerColumnSpec(BaseModel):
+    name: str
+    snowflake_type: str
+    nullable: bool = True
+    source_xpath: str | None = None
+    expression: str | None = None
+    description: str | None = None
+    is_business_key: bool = False
+    semantic_entity: str | None = None
+    pii_category: PiiCategory | None = None
+    suggested_name: str | None = None
+
+
+class LLMColumnAnnotation(BaseModel):
+    """Claude's per-column annotation. Suggestions only — never auto-renames executable columns."""
+    column: str
+    description: str
+    semantic_entity: str
+    pii_category: PiiCategory = "NONE"
+    suggested_name: str | None = None
+
+
+class LLMGoldEntity(BaseModel):
+    """A Gold-layer dimensional entity proposed by Claude for human review."""
+    name: str
+    entity_type: Literal["FACT", "DIMENSION", "BRIDGE", "SATELLITE"]
+    grain: str
+    primary_keys: list[str] = Field(default_factory=list)
+    columns: list[str] = Field(default_factory=list)
+    rationale: str = ""
+
+
+class LLMModelingProposal(BaseModel):
+    model: str
+    summary: str
+    column_annotations: list[LLMColumnAnnotation] = Field(default_factory=list)
+    gold_entities: list[LLMGoldEntity] = Field(default_factory=list)
+    steward_review_notes: list[str] = Field(default_factory=list)
+
+
+class ForeignKeySpec(BaseModel):
+    """Logical foreign key from a child entity table to its parent entity table (Dynamic Tables cannot enforce constraints)."""
+    column: str
+    references_table: str
+    references_column: str
+
+
+class LayerTableSpec(BaseModel):
+    table_name: str
+    entity: str | None = None
+    parent_table: str | None = None
+    foreign_keys: list[ForeignKeySpec] = Field(default_factory=list)
+    layer: Literal["RAW", "STAGE", "GOLD"]
+    table_type: Literal["NORMAL_TABLE", "DYNAMIC_TABLE"]
+    ingestion_or_refresh: Literal["SNOWPIPE", "DYNAMIC_TABLE_REFRESH"]
+    upstream_source: str
+    target_lag: str | None = None
+    warehouse: str | None = None
+    grain: str
+    primary_keys: list[str] = Field(default_factory=list)
+    flatten_path: str | None = None
+    columns: list[LayerColumnSpec] = Field(default_factory=list)
+
+
+class LayerSchemaYaml(BaseModel):
+    dataset: str
+    version: str = "0.1.0"
+    layer: Literal["RAW", "STAGE", "GOLD"]
+    table_type: Literal["NORMAL_TABLE", "DYNAMIC_TABLE"]
+    tables: list[LayerTableSpec] = Field(default_factory=list)
+    generated_by: str = "step1_data_steward_agent"
+    ddl_generated: bool = False
+
+
+class EntityRelationship(BaseModel):
+    parent_entity: str
+    child_entity: str
+    relationship_type: Literal["1:1", "1:N"]
+    join_keys: list[str]
+    source_xpath: str
+    kind: Literal["LINEAGE", "FOREIGN_KEY"] = "LINEAGE"
+    layer: str | None = None
+    fk_column: str | None = None
+    parent_pk_column: str | None = None
+
+
+class DataModelSpec(BaseModel):
+    dataset: str
+    version: str = "0.1.0"
+    modeling_strategy: str = "Medallion 3-Layer (RAW Normal Table -> STAGE Dynamic Table -> GOLD Dynamic Table)"
+    root_element: str
+    business_keys: list[str]
+    raw_layer_file: str = "raw_schema.yaml"
+    staging_layer_file: str = "staging_schema.yaml"
+    gold_layer_file: str = "gold_schema.yaml"
+    entities: list[LayerTableSpec] = Field(default_factory=list)
+    relationships: list[EntityRelationship] = Field(default_factory=list)
+    approval_status: Literal["PENDING_HUMAN_APPROVAL", "APPROVED", "REJECTED"] = "PENDING_HUMAN_APPROVAL"
+    modeling_engine: Literal["rule_based", "anthropic_claude"] = "rule_based"
+    llm_model: str | None = None
+    llm_note: str | None = None
+    llm_proposal: LLMModelingProposal | None = None
+    er_diagram_staging: str = ""
+    er_diagram_curated: str = ""
+
+
+class PipelineDeploymentManifest(BaseModel):
+    dataset: str
+    version: str
+    generated_by: str = "step2_ddl_generator_agent"
+    adls_to_raw_mechanism: str = "SNOWPIPE"
+    raw_to_stage_mechanism: str = "DYNAMIC_TABLE"
+    stage_to_gold_mechanism: str = "DYNAMIC_TABLE"
+    sql_artifacts: dict[str, str] = Field(default_factory=dict)
+    execution_order: list[str] = Field(default_factory=list)
     created_at: str
 
 

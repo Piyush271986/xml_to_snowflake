@@ -1,0 +1,13 @@
+dataset: orders
+source_system: enterprise_erp_orders
+adls_landing_path: abfss://landing@adls.dfs.core.windows.net/xml/enterprise_orders/
+onboarding_sample_dir: C:\Databricks_project\xml_to_snowflake\datasets\enterprise_orders\samples
+data_steward: data-steward@enterprise.io
+engineering_owner: data-eng@enterprise.io
+platform_oncall: platform-oncall@enterprise.io
+freshness_sla_hours: 24
+valid_sample_files:
+- enterprise_order_001.xml
+quarantined_sample_files: []
+status: PROVISIONED
+created_at: '2026-11-11T13:59:28.915389+00:00'

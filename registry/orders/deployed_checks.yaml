@@ -1,0 +1,506 @@
+dataset: orders
+deployed_at: '2026-11-11T14:06:50.832379+00:00'
+gates:
+  G1_Files:
+    sits_between: D1 (ADLS) -> D2 (Raw)
+    checks:
+    - file_non_empty
+    - sha256_idempotency
+    - well_formed_xml
+    on_failure: Reject and hold in O3 Quarantine
+  G2_Contract:
+    sits_between: D2 (Raw) -> D3 (Typed Staging)
+    required_xpaths:
+    - /Order/@orderType
+    - /Order/@version
+    - /Order/@currency
+    - /Order/@channel
+    - /Order/@region
+    - /Order/OrderId
+    - /Order/ExternalPurchaseOrderNumber
+    - /Order/OrderDate
+    - /Order/OrderTimestamp
+    - /Order/OrderStatus
+    - /Order/IsExpedited
+    - /Order/IsBackorderAllowed
+    - /Order/PriorityScore
+    - /Order/TotalAmount
+    - /Order/DiscountAmount
+    - /Order/TaxAmount
+    - /Order/FreightAmount
+    - /Order/NetPayableAmount
+    - /Order/ShippingNotes
+    - /Order/Header/SourceSystem
+    - /Order/Header/SalesOrgCode
+    - /Order/Header/DistributionChannel
+    - /Order/Header/DivisionCode
+    - /Order/Header/ContractReference/MasterAgreementId
+    - /Order/Header/ContractReference/ContractEffectiveDate
+    - /Order/Header/ContractReference/ContractExpirationDate
+    - /Order/Header/ContractReference/DiscountTierPercentage
+    - /Order/Header/ContractReference/IsAutoRenew
+    - /Order/Header/SalesRepresentative/RepId
+    - /Order/Header/SalesRepresentative/RepName
+    - /Order/Header/SalesRepresentative/RepEmail
+    - /Order/Header/SalesRepresentative/TerritoryCode
+    - /Order/Header/SalesRepresentative/CommissionRate
+    - /Order/Customer/@customerTier
+    - /Order/Customer/@taxExempt
+    - /Order/Customer/@kycVerified
+    - /Order/Customer/CustomerId
+    - /Order/Customer/AccountNumber
+    - /Order/Customer/CompanyName
+    - /Order/Customer/DunsNumber
+    - /Order/Customer/TaxRegistrationNumber
+    - /Order/Customer/AccountCreatedDate
+    - /Order/Customer/CreditProfile/CreditLimit
+    - /Order/Customer/CreditProfile/CurrentBalance
+    - /Order/Customer/CreditProfile/AvailableCredit
+    - /Order/Customer/CreditProfile/RiskRating
+    - /Order/Customer/CreditProfile/PaymentTermsDays
+    - /Order/Customer/CreditProfile/IsCreditHold
+    - /Order/Customer/Contacts/PrimaryContact/ContactId
+    - /Order/Customer/Contacts/PrimaryContact/FullName
+    - /Order/Customer/Contacts/PrimaryContact/JobTitle
+    - /Order/Customer/Contacts/PrimaryContact/Email
+    - /Order/Customer/Contacts/PrimaryContact/Phone
+    - /Order/Customer/Contacts/AccountsPayableContact/ContactId
+    - /Order/Customer/Contacts/AccountsPayableContact/FullName
+    - /Order/Customer/Contacts/AccountsPayableContact/JobTitle
+    - /Order/Customer/Contacts/AccountsPayableContact/Email
+    - /Order/Customer/Contacts/AccountsPayableContact/Phone
+    - /Order/Customer/Addresses/BillingAddress/@addressType
+    - /Order/Customer/Addresses/BillingAddress/AddressId
+    - /Order/Customer/Addresses/BillingAddress/AttentionLine
+    - /Order/Customer/Addresses/BillingAddress/StreetLine1
+    - /Order/Customer/Addresses/BillingAddress/StreetLine2
+    - /Order/Customer/Addresses/BillingAddress/City
+    - /Order/Customer/Addresses/BillingAddress/StateProvince
+    - /Order/Customer/Addresses/BillingAddress/PostalCode
+    - /Order/Customer/Addresses/BillingAddress/CountryCode
+    - /Order/Customer/Addresses/BillingAddress/GeoCoordinates/Latitude
+    - /Order/Customer/Addresses/BillingAddress/GeoCoordinates/Longitude
+    - /Order/Customer/Addresses/ShippingAddress/@addressType
+    - /Order/Customer/Addresses/ShippingAddress/AddressId
+    - /Order/Customer/Addresses/ShippingAddress/FacilityName
+    - /Order/Customer/Addresses/ShippingAddress/AttentionLine
+    - /Order/Customer/Addresses/ShippingAddress/StreetLine1
+    - /Order/Customer/Addresses/ShippingAddress/StreetLine2
+    - /Order/Customer/Addresses/ShippingAddress/City
+    - /Order/Customer/Addresses/ShippingAddress/StateProvince
+    - /Order/Customer/Addresses/ShippingAddress/PostalCode
+    - /Order/Customer/Addresses/ShippingAddress/CountryCode
+    - /Order/Customer/Addresses/ShippingAddress/IsResidential
+    - /Order/Customer/Addresses/ShippingAddress/RequiresLiftgate
+    - /Order/Customer/Addresses/ShippingAddress/RequiresInsideDelivery
+    - /Order/Customer/Addresses/ShippingAddress/GeoCoordinates/Latitude
+    - /Order/Customer/Addresses/ShippingAddress/GeoCoordinates/Longitude
+    - /Order/FulfillmentPlan/RequestedDeliveryDate
+    - /Order/FulfillmentPlan/PromisedShipDate
+    - /Order/FulfillmentPlan/Incoterms
+    - /Order/FulfillmentPlan/OriginWarehouse/WarehouseId
+    - /Order/FulfillmentPlan/OriginWarehouse/WarehouseName
+    - /Order/FulfillmentPlan/OriginWarehouse/TimeZone
+    - /Order/FulfillmentPlan/CarrierRouting/@carrierCode
+    - /Order/FulfillmentPlan/CarrierRouting/@serviceLevel
+    - /Order/FulfillmentPlan/CarrierRouting/CarrierName
+    - /Order/FulfillmentPlan/CarrierRouting/ScacCode
+    - /Order/FulfillmentPlan/CarrierRouting/BolNumber
+    - /Order/FulfillmentPlan/CarrierRouting/ProNumber
+    - /Order/FulfillmentPlan/CarrierRouting/EstimatedTransitDays
+    - /Order/FulfillmentPlan/CarrierRouting/TotalPalletCount
+    - /Order/FulfillmentPlan/CarrierRouting/TotalGrossWeightKg
+    - /Order/FulfillmentPlan/CarrierRouting/IsTemperatureControlled
+    - /Order/FulfillmentPlan/CarrierRouting/InsuranceCoverageAmount
+    - /Order/PaymentDetails/@paymentMethod
+    - /Order/PaymentDetails/PaymentStatus
+    - /Order/PaymentDetails/AuthorizationCode
+    - /Order/PaymentDetails/AuthorizedTimestamp
+    - /Order/PaymentDetails/BillingCurrency
+    - /Order/PaymentDetails/ExchangeRateToUsd
+    - /Order/PaymentDetails/InstallmentSchedule/Installment/@installmentNumber
+    - /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentId
+    - /Order/PaymentDetails/InstallmentSchedule/Installment/DueDate
+    - /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentPercentage
+    - /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentAmount
+    - /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentStatus
+    - /Order/LineItems/LineItem/@lineNumber
+    - /Order/LineItems/LineItem/@itemCategory
+    - /Order/LineItems/LineItem/@hazmat
+    - /Order/LineItems/LineItem/LineItemId
+    - /Order/LineItems/LineItem/ProductCode
+    - /Order/LineItems/LineItem/ManufacturerPartNumber
+    - /Order/LineItems/LineItem/ProductName
+    - /Order/LineItems/LineItem/ProductFamily
+    - /Order/LineItems/LineItem/UnitOfMeasure
+    - /Order/LineItems/LineItem/Quantity
+    - /Order/LineItems/LineItem/UnitPrice
+    - /Order/LineItems/LineItem/LineDiscountAmount
+    - /Order/LineItems/LineItem/LineTaxRate
+    - /Order/LineItems/LineItem/LineTaxAmount
+    - /Order/LineItems/LineItem/ExtendedNetAmount
+    - /Order/LineItems/LineItem/IsTaxable
+    - /Order/LineItems/LineItem/IsDropShip
+    - /Order/LineItems/LineItem/RequestedShipDate
+    - /Order/LineItems/LineItem/PhysicalSpecs/UnitWeightKg
+    - /Order/LineItems/LineItem/PhysicalSpecs/DimensionsCm
+    - /Order/LineItems/LineItem/PhysicalSpecs/CountryOfOrigin
+    - /Order/LineItems/LineItem/PhysicalSpecs/HarmonizedTariffCode
+    - /Order/LineItems/LineItem/InventoryAllocation/AllocatedWarehouseId
+    - /Order/LineItems/LineItem/InventoryAllocation/BinLocation
+    - /Order/LineItems/LineItem/InventoryAllocation/LotNumber
+    - /Order/LineItems/LineItem/InventoryAllocation/AllocationStatus
+    - /Order/LineItems/LineItem/InventoryAllocation/AllocationTimestamp
+    - /Order/LineItems/LineItem/Warranty/WarrantyPlanCode
+    - /Order/LineItems/LineItem/Warranty/WarrantyDurationMonths
+    - /Order/LineItems/LineItem/Warranty/IncludesOnsiteResponse
+    - /Order/ComplianceAndGovernance/IsExportControlled
+    - /Order/ComplianceAndGovernance/ExportControlClassification
+    - /Order/ComplianceAndGovernance/SanctionsScreeningPassed
+    - /Order/ComplianceAndGovernance/ScreeningReferenceId
+    - /Order/ComplianceAndGovernance/DataPrivacy/ContainsPii
+    - /Order/ComplianceAndGovernance/DataPrivacy/PiiClassification
+    - /Order/ComplianceAndGovernance/DataPrivacy/GdprApplicable
+    - /Order/ComplianceAndGovernance/DataPrivacy/RetentionPolicyYears
+    - /Order/AuditTrail/AuditEvent/@sequence
+    - /Order/AuditTrail/AuditEvent/EventId
+    - /Order/AuditTrail/AuditEvent/EventType
+    - /Order/AuditTrail/AuditEvent/EventTimestamp
+    - /Order/AuditTrail/AuditEvent/ActorId
+    - /Order/AuditTrail/AuditEvent/EventNotes
+    type_assertions_count: 157
+    row_count_bounds:
+    - 5
+    - 25
+    on_failure: Hold in O3 Quarantine and send drift to C1
+  G3_Business:
+    sits_between: D3 (Typed Staging) -> D4 (Curated SCD2)
+    primary_keys:
+    - order_id
+    - line_item_id
+    not_null_columns:
+    - order_type
+    - version
+    - currency_code
+    - channel
+    - region
+    - order_id
+    - external_purchase_order_number
+    - order_date
+    - order_timestamp
+    - order_status
+    - is_expedited
+    - is_backorder_allowed
+    - priority_score
+    - total_amount
+    - discount_amount
+    - tax_amount
+    - freight_amount
+    - net_payable_amount
+    - shipping_notes
+    - source_system
+    - sales_org_code
+    - distribution_channel
+    - division_code
+    - master_agreement_id
+    - contract_effective_date
+    - contract_expiration_date
+    - discount_tier_percentage
+    - is_auto_renew
+    - rep_id
+    - rep_name
+    - rep_email
+    - territory_code
+    - commission_rate
+    - customer_customer_tier
+    - customer_tax_exempt
+    - customer_kyc_verified
+    - customer_id
+    - account_number
+    - company_name
+    - duns_number
+    - tax_registration_number
+    - account_created_date
+    - credit_limit
+    - current_balance
+    - available_credit
+    - risk_rating
+    - payment_terms_days
+    - is_credit_hold
+    - primary_contact_contact_id
+    - primary_contact_full_name
+    - primary_contact_job_title
+    - primary_contact_email
+    - primary_contact_phone
+    - accounts_payable_contact_contact_id
+    - accounts_payable_contact_full_name
+    - accounts_payable_contact_job_title
+    - accounts_payable_contact_email
+    - accounts_payable_contact_phone
+    - billing_address_address_type
+    - billing_address_address_id
+    - billing_address_attention_line
+    - billing_address_street_line1
+    - billing_address_street_line2
+    - billing_address_city
+    - billing_address_state_province
+    - billing_address_postal_code
+    - billing_address_country_code
+    - geo_coordinates_latitude
+    - geo_coordinates_longitude
+    - shipping_address_address_type
+    - shipping_address_address_id
+    - facility_name
+    - shipping_address_attention_line
+    - shipping_address_street_line1
+    - shipping_address_street_line2
+    - shipping_address_city
+    - shipping_address_state_province
+    - shipping_address_postal_code
+    - shipping_address_country_code
+    - is_residential
+    - requires_liftgate
+    - requires_inside_delivery
+    - geo_coordinates_latitude_2
+    - geo_coordinates_longitude_2
+    - requested_delivery_date
+    - promised_ship_date
+    - incoterms
+    - warehouse_id
+    - warehouse_name
+    - time_zone
+    - carrier_routing_carrier_code
+    - carrier_routing_service_level
+    - carrier_name
+    - scac_code
+    - bol_number
+    - pro_number
+    - estimated_transit_days
+    - total_pallet_count
+    - total_gross_weight_kg
+    - is_temperature_controlled
+    - insurance_coverage_amount
+    - payment_details_payment_method
+    - payment_status
+    - authorization_code
+    - authorized_timestamp
+    - billing_currency
+    - exchange_rate_to_usd
+    - installment_installment_number
+    - installment_id
+    - installment_due_date
+    - installment_percentage
+    - installment_amount
+    - installment_status
+    - line_item_line_number
+    - line_item_item_category
+    - line_item_hazmat
+    - line_item_id
+    - line_item_product_code
+    - line_item_manufacturer_part_number
+    - line_item_product_name
+    - line_item_product_family
+    - line_item_unit_of_measure
+    - line_item_quantity
+    - line_item_unit_price
+    - line_item_line_discount_amount
+    - line_item_line_tax_rate
+    - line_item_line_tax_amount
+    - line_item_extended_net_amount
+    - line_item_is_taxable
+    - line_item_is_drop_ship
+    - line_item_requested_ship_date
+    - line_item_unit_weight_kg
+    - line_item_dimensions_cm
+    - line_item_country_of_origin
+    - line_item_harmonized_tariff_code
+    - line_item_allocated_warehouse_id
+    - line_item_bin_location
+    - line_item_lot_number
+    - line_item_allocation_status
+    - line_item_allocation_timestamp
+    - line_item_warranty_plan_code
+    - line_item_warranty_duration_months
+    - line_item_includes_onsite_response
+    - is_export_controlled
+    - export_control_classification
+    - sanctions_screening_passed
+    - screening_reference_id
+    - contains_pii
+    - pii_classification
+    - gdpr_applicable
+    - retention_policy_years
+    - audit_event_sequence
+    - audit_event_event_id
+    - audit_event_event_type
+    - audit_event_event_timestamp
+    - audit_event_actor_id
+    - audit_event_event_notes
+    accepted_values:
+      order_type:
+      - B2B_ENTERPRISE
+      version:
+      - '2.4'
+      currency_code:
+      - USD
+      channel:
+      - EDI_850
+      region:
+      - NA-EAST
+      customer_customer_tier:
+      - PLATINUM
+      customer_tax_exempt:
+      - 'false'
+      customer_kyc_verified:
+      - 'true'
+      billing_address_address_type:
+      - CORPORATE_HQ
+      shipping_address_address_type:
+      - DATA_CENTER_SITE
+      carrier_routing_carrier_code:
+      - FEDEX_FREIGHT
+      carrier_routing_service_level:
+      - PRIORITY_FREIGHT
+      payment_details_payment_method:
+      - CORPORATE_ACH
+      installment_installment_number:
+      - '1'
+      - '2'
+      line_item_line_number:
+      - '10'
+      - '20'
+      - '30'
+      - '40'
+      - '50'
+      line_item_item_category:
+      - HARDWARE_COMPUTE
+      - NETWORKING_SWITCH
+      - OPTICS_CABLES
+      - POWER_BACKUP
+      - STORAGE_NVME
+      line_item_hazmat:
+      - 'false'
+      - 'true'
+      audit_event_sequence:
+      - '1'
+      - '2'
+      - '3'
+    numeric_ranges:
+    - column: version
+      min_value: 0.0
+      max_value: null
+    - column: priority_score
+      min_value: 0.0
+      max_value: null
+    - column: total_amount
+      min_value: 0.0
+      max_value: null
+    - column: discount_amount
+      min_value: 0.0
+      max_value: null
+    - column: tax_amount
+      min_value: 0.0
+      max_value: null
+    - column: freight_amount
+      min_value: 0.0
+      max_value: null
+    - column: net_payable_amount
+      min_value: 0.0
+      max_value: null
+    - column: distribution_channel
+      min_value: 0.0
+      max_value: null
+    - column: division_code
+      min_value: 0.0
+      max_value: null
+    - column: discount_tier_percentage
+      min_value: 0.0
+      max_value: null
+    - column: commission_rate
+      min_value: 0.0
+      max_value: null
+    - column: duns_number
+      min_value: 0.0
+      max_value: null
+    - column: credit_limit
+      min_value: 0.0
+      max_value: null
+    - column: current_balance
+      min_value: 0.0
+      max_value: null
+    - column: available_credit
+      min_value: 0.0
+      max_value: null
+    - column: payment_terms_days
+      min_value: 0.0
+      max_value: null
+    - column: billing_address_postal_code
+      min_value: 0.0
+      max_value: null
+    - column: geo_coordinates_latitude
+      min_value: 0.0
+      max_value: null
+    - column: shipping_address_postal_code
+      min_value: 0.0
+      max_value: null
+    - column: geo_coordinates_latitude_2
+      min_value: 0.0
+      max_value: null
+    - column: estimated_transit_days
+      min_value: 0.0
+      max_value: null
+    - column: total_pallet_count
+      min_value: 0.0
+      max_value: null
+    - column: total_gross_weight_kg
+      min_value: 0.0
+      max_value: null
+    - column: insurance_coverage_amount
+      min_value: 0.0
+      max_value: null
+    - column: exchange_rate_to_usd
+      min_value: 0.0
+      max_value: null
+    - column: installment_installment_number
+      min_value: 0.0
+      max_value: null
+    - column: installment_percentage
+      min_value: 0.0
+      max_value: null
+    - column: installment_amount
+      min_value: 0.0
+      max_value: null
+    - column: line_item_line_number
+      min_value: 0.0
+      max_value: null
+    - column: line_item_quantity
+      min_value: 0.0
+      max_value: null
+    - column: line_item_unit_price
+      min_value: 0.0
+      max_value: null
+    - column: line_item_line_discount_amount
+      min_value: 0.0
+      max_value: null
+    - column: line_item_line_tax_rate
+      min_value: 0.0
+      max_value: null
+    - column: line_item_line_tax_amount
+      min_value: 0.0
+      max_value: null
+    - column: line_item_extended_net_amount
+      min_value: 0.0
+      max_value: null
+    - column: line_item_unit_weight_kg
+      min_value: 0.0
+      max_value: null
+    - column: line_item_warranty_duration_months
+      min_value: 0.0
+      max_value: null
+    - column: retention_policy_years
+      min_value: 0.0
+      max_value: null
+    - column: audit_event_sequence
+      min_value: 0.0
+      max_value: null
+    on_failure: Hold failed records in O3 Quarantine

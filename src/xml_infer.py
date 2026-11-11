@@ -140,6 +140,11 @@ def build_snowflake_xml_expr(
             expr = f"XMLGET({expr}, '{p}')"
         raw_val = f'{expr}:"$"::VARCHAR'
 
+    return cast_varchar_expr(raw_val, sf_type)
+
+
+def cast_varchar_expr(raw_val: str, sf_type: str) -> str:
+    """Wrap a VARCHAR-valued Snowflake expression in the TRY_ cast matching the target type."""
     if sf_type == "NUMBER(18,0)":
         return f"TRY_TO_NUMBER({raw_val}, 18, 0)"
     if sf_type == "NUMBER(18,4)":
@@ -191,7 +196,8 @@ def infer_schema_from_xml_files(dataset: str, xml_files: list[Path]) -> DatasetM
         # Count child tag frequencies under this parent to detect arrays
         tag_counts = Counter(child.tag for child in children)
         for tag, count in tag_counts.items():
-            if count > 1:
+            # `<X_record>` elements inside an `<X_set>` wrapper are always child entities, even when a sample has a single one
+            if count > 1 or tag.lower().endswith("_record"):
                 repeating_container_paths.add(f"{current_path}/{tag}")
 
         for child in children:
@@ -207,23 +213,54 @@ def infer_schema_from_xml_files(dataset: str, xml_files: list[Path]) -> DatasetM
     assert root_tag is not None
     root_element = f"/{root_tag}"
 
-    fields: list[FieldMapping] = []
+    # Identify primary flatten_path (prefer LineItem if multiple repeating arrays exist)
+    primary_flatten_path: str | None = None
+    if repeating_container_paths:
+        line_item_paths = [p for p in repeating_container_paths if p.lower().endswith("lineitem")]
+        primary_flatten_path = (
+            line_item_paths[0]
+            if line_item_paths
+            else sorted(repeating_container_paths, key=len)[0]
+        )
+
+    # Pre-count base column names to disambiguate any hierarchical leaf collisions (e.g. BillingAddress/City vs ShippingAddress/City)
+    raw_col_counts: Counter[str] = Counter()
+    temp_meta: list[tuple[str, bool, str | None, bool, str]] = []
     for xpath in ordered_xpaths:
         is_attr = xpath_is_attr.get(xpath, False)
-        files_seen = len(xpath_files_present[xpath])
-        confidence = round(files_seen / total_files, 2)
-        required = files_seen == total_files
-
         flatten_path: str | None = None
         for rep_path in sorted(repeating_container_paths, key=len, reverse=True):
             if xpath.startswith(rep_path + "/") or xpath == rep_path:
                 flatten_path = rep_path
                 break
         is_array = flatten_path is not None
+        base_col = build_column_name(xpath, root_tag, flatten_path)
+        raw_col_counts[base_col] += 1
+        temp_meta.append((xpath, is_attr, flatten_path, is_array, base_col))
+
+    used_col_names: set[str] = set()
+    fields: list[FieldMapping] = []
+    for xpath, is_attr, flatten_path, is_array, base_col in temp_meta:
+        files_seen = len(xpath_files_present[xpath])
+        confidence = round(files_seen / total_files, 2)
+        required = files_seen == total_files
+
+        col_name = base_col
+        if raw_col_counts[base_col] > 1 or col_name in used_col_names:
+            parts = [p for p in xpath.strip("/").split("/") if p and not p.startswith("@")]
+            if len(parts) >= 2:
+                parent_prefix = to_snake_case(parts[-2])
+                if not col_name.startswith(parent_prefix):
+                    col_name = f"{parent_prefix}_{col_name}"
+            idx = 2
+            orig_col = col_name
+            while col_name in used_col_names:
+                col_name = f"{orig_col}_{idx}"
+                idx += 1
+        used_col_names.add(col_name)
 
         values = xpath_values[xpath]
         sf_type = resolve_narrowest_snowflake_type(values)
-        col_name = build_column_name(xpath, root_tag, flatten_path)
         xml_expr = build_snowflake_xml_expr(
             xpath=xpath,
             root_tag=root_tag,
@@ -258,17 +295,37 @@ def infer_schema_from_xml_files(dataset: str, xml_files: list[Path]) -> DatasetM
             )
         )
 
-    # Identify business keys: required ID fields at root level (+ first array code if array exists)
+    # Identify business keys: required ID fields at root level (+ first primary array code/id if array exists)
     business_keys: list[str] = []
     for f in fields:
         if not f.is_array and f.required and f.column.endswith("_id"):
             business_keys.append(f.column)
             break
+    if not business_keys:
+        # Prefer a required scalar element whose observed values are all distinct (natural identifier such as CUSIP)
+        candidates = [
+            f
+            for f in fields
+            if (not f.is_array or f.flatten_path == primary_flatten_path)
+            and not f.is_attribute
+            and f.required
+            and len(xpath_values.get(f.xpath, [])) > 1
+            and len(set(xpath_values[f.xpath])) / len(xpath_values[f.xpath]) >= 0.95
+            and not re.search(r"(_dt|_ts|_date|_time|_timestamp)$", f.column)
+        ]
+        id_like = [f for f in candidates if re.search(r"(cusip|isin|sedol|ticker|id|key)", f.column)]
+        if id_like:
+            business_keys.append(id_like[0].column)
     if not business_keys and fields:
         business_keys.append(fields[0].column)
-    # If there is an array grain, include the first array identifier in the staging/curated grain key
+    # If there is an array grain, include the first array identifier from the primary flatten path
     for f in fields:
-        if f.is_array and ("code" in f.column or "id" in f.column):
+        if (
+            f.is_array
+            and (primary_flatten_path is None or f.flatten_path == primary_flatten_path)
+            and not f.is_attribute
+            and ("code" in f.column or "id" in f.column)
+        ):
             business_keys.append(f.column)
             break
 
@@ -335,27 +392,62 @@ def flatten_xml_to_rows(xml_text: str, mapping: DatasetMapping) -> list[dict[str
     if not array_fields:
         return [base_row]
 
-    # Group by flatten_path (e.g. /Order/LineItems/LineItem)
-    flatten_path = array_fields[0].flatten_path
-    assert flatten_path is not None
-    fp_parts = [p for p in flatten_path.strip("/").split("/") if p]
+    # Group by primary flatten_path (prefer LineItem when multiple repeating arrays exist)
+    distinct_fps = sorted({f.flatten_path for f in array_fields if f.flatten_path}, key=len)
+    line_item_fps = [fp for fp in distinct_fps if fp.lower().endswith("lineitem")]
+    primary_fp = line_item_fps[0] if line_item_fps else distinct_fps[0]
+
+    # Pre-populate secondary array fields on base_row using their first element (so no field is left None)
+    secondary_array_fields = [f for f in array_fields if f.flatten_path != primary_fp]
+    for saf in secondary_array_fields:
+        assert saf.flatten_path is not None
+        sfp_parts = [p for p in saf.flatten_path.strip("/").split("/") if p]
+        rel_sfp = "/".join(sfp_parts[1:]) if sfp_parts[0] == root_prefix else "/".join(sfp_parts)
+        sec_nodes = root.findall(rel_sfp)
+        if not sec_nodes:
+            base_row[saf.column] = None
+            continue
+        first_node = sec_nodes[0]
+        af_parts = [p for p in saf.xpath.strip("/").split("/") if p]
+        rel_item_parts = af_parts[len(sfp_parts) :]
+        if saf.is_attribute:
+            attr_name = rel_item_parts[-1][1:]
+            sub = first_node
+            for p in rel_item_parts[:-1]:
+                sub = sub.find(p) if sub is not None else None
+            base_row[saf.column] = sub.attrib.get(attr_name) if sub is not None else None
+        else:
+            sub = first_node
+            for p in rel_item_parts:
+                sub = sub.find(p) if sub is not None else None
+            base_row[saf.column] = (sub.text or "").strip() if (sub is not None and sub.text) else None
+
+    primary_array_fields = [f for f in array_fields if f.flatten_path == primary_fp]
+    fp_parts = [p for p in primary_fp.strip("/").split("/") if p]
     rel_fp = "/".join(fp_parts[1:]) if fp_parts[0] == root_prefix else "/".join(fp_parts)
     array_nodes = root.findall(rel_fp)
     if not array_nodes:
         row = dict(base_row)
-        for af in array_fields:
+        for af in primary_array_fields:
             row[af.column] = None
         return [row]
 
     rows: list[dict[str, Any]] = []
     for item_elem in array_nodes:
         row = dict(base_row)
-        for af in array_fields:
+        for af in primary_array_fields:
             af_parts = [p for p in af.xpath.strip("/").split("/") if p]
             rel_item_parts = af_parts[len(fp_parts) :]
-            sub = item_elem
-            for p in rel_item_parts:
-                sub = sub.find(p) if sub is not None else None
-            row[af.column] = (sub.text or "").strip() if (sub is not None and sub.text) else None
+            if af.is_attribute:
+                attr_name = rel_item_parts[-1][1:]
+                sub = item_elem
+                for p in rel_item_parts[:-1]:
+                    sub = sub.find(p) if sub is not None else None
+                row[af.column] = sub.attrib.get(attr_name) if sub is not None else None
+            else:
+                sub = item_elem
+                for p in rel_item_parts:
+                    sub = sub.find(p) if sub is not None else None
+                row[af.column] = (sub.text or "").strip() if (sub is not None and sub.text) else None
         rows.append(row)
     return rows

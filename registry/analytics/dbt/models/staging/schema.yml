@@ -1,0 +1,234 @@
+version: 2
+sources:
+- name: snowflake_dw
+  database: ENTERPRISE_DW
+  schema: STAGING
+  tables:
+  - name: staging_analytics
+  - name: staging_analytics_asset
+  - name: staging_analytics_country_classification
+  - name: staging_analytics_cusip2
+  - name: staging_analytics_cusip_alias
+models:
+- name: stg_assets
+  description: Staging model for document entity `assets`
+  columns:
+  - name: assets_pk
+    description: Surrogate primary key for assets
+    tests:
+    - unique
+    - not_null
+  - name: asof_date
+    description: 'Extracted from XML XPath: /ASSETS/@ASOF_DATE'
+    tests:
+    - not_null
+  - name: create_date
+    description: 'Extracted from XML XPath: /ASSETS/@CREATE_DATE'
+    tests:
+    - not_null
+  - name: records
+    description: 'Extracted from XML XPath: /ASSETS/@RECORDS'
+    tests:
+    - not_null
+  - name: esg_rating
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/ESG_RATING'
+  - name: rating_agency
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/RATING_AGENCY'
+  - name: seniority_type
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/SENIORITY_TYPE'
+- name: stg_asset
+  description: Staging model for record entity `asset`
+  columns:
+  - name: asset_pk
+    description: Surrogate primary key for asset
+    tests:
+    - unique
+    - not_null
+  - name: assets_fk
+    description: Foreign key referencing stg_assets.assets_pk
+    tests:
+    - not_null
+    - relationships:
+        to: ref('stg_assets')
+        field: assets_pk
+  - name: class_val
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/CLASS'
+    tests:
+    - not_null
+  - name: accrual_dt
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/ACCRUAL_DT'
+    tests:
+    - not_null
+  - name: amt_isu
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/AMT_ISU'
+    tests:
+    - not_null
+  - name: announce_dt
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/ANNOUNCE_DT'
+    tests:
+    - not_null
+  - name: calc_type
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/CALC_TYPE'
+    tests:
+    - not_null
+  - name: call_mandatory
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/CALL_MANDATORY'
+    tests:
+    - not_null
+  - name: call_type
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/CALL_TYPE'
+    tests:
+    - not_null
+  - name: cd_instmt_type
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/CD_INSTMT_TYPE'
+    tests:
+    - not_null
+  - name: change_dt
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/CHANGE_DT'
+    tests:
+    - not_null
+  - name: compound_flag
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/COMPOUND_FLAG'
+    tests:
+    - not_null
+  - name: country
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/COUNTRY'
+    tests:
+    - not_null
+  - name: coupon_fix
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/COUPON_FIX'
+    tests:
+    - not_null
+  - name: coup_freq
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/COUP_FREQ'
+    tests:
+    - not_null
+  - name: cpn_type
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/CPN_TYPE'
+    tests:
+    - not_null
+  - name: currency
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/CURRENCY'
+    tests:
+    - not_null
+  - name: cusip
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/CUSIP'
+    tests:
+    - not_null
+  - name: cusip_type
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/CUSIP_TYPE'
+    tests:
+    - not_null
+  - name: date_conv
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/DATE_CONV'
+    tests:
+    - not_null
+  - name: desc_instmt
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/DESC_INSTMT'
+    tests:
+    - not_null
+  - name: end_adj_flag
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/END_ADJ_FLAG'
+    tests:
+    - not_null
+  - name: first_pay_dt
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/FIRST_PAY_DT'
+    tests:
+    - not_null
+  - name: first_settle_dt
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/FIRST_SETTLE_DT'
+    tests:
+    - not_null
+  - name: flag_144_a
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/FLAG_144A'
+    tests:
+    - not_null
+  - name: flag_reg_s
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/FLAG_REG_S'
+    tests:
+    - not_null
+  - name: issue_price
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/ISSUE_PRICE'
+    tests:
+    - not_null
+  - name: maturity_dt
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/MATURITY_DT'
+    tests:
+    - not_null
+- name: stg_country_classification
+  description: Staging model for child entity `country_classification`
+  columns:
+  - name: country_classification_pk
+    description: Surrogate primary key for country_classification
+    tests:
+    - unique
+    - not_null
+  - name: asset_fk
+    description: Foreign key referencing stg_asset.asset_pk
+    tests:
+    - not_null
+    - relationships:
+        to: ref('stg_asset')
+        field: asset_pk
+  - name: cntry
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/COUNTRY_CLASSIFICATION_record/CNTRY'
+    tests:
+    - not_null
+  - name: cntry_src
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/COUNTRY_CLASSIFICATION_record/CNTRY_SRC'
+    tests:
+    - not_null
+  - name: cntry_type
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/COUNTRY_CLASSIFICATION_record/CNTRY_TYPE'
+    tests:
+    - not_null
+- name: stg_cusip2
+  description: Staging model for child entity `cusip2`
+  columns:
+  - name: cusip2_pk
+    description: Surrogate primary key for cusip2
+    tests:
+    - unique
+    - not_null
+  - name: asset_fk
+    description: Foreign key referencing stg_asset.asset_pk
+    tests:
+    - not_null
+    - relationships:
+        to: ref('stg_asset')
+        field: asset_pk
+  - name: code
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/CUSIP2_set/CUSIP2_record/CODE'
+    tests:
+    - not_null
+  - name: identifier
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/CUSIP2_set/CUSIP2_record/IDENTIFIER'
+    tests:
+    - not_null
+- name: stg_cusip_alias
+  description: Staging model for child entity `cusip_alias`
+  columns:
+  - name: cusip_alias_pk
+    description: Surrogate primary key for cusip_alias
+    tests:
+    - unique
+    - not_null
+  - name: asset_fk
+    description: Foreign key referencing stg_asset.asset_pk
+    tests:
+    - not_null
+    - relationships:
+        to: ref('stg_asset')
+        field: asset_pk
+  - name: code
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/CUSIP_ALIAS_record/CODE'
+    tests:
+    - not_null
+  - name: identifier
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/CUSIP_ALIAS_record/IDENTIFIER'
+    tests:
+    - not_null
+  - name: purpose
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/CUSIP_ALIAS_record/PURPOSE'
+    tests:
+    - not_null

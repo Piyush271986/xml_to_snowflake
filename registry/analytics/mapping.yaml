@@ -1,0 +1,898 @@
+dataset: analytics
+version: 0.3.0
+source: sample_inference
+root_element: /ASSETS
+business_keys:
+- asset_cusip
+targets:
+  raw_table: raw_analytics
+  staging_table: staging_analytics
+  curated_table: curated_analytics
+  quarantine_table: quarantine_analytics
+  dq_results_table: dq_results_analytics
+fields:
+- xpath: /ASSETS/@ASOF_DATE
+  column: asof_date
+  snowflake_type: VARCHAR
+  xml_expr: raw_xml:"@ASOF_DATE"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - 5/11/2026
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/@CREATE_DATE
+  column: create_date
+  snowflake_type: VARCHAR
+  xml_expr: raw_xml:"@CREATE_DATE"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - 5/11/2026
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/@RECORDS
+  column: records
+  snowflake_type: NUMBER(18,0)
+  xml_expr: raw_xml:"@RECORDS"::NUMBER(18,0)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - 002191
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/CLASS
+  column: asset_class
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'BND_CORP'), 'CLASS'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - BND_CORP
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/ACCRUAL_DT
+  column: asset_accrual_dt
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'BND_CORP'), 'ACCRUAL_DT'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 7/4/2023
+  - 4/8/2023
+  - 9/19/2022
+  - 6/10/2022
+  - 10/2/2023
+  - 9/27/2022
+  - 3/8/2023
+  - 12/24/2025
+  - 7/1/2022
+  - 3/20/2022
+  - 1/1/2022
+  - 5/2/2023
+  - 2/13/2025
+  - 11/1/2025
+  - 4/3/2022
+  - 1/27/2023
+  - 10/22/2024
+  - 1/25/2023
+  - 2/4/2022
+  - 1/20/2022
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/AMT_ISU
+  column: asset_amt_isu
+  snowflake_type: NUMBER(18,0)
+  xml_expr: TRY_TO_NUMBER(XMLGET(XMLGET(item.value, 'BND_CORP'), 'AMT_ISU'):"$"::VARCHAR,
+    18, 0)
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '100000000'
+  - '250000000'
+  - '1500000000'
+  - '1000000000'
+  - '525000000'
+  - '50000000'
+  - '750000000'
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/ANNOUNCE_DT
+  column: asset_announce_dt
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'BND_CORP'), 'ANNOUNCE_DT'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 10/3/2024
+  - 12/10/2025
+  - 12/18/2022
+  - 6/2/2022
+  - 3/24/2025
+  - 5/20/2024
+  - 5/19/2023
+  - 11/26/2023
+  - 9/22/2024
+  - 12/12/2025
+  - 7/9/2025
+  - 7/4/2025
+  - 8/6/2023
+  - 5/9/2022
+  - 5/8/2023
+  - 9/15/2025
+  - 10/6/2023
+  - 6/9/2022
+  - 5/15/2022
+  - 10/19/2022
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/CALC_TYPE
+  column: asset_calc_type
+  snowflake_type: NUMBER(18,0)
+  xml_expr: TRY_TO_NUMBER(XMLGET(XMLGET(item.value, 'BND_CORP'), 'CALC_TYPE'):"$"::VARCHAR,
+    18, 0)
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '5'
+  - '2'
+  - '1'
+  - '3'
+  - '4'
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/CALL_MANDATORY
+  column: asset_call_mandatory
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'BND_CORP'), 'CALL_MANDATORY'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - N
+  - Y
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/CALL_TYPE
+  column: asset_call_type
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'BND_CORP'), 'CALL_TYPE'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - B
+  - A
+  - N
+  - E
+  - X
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/CD_INSTMT_TYPE
+  column: asset_cd_instmt_type
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'BND_CORP'), 'CD_INSTMT_TYPE'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - SECURED_NOTE
+  - MTN
+  - SUB_DEBT
+  - CORP_BOND
+  - UNKNOWN
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/CHANGE_DT
+  column: asset_change_dt
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'BND_CORP'), 'CHANGE_DT'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 8/9/2026 23:35:43.118
+  - 10/11/2026 10:23:33.772
+  - 8/24/2026 10:36:21.366
+  - 5/10/2026 22:48:41.532
+  - 4/28/2026 18:12:14.194
+  - 11/15/2026 18:23:37.612
+  - 8/24/2026 22:30:18.747
+  - 12/25/2026 23:26:41.704
+  - 5/1/2026 11:12:37.247
+  - 1/17/2026 21:54:38.693
+  - 8/18/2026 13:28:31.486
+  - 10/21/2026 21:51:51.349
+  - 9/24/2026 22:44:11.693
+  - 7/9/2026 10:26:30.856
+  - 3/8/2026 20:58:21.893
+  - 1/24/2026 16:48:37.308
+  - 5/7/2026 23:26:33.289
+  - 1/14/2026 18:13:20.539
+  - 12/3/2026 18:52:40.160
+  - 9/2/2026 21:38:55.839
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/COMPOUND_FLAG
+  column: asset_compound_flag
+  snowflake_type: NUMBER(18,0)
+  xml_expr: TRY_TO_NUMBER(XMLGET(XMLGET(item.value, 'BND_CORP'), 'COMPOUND_FLAG'):"$"::VARCHAR,
+    18, 0)
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '1'
+  - '0'
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/COUNTRY
+  column: asset_country
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'BND_CORP'), 'COUNTRY'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - ES
+  - IN
+  - FR
+  - US
+  - JP
+  - AU
+  - NL
+  - DE
+  - IT
+  - SG
+  - GB
+  - CH
+  - CA
+  - BR
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/@SIZE
+  column: country_classification_set_size
+  snowflake_type: NUMBER(18,0)
+  xml_expr: raw_xml:"@SIZE"::NUMBER(18,0)
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - '2'
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/COUNTRY_CLASSIFICATION_record/CNTRY
+  column: country_classification_record_cntry
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(item.value, 'CNTRY'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/COUNTRY_CLASSIFICATION_record
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - ES
+  - IN
+  - FR
+  - US
+  - JP
+  - AU
+  - NL
+  - DE
+  - IT
+  - SG
+  - GB
+  - CH
+  - CA
+  - BR
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/COUNTRY_CLASSIFICATION_record/CNTRY_SRC
+  column: country_classification_record_cntry_src
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(item.value, 'CNTRY_SRC'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/COUNTRY_CLASSIFICATION_record
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - M
+  - L
+  - IDX
+  - B
+  - R
+  - ISO
+  - NL
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/COUNTRY_CLASSIFICATION_record/CNTRY_TYPE
+  column: country_classification_record_cntry_type
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(item.value, 'CNTRY_TYPE'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/COUNTRY_CLASSIFICATION_record
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - INCORP
+  - RISK
+  - DOM
+  - LEGAL
+  - IDX
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/COUPON_FIX
+  column: asset_coupon_fix
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(XMLGET(item.value, 'BND_CORP'), 'COUPON_FIX'):"$"::VARCHAR,
+    18, 4)
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '2.861'
+  - '7.020'
+  - '6.668'
+  - '4.899'
+  - '9.058'
+  - '6.445'
+  - '8.425'
+  - '9.901'
+  - '7.471'
+  - '2.949'
+  - '8.921'
+  - '2.699'
+  - '11.061'
+  - '10.416'
+  - '11.769'
+  - '2.984'
+  - '11.005'
+  - '11.818'
+  - '4.487'
+  - '6.171'
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/COUP_FREQ
+  column: asset_coup_freq
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'BND_CORP'), 'COUP_FREQ'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - Q
+  - S
+  - A
+  - M
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/CPN_TYPE
+  column: asset_cpn_type
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'BND_CORP'), 'CPN_TYPE'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - S
+  - F
+  - V
+  - Z
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/CURRENCY
+  column: asset_currency
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'BND_CORP'), 'CURRENCY'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - CAD
+  - JPY
+  - USD
+  - GBP
+  - AUD
+  - EUR
+  - CHF
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/CUSIP
+  column: asset_cusip
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'BND_CORP'), 'CUSIP'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 4484AA7
+  - 1051GAA6
+  - 8236AA4
+  - 5893GAA2
+  - 1536GAA9
+  - 7835BA8
+  - 7070BB5
+  - 5442BB7
+  - 5876GAA4
+  - 8814GA9
+  - 9394AA3
+  - 6505AA1
+  - 1747AC1
+  - 7636AC5
+  - 4793GAA6
+  - 3449GA7
+  - 6379GA6
+  - 9658BA5
+  - 1487AA9
+  - 6558BA4
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/CUSIP2_set/@SIZE
+  column: cusip2_set_size
+  snowflake_type: NUMBER(18,0)
+  xml_expr: raw_xml:"@SIZE"::NUMBER(18,0)
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - '5'
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/CUSIP2_set/CUSIP2_record/CODE
+  column: cusip2_record_code
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(item.value, 'CODE'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET/BND_CORP/CUSIP2_set/CUSIP2_record
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - A
+  - C
+  - I
+  - R
+  - W
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/CUSIP2_set/CUSIP2_record/IDENTIFIER
+  column: cusip2_record_identifier
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(item.value, 'IDENTIFIER'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET/BND_CORP/CUSIP2_set/CUSIP2_record
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 4484AA7
+  - B459447
+  - ES6314320599
+  - '0x04befac4cfc00ac3'
+  - A397T83
+  - 1051GAA6
+  - B798695
+  - IN2814053028
+  - '0x044e5125cfc00ac9'
+  - A682T32
+  - 8236AA4
+  - C994766
+  - FR9072197917
+  - '0x01de0abbcfc00ac3'
+  - A112T76
+  - 5893GAA2
+  - D232852
+  - US8623685431
+  - '0x0461db13cfc00ac3'
+  - A649T12
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/@SIZE
+  column: cusip_alias_set_size
+  snowflake_type: NUMBER(18,0)
+  xml_expr: raw_xml:"@SIZE"::NUMBER(18,0)
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - '1'
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/CUSIP_ALIAS_record/CODE
+  column: cusip_alias_record_code
+  snowflake_type: NUMBER(18,0)
+  xml_expr: TRY_TO_NUMBER(XMLGET(item.value, 'CODE'):"$"::VARCHAR, 18, 0)
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/CUSIP_ALIAS_record
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '8147'
+  - '8123'
+  - '8196'
+  - '8404'
+  - '8188'
+  - '8073'
+  - '8602'
+  - '8999'
+  - '8774'
+  - '8424'
+  - '8430'
+  - '8267'
+  - '8565'
+  - '8241'
+  - '8701'
+  - '8796'
+  - '8748'
+  - '8370'
+  - '8552'
+  - '8301'
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/CUSIP_ALIAS_record/IDENTIFIER
+  column: cusip_alias_record_identifier
+  snowflake_type: NUMBER(18,0)
+  xml_expr: TRY_TO_NUMBER(XMLGET(item.value, 'IDENTIFIER'):"$"::VARCHAR, 18, 0)
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/CUSIP_ALIAS_record
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '661346022'
+  - '105586016'
+  - '431352304'
+  - '929012866'
+  - '178293072'
+  - '586037867'
+  - '588674529'
+  - '417709519'
+  - '367459234'
+  - '606501641'
+  - '573406557'
+  - '957285016'
+  - '836659935'
+  - '413214304'
+  - '579352138'
+  - '993846255'
+  - '711309405'
+  - '430736241'
+  - '229997068'
+  - '873991595'
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/CUSIP_ALIAS_record/PURPOSE
+  column: cusip_alias_record_purpose
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(item.value, 'PURPOSE'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/CUSIP_ALIAS_record
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - DEBTID
+  - SECURITYID
+  - INTERNALREF
+  - LOANID
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/CUSIP_TYPE
+  column: asset_cusip_type
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'BND_CORP'), 'CUSIP_TYPE'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - ISIN
+  - VALOREN
+  - SEDOL
+  - CUSIP
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/DATE_CONV
+  column: asset_date_conv
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'BND_CORP'), 'DATE_CONV'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - ACTACT
+  - '30360'
+  - ACT360
+  - 30E360
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/DESC_INSTMT
+  column: asset_desc_instmt
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'BND_CORP'), 'DESC_INSTMT'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - APEX FINANCIAL CORP
+  - VORTEX PHARMACEUTICALS INC
+  - GLOBAL AUTO HOLDINGS PLC
+  - QUANTUM SEMICONDUCTOR NV
+  - ZENITH MARITIME CARRIERS
+  - TITAN ENERGY LOGISTICS LLC
+  - ORION DEFENSE AEROSPACE PLC
+  - BEACON REAL ESTATE TRUST
+  - SOLARIS INFRASTRUCTURE LTD
+  - NEXUS TELECOM GROUP SA
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/END_ADJ_FLAG
+  column: asset_end_adj_flag
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'BND_CORP'), 'END_ADJ_FLAG'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - Y
+  - N
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/FIRST_PAY_DT
+  column: asset_first_pay_dt
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'BND_CORP'), 'FIRST_PAY_DT'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 6/8/2026
+  - 7/4/2025
+  - 8/26/2025
+  - 11/2/2026
+  - 7/23/2026
+  - 12/21/2026
+  - 7/17/2026
+  - 8/7/2024
+  - 1/18/2026
+  - 1/26/2024
+  - 1/13/2024
+  - 7/7/2025
+  - 4/26/2024
+  - 6/14/2025
+  - 2/7/2025
+  - 10/24/2024
+  - 9/21/2024
+  - 2/18/2025
+  - 4/14/2024
+  - 3/9/2024
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/FIRST_SETTLE_DT
+  column: asset_first_settle_dt
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'BND_CORP'), 'FIRST_SETTLE_DT'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 2/6/2023
+  - 5/10/2023
+  - 10/28/2024
+  - 7/5/2024
+  - 6/26/2022
+  - 7/5/2023
+  - 3/6/2023
+  - 7/4/2023
+  - 7/7/2022
+  - 4/21/2024
+  - 10/10/2022
+  - 1/14/2024
+  - 12/5/2022
+  - 5/16/2024
+  - 7/20/2022
+  - 3/14/2022
+  - 7/17/2023
+  - 2/18/2023
+  - 3/15/2023
+  - 5/6/2022
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/FLAG_144A
+  column: asset_flag_144_a
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'BND_CORP'), 'FLAG_144A'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - N
+  - Y
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/FLAG_REG_S
+  column: asset_flag_reg_s
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'BND_CORP'), 'FLAG_REG_S'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - Y
+  - N
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/ISSUE_PRICE
+  column: asset_issue_price
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(XMLGET(item.value, 'BND_CORP'), 'ISSUE_PRICE'):"$"::VARCHAR,
+    18, 4)
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '99.830'
+  - '101.247'
+  - '99.241'
+  - '99.129'
+  - '100.771'
+  - '100.122'
+  - '98.377'
+  - '99.781'
+  - '98.752'
+  - '99.579'
+  - '98.512'
+  - '100.988'
+  - '102.419'
+  - '99.268'
+  - '98.524'
+  - '101.046'
+  - '102.304'
+  - '99.816'
+  - '100.511'
+  - '100.435'
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/MATURITY_DT
+  column: asset_maturity_dt
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'BND_CORP'), 'MATURITY_DT'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /ASSETS/ASSET
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 3/5/2029
+  - 7/27/2034
+  - 9/3/2029
+  - 10/25/2043
+  - 9/14/2042
+  - 11/7/2039
+  - 11/3/2044
+  - 3/2/2034
+  - 6/12/2030
+  - 3/25/2031
+  - 7/16/2037
+  - 2/21/2031
+  - 12/14/2041
+  - 6/26/2029
+  - 4/11/2037
+  - 1/16/2040
+  - 7/6/2033
+  - 4/9/2029
+  - 8/16/2038
+  - 10/26/2036
+  origin: c3_steward_override
+  added_in_version: 0.1.0
+- xpath: /ASSETS/ASSET/BND_CORP/ESG_RATING
+  column: esg_rating
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(raw_xml, 'ASSET'), 'BND_CORP'), 'ESG_RATING'):"$"::VARCHAR
+  required: false
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 0.1
+  sample_values:
+  - AAA
+  origin: c1_drift_additive
+  added_in_version: 0.2.0
+- xpath: /ASSETS/ASSET/BND_CORP/RATING_AGENCY
+  column: rating_agency
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(raw_xml, 'ASSET'), 'BND_CORP'), 'RATING_AGENCY'):"$"::VARCHAR
+  required: false
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 0.1
+  sample_values:
+  - MSCI
+  origin: c1_drift_additive
+  added_in_version: 0.2.0
+- xpath: /ASSETS/ASSET/BND_CORP/SENIORITY_TYPE
+  column: seniority_type
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(raw_xml, 'ASSET'), 'BND_CORP'), 'SENIORITY_TYPE'):"$"::VARCHAR
+  required: false
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 0.1
+  sample_values:
+  - SENIOR_SECURED
+  origin: c1_drift_additive
+  added_in_version: 0.3.0

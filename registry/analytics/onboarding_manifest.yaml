@@ -1,0 +1,13 @@
+dataset: analytics
+source_system: securities_analytics_feed
+adls_landing_path: abfss://landing@adls.dfs.core.windows.net/xml/analytics/
+onboarding_sample_dir: samples\analytics
+data_steward: data-steward@enterprise.io
+engineering_owner: data-eng@enterprise.io
+platform_oncall: platform-oncall@enterprise.io
+freshness_sla_hours: 24
+valid_sample_files:
+- analytics.xml
+quarantined_sample_files: []
+status: PROVISIONED
+created_at: '2026-11-11T14:03:01.916950+00:00'

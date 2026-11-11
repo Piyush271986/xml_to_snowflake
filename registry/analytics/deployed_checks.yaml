@@ -1,0 +1,151 @@
+dataset: analytics
+deployed_at: '2026-11-11T13:49:08.735164+00:00'
+gates:
+  G1_Files:
+    sits_between: D1 (ADLS) -> D2 (Raw)
+    checks:
+    - file_non_empty
+    - sha256_idempotency
+    - well_formed_xml
+    on_failure: Reject and hold in O3 Quarantine
+  G2_Contract:
+    sits_between: D2 (Raw) -> D3 (Typed Staging)
+    required_xpaths:
+    - /ASSETS/@ASOF_DATE
+    - /ASSETS/@CREATE_DATE
+    - /ASSETS/@RECORDS
+    - /ASSETS/ASSET/BND_CORP/CLASS
+    - /ASSETS/ASSET/BND_CORP/ACCRUAL_DT
+    - /ASSETS/ASSET/BND_CORP/AMT_ISU
+    - /ASSETS/ASSET/BND_CORP/ANNOUNCE_DT
+    - /ASSETS/ASSET/BND_CORP/CALC_TYPE
+    - /ASSETS/ASSET/BND_CORP/CALL_MANDATORY
+    - /ASSETS/ASSET/BND_CORP/CALL_TYPE
+    - /ASSETS/ASSET/BND_CORP/CD_INSTMT_TYPE
+    - /ASSETS/ASSET/BND_CORP/CHANGE_DT
+    - /ASSETS/ASSET/BND_CORP/COMPOUND_FLAG
+    - /ASSETS/ASSET/BND_CORP/COUNTRY
+    - /ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/@SIZE
+    - /ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/COUNTRY_CLASSIFICATION_record/CNTRY
+    - /ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/COUNTRY_CLASSIFICATION_record/CNTRY_SRC
+    - /ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/COUNTRY_CLASSIFICATION_record/CNTRY_TYPE
+    - /ASSETS/ASSET/BND_CORP/COUPON_FIX
+    - /ASSETS/ASSET/BND_CORP/COUP_FREQ
+    - /ASSETS/ASSET/BND_CORP/CPN_TYPE
+    - /ASSETS/ASSET/BND_CORP/CURRENCY
+    - /ASSETS/ASSET/BND_CORP/CUSIP
+    - /ASSETS/ASSET/BND_CORP/CUSIP2_set/@SIZE
+    - /ASSETS/ASSET/BND_CORP/CUSIP2_set/CUSIP2_record/CODE
+    - /ASSETS/ASSET/BND_CORP/CUSIP2_set/CUSIP2_record/IDENTIFIER
+    - /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/@SIZE
+    - /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/CUSIP_ALIAS_record/CODE
+    - /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/CUSIP_ALIAS_record/IDENTIFIER
+    - /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/CUSIP_ALIAS_record/PURPOSE
+    - /ASSETS/ASSET/BND_CORP/CUSIP_TYPE
+    - /ASSETS/ASSET/BND_CORP/DATE_CONV
+    - /ASSETS/ASSET/BND_CORP/DESC_INSTMT
+    - /ASSETS/ASSET/BND_CORP/END_ADJ_FLAG
+    - /ASSETS/ASSET/BND_CORP/FIRST_PAY_DT
+    - /ASSETS/ASSET/BND_CORP/FIRST_SETTLE_DT
+    - /ASSETS/ASSET/BND_CORP/FLAG_144A
+    - /ASSETS/ASSET/BND_CORP/FLAG_REG_S
+    - /ASSETS/ASSET/BND_CORP/ISSUE_PRICE
+    - /ASSETS/ASSET/BND_CORP/MATURITY_DT
+    type_assertions_count: 40
+    row_count_bounds:
+    - 2191
+    - 10955
+    on_failure: Hold in O3 Quarantine and send drift to C1
+  G3_Business:
+    sits_between: D3 (Typed Staging) -> D4 (Curated SCD2)
+    primary_keys:
+    - asset_cusip
+    not_null_columns:
+    - asof_date
+    - create_date
+    - records
+    - asset_class
+    - asset_accrual_dt
+    - asset_amt_isu
+    - asset_announce_dt
+    - asset_calc_type
+    - asset_call_mandatory
+    - asset_call_type
+    - asset_cd_instmt_type
+    - asset_change_dt
+    - asset_compound_flag
+    - asset_country
+    - country_classification_set_size
+    - country_classification_record_cntry
+    - country_classification_record_cntry_src
+    - country_classification_record_cntry_type
+    - asset_coupon_fix
+    - asset_coup_freq
+    - asset_cpn_type
+    - asset_currency
+    - asset_cusip
+    - cusip2_set_size
+    - cusip2_record_code
+    - cusip2_record_identifier
+    - cusip_alias_set_size
+    - cusip_alias_record_code
+    - cusip_alias_record_identifier
+    - cusip_alias_record_purpose
+    - asset_cusip_type
+    - asset_date_conv
+    - asset_desc_instmt
+    - asset_end_adj_flag
+    - asset_first_pay_dt
+    - asset_first_settle_dt
+    - asset_flag_144_a
+    - asset_flag_reg_s
+    - asset_issue_price
+    - asset_maturity_dt
+    accepted_values:
+      asof_date:
+      - 5/11/2026
+      create_date:
+      - 5/11/2026
+      records:
+      - 002191
+      country_classification_set_size:
+      - '2'
+      cusip2_set_size:
+      - '5'
+      cusip_alias_set_size:
+      - '1'
+    numeric_ranges:
+    - column: records
+      min_value: 0.0
+      max_value: null
+    - column: asset_amt_isu
+      min_value: 0.0
+      max_value: null
+    - column: asset_calc_type
+      min_value: 0.0
+      max_value: null
+    - column: asset_compound_flag
+      min_value: 0.0
+      max_value: null
+    - column: country_classification_set_size
+      min_value: 0.0
+      max_value: null
+    - column: asset_coupon_fix
+      min_value: 0.0
+      max_value: null
+    - column: cusip2_set_size
+      min_value: 0.0
+      max_value: null
+    - column: cusip_alias_set_size
+      min_value: 0.0
+      max_value: null
+    - column: cusip_alias_record_code
+      min_value: 0.0
+      max_value: null
+    - column: cusip_alias_record_identifier
+      min_value: 0.0
+      max_value: null
+    - column: asset_issue_price
+      min_value: 0.0
+      max_value: null
+    on_failure: Hold failed records in O3 Quarantine

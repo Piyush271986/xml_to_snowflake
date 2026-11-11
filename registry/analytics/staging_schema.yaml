@@ -1,0 +1,742 @@
+dataset: analytics
+version: 0.3.0
+layer: STAGE
+table_type: DYNAMIC_TABLE
+tables:
+- table_name: staging_analytics
+  entity: assets
+  parent_table: null
+  foreign_keys: []
+  layer: STAGE
+  table_type: DYNAMIC_TABLE
+  ingestion_or_refresh: DYNAMIC_TABLE_REFRESH
+  upstream_source: raw_analytics
+  target_lag: 5 minutes
+  warehouse: COMPUTE_WH
+  grain: One row per /ASSETS element
+  primary_keys:
+  - assets_pk
+  flatten_path: null
+  columns:
+  - name: assets_pk
+    snowflake_type: VARCHAR(32)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Surrogate primary key of assets (MD5 of file identity + element position)
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: asof_date
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/@ASOF_DATE
+    expression: r.raw_xml:"@ASOF_DATE"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: create_date
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/@CREATE_DATE
+    expression: r.raw_xml:"@CREATE_DATE"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: records
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /ASSETS/@RECORDS
+    expression: TRY_TO_NUMBER(r.raw_xml:"@RECORDS"::VARCHAR, 18, 0)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: esg_rating
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/ESG_RATING
+    expression: XMLGET(XMLGET(XMLGET(r.raw_xml, 'ASSET'), 'BND_CORP'), 'ESG_RATING'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: rating_agency
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/RATING_AGENCY
+    expression: XMLGET(XMLGET(XMLGET(r.raw_xml, 'ASSET'), 'BND_CORP'), 'RATING_AGENCY'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: seniority_type
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/SENIORITY_TYPE
+    expression: XMLGET(XMLGET(XMLGET(r.raw_xml, 'ASSET'), 'BND_CORP'), 'SENIORITY_TYPE'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _file_name
+    snowflake_type: VARCHAR(512)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _file_sha256
+    snowflake_type: VARCHAR(64)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _staged_ts
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+- table_name: staging_analytics_asset
+  entity: asset
+  parent_table: staging_analytics
+  foreign_keys:
+  - column: assets_fk
+    references_table: staging_analytics
+    references_column: assets_pk
+  layer: STAGE
+  table_type: DYNAMIC_TABLE
+  ingestion_or_refresh: DYNAMIC_TABLE_REFRESH
+  upstream_source: raw_analytics
+  target_lag: 5 minutes
+  warehouse: COMPUTE_WH
+  grain: One row per /ASSETS/ASSET element
+  primary_keys:
+  - asset_pk
+  flatten_path: /ASSETS/ASSET
+  columns:
+  - name: asset_pk
+    snowflake_type: VARCHAR(32)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Surrogate primary key of asset (MD5 of file identity + element position)
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: assets_fk
+    snowflake_type: VARCHAR(32)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Foreign key to assets.assets_pk
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: class_val
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/CLASS
+    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CLASS'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: accrual_dt
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/ACCRUAL_DT
+    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'ACCRUAL_DT'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: amt_isu
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/AMT_ISU
+    expression: TRY_TO_NUMBER(XMLGET(XMLGET(a1.value, 'BND_CORP'), 'AMT_ISU'):"$"::VARCHAR,
+      18, 0)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: announce_dt
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/ANNOUNCE_DT
+    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'ANNOUNCE_DT'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: calc_type
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/CALC_TYPE
+    expression: TRY_TO_NUMBER(XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CALC_TYPE'):"$"::VARCHAR,
+      18, 0)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: call_mandatory
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/CALL_MANDATORY
+    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CALL_MANDATORY'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: call_type
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/CALL_TYPE
+    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CALL_TYPE'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: cd_instmt_type
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/CD_INSTMT_TYPE
+    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CD_INSTMT_TYPE'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: change_dt
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/CHANGE_DT
+    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CHANGE_DT'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: compound_flag
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/COMPOUND_FLAG
+    expression: TRY_TO_NUMBER(XMLGET(XMLGET(a1.value, 'BND_CORP'), 'COMPOUND_FLAG'):"$"::VARCHAR,
+      18, 0)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: country
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/COUNTRY
+    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'COUNTRY'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: coupon_fix
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/COUPON_FIX
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(a1.value, 'BND_CORP'), 'COUPON_FIX'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: coup_freq
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/COUP_FREQ
+    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'COUP_FREQ'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: cpn_type
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/CPN_TYPE
+    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CPN_TYPE'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: currency
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/CURRENCY
+    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CURRENCY'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: cusip
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/CUSIP
+    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CUSIP'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: cusip_type
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/CUSIP_TYPE
+    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CUSIP_TYPE'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: date_conv
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/DATE_CONV
+    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'DATE_CONV'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: desc_instmt
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/DESC_INSTMT
+    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'DESC_INSTMT'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: end_adj_flag
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/END_ADJ_FLAG
+    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'END_ADJ_FLAG'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: first_pay_dt
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/FIRST_PAY_DT
+    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'FIRST_PAY_DT'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: first_settle_dt
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/FIRST_SETTLE_DT
+    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'FIRST_SETTLE_DT'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: flag_144_a
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/FLAG_144A
+    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'FLAG_144A'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: flag_reg_s
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/FLAG_REG_S
+    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'FLAG_REG_S'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: issue_price
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/ISSUE_PRICE
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(a1.value, 'BND_CORP'), 'ISSUE_PRICE'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: maturity_dt
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/MATURITY_DT
+    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'MATURITY_DT'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _file_name
+    snowflake_type: VARCHAR(512)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _file_sha256
+    snowflake_type: VARCHAR(64)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _staged_ts
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+- table_name: staging_analytics_country_classification
+  entity: country_classification
+  parent_table: staging_analytics_asset
+  foreign_keys:
+  - column: asset_fk
+    references_table: staging_analytics_asset
+    references_column: asset_pk
+  layer: STAGE
+  table_type: DYNAMIC_TABLE
+  ingestion_or_refresh: DYNAMIC_TABLE_REFRESH
+  upstream_source: raw_analytics
+  target_lag: 5 minutes
+  warehouse: COMPUTE_WH
+  grain: One row per /ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/COUNTRY_CLASSIFICATION_record
+    element
+  primary_keys:
+  - country_classification_pk
+  flatten_path: /ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/COUNTRY_CLASSIFICATION_record
+  columns:
+  - name: country_classification_pk
+    snowflake_type: VARCHAR(32)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Surrogate primary key of country_classification (MD5 of file identity
+      + element position)
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: asset_fk
+    snowflake_type: VARCHAR(32)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Foreign key to asset.asset_pk
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: cntry
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/COUNTRY_CLASSIFICATION_record/CNTRY
+    expression: XMLGET(a2.value, 'CNTRY'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: cntry_src
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/COUNTRY_CLASSIFICATION_record/CNTRY_SRC
+    expression: XMLGET(a2.value, 'CNTRY_SRC'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: cntry_type
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/COUNTRY_CLASSIFICATION_record/CNTRY_TYPE
+    expression: XMLGET(a2.value, 'CNTRY_TYPE'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _file_name
+    snowflake_type: VARCHAR(512)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _file_sha256
+    snowflake_type: VARCHAR(64)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _staged_ts
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+- table_name: staging_analytics_cusip2
+  entity: cusip2
+  parent_table: staging_analytics_asset
+  foreign_keys:
+  - column: asset_fk
+    references_table: staging_analytics_asset
+    references_column: asset_pk
+  layer: STAGE
+  table_type: DYNAMIC_TABLE
+  ingestion_or_refresh: DYNAMIC_TABLE_REFRESH
+  upstream_source: raw_analytics
+  target_lag: 5 minutes
+  warehouse: COMPUTE_WH
+  grain: One row per /ASSETS/ASSET/BND_CORP/CUSIP2_set/CUSIP2_record element
+  primary_keys:
+  - cusip2_pk
+  flatten_path: /ASSETS/ASSET/BND_CORP/CUSIP2_set/CUSIP2_record
+  columns:
+  - name: cusip2_pk
+    snowflake_type: VARCHAR(32)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Surrogate primary key of cusip2 (MD5 of file identity + element position)
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: asset_fk
+    snowflake_type: VARCHAR(32)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Foreign key to asset.asset_pk
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/CUSIP2_set/CUSIP2_record/CODE
+    expression: XMLGET(a2.value, 'CODE'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: identifier
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/CUSIP2_set/CUSIP2_record/IDENTIFIER
+    expression: XMLGET(a2.value, 'IDENTIFIER'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _file_name
+    snowflake_type: VARCHAR(512)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _file_sha256
+    snowflake_type: VARCHAR(64)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _staged_ts
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+- table_name: staging_analytics_cusip_alias
+  entity: cusip_alias
+  parent_table: staging_analytics_asset
+  foreign_keys:
+  - column: asset_fk
+    references_table: staging_analytics_asset
+    references_column: asset_pk
+  layer: STAGE
+  table_type: DYNAMIC_TABLE
+  ingestion_or_refresh: DYNAMIC_TABLE_REFRESH
+  upstream_source: raw_analytics
+  target_lag: 5 minutes
+  warehouse: COMPUTE_WH
+  grain: One row per /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/CUSIP_ALIAS_record element
+  primary_keys:
+  - cusip_alias_pk
+  flatten_path: /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/CUSIP_ALIAS_record
+  columns:
+  - name: cusip_alias_pk
+    snowflake_type: VARCHAR(32)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Surrogate primary key of cusip_alias (MD5 of file identity + element
+      position)
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: asset_fk
+    snowflake_type: VARCHAR(32)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Foreign key to asset.asset_pk
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: code
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/CUSIP_ALIAS_record/CODE
+    expression: TRY_TO_NUMBER(XMLGET(a2.value, 'CODE'):"$"::VARCHAR, 18, 0)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: identifier
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/CUSIP_ALIAS_record/IDENTIFIER
+    expression: TRY_TO_NUMBER(XMLGET(a2.value, 'IDENTIFIER'):"$"::VARCHAR, 18, 0)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: purpose
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/CUSIP_ALIAS_record/PURPOSE
+    expression: XMLGET(a2.value, 'PURPOSE'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _file_name
+    snowflake_type: VARCHAR(512)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _file_sha256
+    snowflake_type: VARCHAR(64)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _staged_ts
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+generated_by: step1_data_steward_agent
+ddl_generated: true

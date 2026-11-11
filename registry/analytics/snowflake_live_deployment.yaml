@@ -1,0 +1,416 @@
+deployed: true
+mode: snowflake_externalbrowser
+authenticator: snowflake
+dataset: analytics
+version: 0.1.0
+snowflake_session:
+  connected: true
+  authenticator: snowflake
+  current_user: welcometopiyush
+  current_role: ACCOUNTADMIN
+  current_warehouse: COMPUTE_WH
+  current_database: ENTERPRISE_DW
+  snowflake_version: 10.40.103
+  current_account: EB58860
+  verified_at: '2026-11-11T13:55:48.934276+00:00'
+target_database: ENTERPRISE_DW
+target_schema: RAW / STAGING / CURATED / OPS
+layer_schemas:
+  raw: RAW
+  staging: STAGING
+  gold: CURATED
+  ops: OPS
+target_warehouse: COMPUTE_WH
+seeded_sample_files: 1
+snowpipe_enabled: true
+statements_executed: 50
+statements_succeeded: 49
+statements_warnings: 1
+execution_logs:
+- step: 'Context: Role'
+  sql_preview: USE ROLE IDENTIFIER('ACCOUNTADMIN');
+  status: SUCCESS
+  query_id: 01c85743-000e-2cf7-0003-01b6000ad23e
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:49.143214+00:00'
+- step: 'Context: Warehouse'
+  sql_preview: CREATE WAREHOUSE IF NOT EXISTS IDENTIFIER('COMPUTE_WH') WAREHOUSE_SIZE
+    = 'XSMALL' AUTO_SUSPEND = 60 AUTO_RESUME = TRUE;
+  status: SUCCESS
+  query_id: 01c85743-000e-2c95-0003-01b6000854de
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:49.331325+00:00'
+- step: 'Context: Use Warehouse'
+  sql_preview: USE WAREHOUSE IDENTIFIER('COMPUTE_WH');
+  status: SUCCESS
+  query_id: 01c85743-000e-2c95-0003-01b6000854e2
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:49.487204+00:00'
+- step: 'Context: Database'
+  sql_preview: CREATE DATABASE IF NOT EXISTS IDENTIFIER('ENTERPRISE_DW');
+  status: SUCCESS
+  query_id: 01c85743-000e-2c4f-0003-01b6000ae22a
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:49.647326+00:00'
+- step: 'Context: Use Database'
+  sql_preview: USE DATABASE IDENTIFIER('ENTERPRISE_DW');
+  status: SUCCESS
+  query_id: 01c85743-000e-2c9c-0003-01b6000b2112
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:49.812177+00:00'
+- step: 'Context: Schema RAW'
+  sql_preview: CREATE SCHEMA IF NOT EXISTS IDENTIFIER('RAW');
+  status: SUCCESS
+  query_id: 01c85743-000e-2cf7-0003-01b6000ad242
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:49.979999+00:00'
+- step: 'Context: Schema STAGING'
+  sql_preview: CREATE SCHEMA IF NOT EXISTS IDENTIFIER('STAGING');
+  status: SUCCESS
+  query_id: 01c85743-000e-2d30-0003-01b6000b1146
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:50.134616+00:00'
+- step: 'Context: Schema CURATED'
+  sql_preview: CREATE SCHEMA IF NOT EXISTS IDENTIFIER('CURATED');
+  status: SUCCESS
+  query_id: 01c85743-000e-2c9c-0003-01b6000b2116
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:50.288300+00:00'
+- step: 'Context: Schema OPS'
+  sql_preview: CREATE SCHEMA IF NOT EXISTS IDENTIFIER('OPS');
+  status: SUCCESS
+  query_id: 01c85743-000e-2c95-0003-01b6000854e6
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:50.443195+00:00'
+- step: 'Cleanup: Remove misplaced RAW.staging_analytics'
+  sql_preview: DROP DYNAMIC TABLE IF EXISTS RAW.staging_analytics;
+  status: SUCCESS
+  query_id: 01c85743-000e-2c4f-0003-01b6000ae22e
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:50.598291+00:00'
+- step: 'Cleanup: Remove misplaced RAW.curated_analytics'
+  sql_preview: DROP DYNAMIC TABLE IF EXISTS RAW.curated_analytics;
+  status: SUCCESS
+  query_id: 01c85743-000e-2cef-0003-01b6000a74ca
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:50.767112+00:00'
+- step: 'Cleanup: Remove misplaced RAW.quarantine_analytics'
+  sql_preview: DROP TABLE IF EXISTS RAW.quarantine_analytics;
+  status: SUCCESS
+  query_id: 01c85743-000e-2cf7-0003-01b6000ad246
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:50.925321+00:00'
+- step: 'Cleanup: Remove misplaced RAW.dq_results_analytics'
+  sql_preview: DROP TABLE IF EXISTS RAW.dq_results_analytics;
+  status: SUCCESS
+  query_id: 01c85743-000e-2d30-0003-01b6000b114a
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:51.076104+00:00'
+- step: 'Cleanup: Remove misplaced RAW.v_sla_dashboard_analytics'
+  sql_preview: DROP VIEW IF EXISTS RAW.v_sla_dashboard_analytics;
+  status: SUCCESS
+  query_id: 01c85743-000e-2c95-0003-01b6000854ea
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:51.222427+00:00'
+- step: 'Context: Use Schema RAW'
+  sql_preview: USE SCHEMA IDENTIFIER('RAW');
+  status: SUCCESS
+  query_id: 01c85743-000e-2cef-0003-01b6000a74ce
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:51.381766+00:00'
+- step: 'Stage Setup: XML Stage'
+  sql_preview: CREATE STAGE IF NOT EXISTS RAW.ADLS_XML_STAGE FILE_FORMAT = (TYPE =
+    'XML' STRIP_OUTER_ELEMENT = FALSE);
+  status: SUCCESS
+  query_id: 01c85743-000e-2c9c-0003-01b6000b211a
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:51.585316+00:00'
+- step: 'Context: Use Schema RAW'
+  sql_preview: USE SCHEMA IDENTIFIER('RAW');
+  status: SUCCESS
+  query_id: 01c85743-000e-2c59-0003-01b6000894f6
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:51.757889+00:00'
+- step: 'Layer 1: RAW Table & Snowpipe [RAW] (#1)'
+  sql_preview: CREATE SCHEMA IF NOT EXISTS RAW;
+  status: SUCCESS
+  query_id: 01c85743-000e-2cf7-0003-01b6000ad24a
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:51.913756+00:00'
+- step: 'Layer 1: RAW Table & Snowpipe [RAW] (#2)'
+  sql_preview: CREATE TABLE IF NOT EXISTS RAW.raw_analytics ( _file_name VARCHAR(512)
+    NOT NULL, _file_sha256 VARCHAR(64) NOT NULL, _source_system VARCHAR(128) NOT NULL,
+    _load_ts TIMESTAMP_NTZ DEF
+  status: SUCCESS
+  query_id: 01c85743-000e-2c4f-0003-01b6000ae232
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:52.077867+00:00'
+- step: 'Layer 1: RAW Table & Snowpipe [RAW] (#3)'
+  sql_preview: CREATE PIPE IF NOT EXISTS RAW.pipe_analytics AUTO_INGEST = TRUE COMMENT
+    = 'Snowpipe for analytics XML ingestion from ADLS into RAW.raw_analytics' AS COPY
+    INTO RAW.raw_analytics (_f
+  status: SUCCESS
+  query_id: 01c85743-000e-2c95-0003-01b6000854ee
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:52.313579+00:00'
+- step: 'Layer 1: RAW Table & Snowpipe [RAW] (#4)'
+  sql_preview: ALTER PIPE IF EXISTS RAW.pipe_analytics SET PIPE_EXECUTION_PAUSED =
+    TRUE;
+  status: SUCCESS
+  query_id: 01c85743-000e-2c59-0003-01b6000894fa
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:52.750138+00:00'
+- step: 'Context: Use Schema STAGING'
+  sql_preview: USE SCHEMA IDENTIFIER('STAGING');
+  status: SUCCESS
+  query_id: 01c85743-000e-2c9c-0003-01b6000b211e
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:52.904156+00:00'
+- step: 'Layer 2: Stage Dynamic Table [STAGING] (#1)'
+  sql_preview: CREATE SCHEMA IF NOT EXISTS STAGING;
+  status: SUCCESS
+  query_id: 01c85743-000e-2d30-0003-01b6000b114e
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:53.053467+00:00'
+- step: 'Layer 2: Stage Dynamic Table [STAGING] (#2)'
+  sql_preview: CREATE OR REPLACE DYNAMIC TABLE STAGING.staging_analytics TARGET_LAG
+    = '5 minutes' WAREHOUSE = COMPUTE_WH REFRESH_MODE = AUTO INITIALIZE = ON_CREATE
+    COMMENT = 'STAGING.staging_anal
+  status: SUCCESS
+  query_id: 01c85743-000e-2d30-0003-01b6000b1152
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:54.079479+00:00'
+- step: 'Layer 2: Stage Dynamic Table [STAGING] (#3)'
+  sql_preview: 'CREATE OR REPLACE DYNAMIC TABLE STAGING.staging_analytics_country_classification
+    TARGET_LAG = ''5 minutes'' WAREHOUSE = COMPUTE_WH REFRESH_MODE = AUTO INITIALIZE
+    = ON_CREATE COMMENT '
+  status: SUCCESS
+  query_id: 01c85743-000e-2c59-0003-01b6000894fe
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:55.176130+00:00'
+- step: 'Layer 2: Stage Dynamic Table [STAGING] (#4)'
+  sql_preview: CREATE OR REPLACE DYNAMIC TABLE STAGING.staging_analytics_cusip2 TARGET_LAG
+    = '5 minutes' WAREHOUSE = COMPUTE_WH REFRESH_MODE = AUTO INITIALIZE = ON_CREATE
+    COMMENT = 'STAGING.stagi
+  status: SUCCESS
+  query_id: 01c85743-000e-2c59-0003-01b600089506
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:56.421837+00:00'
+- step: 'Layer 2: Stage Dynamic Table [STAGING] (#5)'
+  sql_preview: CREATE OR REPLACE DYNAMIC TABLE STAGING.staging_analytics_cusip_alias
+    TARGET_LAG = '5 minutes' WAREHOUSE = COMPUTE_WH REFRESH_MODE = AUTO INITIALIZE
+    = ON_CREATE COMMENT = 'STAGING.
+  status: SUCCESS
+  query_id: 01c85743-000e-2d30-0003-01b6000b115a
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:57.276524+00:00'
+- step: 'Context: Use Schema CURATED'
+  sql_preview: USE SCHEMA IDENTIFIER('CURATED');
+  status: SUCCESS
+  query_id: 01c85743-000e-2c95-0003-01b6000854f2
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:57.432377+00:00'
+- step: 'Layer 3: Gold Dynamic Table [CURATED] (#1)'
+  sql_preview: CREATE SCHEMA IF NOT EXISTS CURATED;
+  status: SUCCESS
+  query_id: 01c85743-000e-2c4f-0003-01b6000ae236
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:57.592132+00:00'
+- step: 'Layer 3: Gold Dynamic Table [CURATED] (#2)'
+  sql_preview: CREATE OR REPLACE DYNAMIC TABLE CURATED.curated_analytics TARGET_LAG
+    = '15 minutes' WAREHOUSE = COMPUTE_WH REFRESH_MODE = AUTO INITIALIZE = ON_CREATE
+    COMMENT = 'CURATED.curated_ana
+  status: SUCCESS
+  query_id: 01c85743-000e-2c9c-0003-01b6000b2122
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:55:59.586375+00:00'
+- step: 'Layer 3: Gold Dynamic Table [CURATED] (#3)'
+  sql_preview: CREATE OR REPLACE DYNAMIC TABLE CURATED.curated_analytics_country_classification
+    TARGET_LAG = '15 minutes' WAREHOUSE = COMPUTE_WH REFRESH_MODE = AUTO INITIALIZE
+    = ON_CREATE COMMENT
+  status: SUCCESS
+  query_id: 01c85744-000e-2cef-0003-01b6000a74d2
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:56:00.916423+00:00'
+- step: 'Layer 3: Gold Dynamic Table [CURATED] (#4)'
+  sql_preview: CREATE OR REPLACE DYNAMIC TABLE CURATED.curated_analytics_cusip2 TARGET_LAG
+    = '15 minutes' WAREHOUSE = COMPUTE_WH REFRESH_MODE = AUTO INITIALIZE = ON_CREATE
+    COMMENT = 'CURATED.cura
+  status: SUCCESS
+  query_id: 01c85744-000e-2cef-0003-01b6000a74de
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:56:02.182636+00:00'
+- step: 'Layer 3: Gold Dynamic Table [CURATED] (#5)'
+  sql_preview: CREATE OR REPLACE DYNAMIC TABLE CURATED.curated_analytics_cusip_alias
+    TARGET_LAG = '15 minutes' WAREHOUSE = COMPUTE_WH REFRESH_MODE = AUTO INITIALIZE
+    = ON_CREATE COMMENT = 'CURATED
+  status: SUCCESS
+  query_id: 01c85744-000e-2d30-0003-01b6000b118e
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:56:03.795135+00:00'
+- step: 'Context: Use Schema OPS'
+  sql_preview: USE SCHEMA IDENTIFIER('OPS');
+  status: SUCCESS
+  query_id: 01c85744-000e-2c4f-0003-01b6000ae23a
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:56:03.950619+00:00'
+- step: 'Ops Plane: O3 Quarantine & O1 DQ [OPS] (#1)'
+  sql_preview: CREATE SCHEMA IF NOT EXISTS OPS;
+  status: SUCCESS
+  query_id: 01c85744-000e-2c59-0003-01b60008950e
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:56:04.102393+00:00'
+- step: 'Ops Plane: O3 Quarantine & O1 DQ [OPS] (#2)'
+  sql_preview: CREATE TABLE IF NOT EXISTS OPS.quarantine_analytics ( quarantine_id
+    VARCHAR(64) DEFAULT UUID_STRING(), dataset VARCHAR(128) NOT NULL, file_name VARCHAR(512)
+    NOT NULL, file_sha256 V
+  status: SUCCESS
+  query_id: 01c85744-000e-2cf7-0003-01b6000ad24e
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:56:04.290040+00:00'
+- step: 'Ops Plane: O3 Quarantine & O1 DQ [OPS] (#3)'
+  sql_preview: CREATE TABLE IF NOT EXISTS OPS.dq_results_analytics ( check_id VARCHAR(64)
+    DEFAULT UUID_STRING(), dataset VARCHAR(128) NOT NULL, file_name VARCHAR(512) NOT
+    NULL, gate_id VARCHAR(8)
+  status: SUCCESS
+  query_id: 01c85744-000e-2cf7-0003-01b6000ad252
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:56:04.456348+00:00'
+- step: 'Context: Use Schema OPS'
+  sql_preview: USE SCHEMA IDENTIFIER('OPS');
+  status: SUCCESS
+  query_id: 01c85744-000e-2c9c-0003-01b6000b212e
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:56:04.604375+00:00'
+- step: 'Stage 7: O5 Monitoring View [OPS] (#1)'
+  sql_preview: CREATE SCHEMA IF NOT EXISTS OPS;
+  status: SUCCESS
+  query_id: 01c85744-000e-2c95-0003-01b6000854f6
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:56:04.756958+00:00'
+- step: 'Stage 7: O5 Monitoring View [OPS] (#2)'
+  sql_preview: 'CREATE OR REPLACE VIEW OPS.v_sla_dashboard_analytics AS SELECT DATE_TRUNC(''HOUR'',
+    r._load_ts) AS load_hour, COUNT(DISTINCT r._file_name) AS files_ingested, COUNT(c.asset_cusip)
+    AS '
+  status: WARNING
+  query_id: 01c85744-000e-2d30-0003-01b6000b119a
+  rowcount: null
+  message: '000904 (42000): SQL compilation error: error line 5 at position 10
+
+    invalid identifier ''C.ASSET_CUSIP'''
+  executed_at: '2026-11-11T13:56:04.941620+00:00'
+- step: Seed Sample XMLs into RAW
+  sql_preview: INSERT INTO RAW.raw_analytics SELECT PARSE_XML(...) [1 files]
+  status: SUCCESS
+  query_id: null
+  rowcount: 1
+  message: Loaded 1 XML sample file(s) into Snowflake RAW.raw_analytics
+  executed_at: '2026-11-11T13:56:07.478083+00:00'
+- step: Refresh Stage Dynamic Table (STAGING.staging_analytics)
+  sql_preview: ALTER DYNAMIC TABLE IF EXISTS STAGING.staging_analytics REFRESH;
+  status: SUCCESS
+  query_id: 01c85744-000e-2c95-0003-01b6000854fa
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:56:08.701434+00:00'
+- step: Refresh Stage Dynamic Table (STAGING.staging_analytics_country_classification)
+  sql_preview: ALTER DYNAMIC TABLE IF EXISTS STAGING.staging_analytics_country_classification
+    REFRESH;
+  status: SUCCESS
+  query_id: 01c85744-000e-2c9c-0003-01b6000b2136
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:56:09.919003+00:00'
+- step: Refresh Stage Dynamic Table (STAGING.staging_analytics_cusip2)
+  sql_preview: ALTER DYNAMIC TABLE IF EXISTS STAGING.staging_analytics_cusip2 REFRESH;
+  status: SUCCESS
+  query_id: 01c85744-000e-2c59-0003-01b600089512
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:56:10.990293+00:00'
+- step: Refresh Stage Dynamic Table (STAGING.staging_analytics_cusip_alias)
+  sql_preview: ALTER DYNAMIC TABLE IF EXISTS STAGING.staging_analytics_cusip_alias
+    REFRESH;
+  status: SUCCESS
+  query_id: 01c85744-000e-2c95-0003-01b600085502
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:56:11.974039+00:00'
+- step: Refresh Curated Dynamic Table (CURATED.curated_analytics)
+  sql_preview: ALTER DYNAMIC TABLE IF EXISTS CURATED.curated_analytics REFRESH;
+  status: SUCCESS
+  query_id: 01c85744-000e-2d30-0003-01b6000b119e
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:56:13.245854+00:00'
+- step: Refresh Curated Dynamic Table (CURATED.curated_analytics_country_classification)
+  sql_preview: ALTER DYNAMIC TABLE IF EXISTS CURATED.curated_analytics_country_classification
+    REFRESH;
+  status: SUCCESS
+  query_id: 01c85744-000e-2d30-0003-01b6000b11aa
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:56:14.156372+00:00'
+- step: Refresh Curated Dynamic Table (CURATED.curated_analytics_cusip2)
+  sql_preview: ALTER DYNAMIC TABLE IF EXISTS CURATED.curated_analytics_cusip2 REFRESH;
+  status: SUCCESS
+  query_id: 01c85744-000e-2c95-0003-01b60008550a
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:56:15.253033+00:00'
+- step: Refresh Curated Dynamic Table (CURATED.curated_analytics_cusip_alias)
+  sql_preview: ALTER DYNAMIC TABLE IF EXISTS CURATED.curated_analytics_cusip_alias
+    REFRESH;
+  status: SUCCESS
+  query_id: 01c85744-000e-2c4f-0003-01b6000ae23e
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:56:16.345995+00:00'
+- step: 'Go-Live: Enable Production Snowpipe (RAW.pipe_analytics)'
+  sql_preview: ALTER PIPE IF EXISTS RAW.pipe_analytics SET PIPE_EXECUTION_PAUSED =
+    FALSE;
+  status: SUCCESS
+  query_id: 01c85744-000e-2cf7-0003-01b6000ad256
+  rowcount: 1
+  message: Executed successfully on Snowflake
+  executed_at: '2026-11-11T13:56:16.673499+00:00'
+deployed_at: '2026-11-11T13:56:16.673856+00:00'

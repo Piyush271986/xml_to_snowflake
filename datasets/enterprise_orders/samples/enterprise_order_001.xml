@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Order orderType="B2B_ENTERPRISE" version="2.4" currency="USD" channel="EDI_850" region="NA-EAST">
+    <OrderId>90010458</OrderId>
+    <ExternalPurchaseOrderNumber>PO-2026-GLB-88412</ExternalPurchaseOrderNumber>
+    <OrderDate>2026-11-10</OrderDate>
+    <OrderTimestamp>2026-11-10T14:22:35Z</OrderTimestamp>
+    <OrderStatus>APPROVED_FOR_FULFILLMENT</OrderStatus>
+    <IsExpedited>true</IsExpedited>
+    <IsBackorderAllowed>false</IsBackorderAllowed>
+    <PriorityScore>1</PriorityScore>
+    <TotalAmount>48792.6500</TotalAmount>
+    <DiscountAmount>2450.0000</DiscountAmount>
+    <TaxAmount>3903.4120</TaxAmount>
+    <FreightAmount>685.5000</FreightAmount>
+    <NetPayableAmount>50931.5620</NetPayableAmount>
+    <ShippingNotes>Deliver to Central Receiving Bay 4. Forklift required for palletized server racks. Call dock manager 30 mins prior to arrival.</ShippingNotes>
+
+    <Header>
+        <SourceSystem>SAP_S4HANA_ERP</SourceSystem>
+        <SalesOrgCode>US10</SalesOrgCode>
+        <DistributionChannel>10</DistributionChannel>
+        <DivisionCode>02</DivisionCode>
+        <ContractReference>
+            <MasterAgreementId>MSA-2024-9921</MasterAgreementId>
+            <ContractEffectiveDate>2024-01-15</ContractEffectiveDate>
+            <ContractExpirationDate>2027-12-31</ContractExpirationDate>
+            <DiscountTierPercentage>5.0000</DiscountTierPercentage>
+            <IsAutoRenew>true</IsAutoRenew>
+        </ContractReference>
+        <SalesRepresentative>
+            <RepId>REP-4409</RepId>
+            <RepName>Marcus Vance</RepName>
+            <RepEmail>m.vance@enterprise-supply.io</RepEmail>
+            <TerritoryCode>US-NE-ENTERPRISE</TerritoryCode>
+            <CommissionRate>0.0325</CommissionRate>
+        </SalesRepresentative>
+    </Header>
+
+    <Customer customerTier="PLATINUM" taxExempt="false" kycVerified="true">
+        <CustomerId>CUST-88401</CustomerId>
+        <AccountNumber>ACCT-US-9920144</AccountNumber>
+        <CompanyName>Apex Global Cloud Infrastructure Corp</CompanyName>
+        <DunsNumber>149028831</DunsNumber>
+        <TaxRegistrationNumber>US-EIN-84-2901145</TaxRegistrationNumber>
+        <AccountCreatedDate>2021-06-01</AccountCreatedDate>
+        <CreditProfile>
+            <CreditLimit>500000.0000</CreditLimit>
+            <CurrentBalance>142850.2500</CurrentBalance>
+            <AvailableCredit>357149.7500</AvailableCredit>
+            <RiskRating>LOW</RiskRating>
+            <PaymentTermsDays>45</PaymentTermsDays>
+            <IsCreditHold>false</IsCreditHold>
+        </CreditProfile>
+        <Contacts>
+            <PrimaryContact>
+                <ContactId>CNT-101</ContactId>
+                <FullName>Elena Rostova</FullName>
+                <JobTitle>VP of Data Center Procurement</JobTitle>
+                <Email>elena.rostova@apexcloud.example.com</Email>
+                <Phone>+1-617-555-0192</Phone>
+            </PrimaryContact>
+            <AccountsPayableContact>
+                <ContactId>CNT-102</ContactId>
+                <FullName>David Chen</FullName>
+                <JobTitle>Senior AP Controller</JobTitle>
+                <Email>ap-invoices@apexcloud.example.com</Email>
+                <Phone>+1-617-555-0148</Phone>
+            </AccountsPayableContact>
+        </Contacts>
+        <Addresses>
+            <BillingAddress addressType="CORPORATE_HQ">
+                <AddressId>ADDR-BILL-701</AddressId>
+                <AttentionLine>Attn: Accounts Payable Dept</AttentionLine>
+                <StreetLine1>450 Technology Square</StreetLine1>
+                <StreetLine2>Suite 1800</StreetLine2>
+                <City>Cambridge</City>
+                <StateProvince>MA</StateProvince>
+                <PostalCode>02139</PostalCode>
+                <CountryCode>US</CountryCode>
+                <GeoCoordinates>
+                    <Latitude>42.3629</Latitude>
+                    <Longitude>-71.0921</Longitude>
+                </GeoCoordinates>
+            </BillingAddress>
+            <ShippingAddress addressType="DATA_CENTER_SITE">
+                <AddressId>ADDR-SHIP-709</AddressId>
+                <FacilityName>Apex Ashburn Hyperscale Facility DC-04</FacilityName>
+                <AttentionLine>Attn: Hardware Provisioning Dock B</AttentionLine>
+                <StreetLine1>21700 Filigree Court</StreetLine1>
+                <StreetLine2>Building C, Bay 4</StreetLine2>
+                <City>Ashburn</City>
+                <StateProvince>VA</StateProvince>
+                <PostalCode>20147</PostalCode>
+                <CountryCode>US</CountryCode>
+                <IsResidential>false</IsResidential>
+                <RequiresLiftgate>false</RequiresLiftgate>
+                <RequiresInsideDelivery>true</RequiresInsideDelivery>
+                <GeoCoordinates>
+                    <Latitude>39.0163</Latitude>
+                    <Longitude>-77.4590</Longitude>
+                </GeoCoordinates>
+            </ShippingAddress>
+        </Addresses>
+    </Customer>
+
+    <FulfillmentPlan>
+        <RequestedDeliveryDate>2026-11-18</RequestedDeliveryDate>
+        <PromisedShipDate>2026-11-12</PromisedShipDate>
+        <Incoterms>DDP</Incoterms>
+        <OriginWarehouse>
+            <WarehouseId>WH-NJ-02</WarehouseId>
+            <WarehouseName>Newark Enterprise Distribution Hub</WarehouseName>
+            <TimeZone>America/New_York</TimeZone>
+        </OriginWarehouse>
+        <CarrierRouting carrierCode="FEDEX_FREIGHT" serviceLevel="PRIORITY_FREIGHT">
+            <CarrierName>FedEx Freight Priority</CarrierName>
+            <ScacCode>FXFE</ScacCode>
+            <BolNumber>BOL-2026-1110-9941</BolNumber>
+            <ProNumber>PRO-778291044</ProNumber>
+            <EstimatedTransitDays>2</EstimatedTransitDays>
+            <TotalPalletCount>4</TotalPalletCount>
+            <TotalGrossWeightKg>842.6000</TotalGrossWeightKg>
+            <IsTemperatureControlled>false</IsTemperatureControlled>
+            <InsuranceCoverageAmount>75000.0000</InsuranceCoverageAmount>
+        </CarrierRouting>
+    </FulfillmentPlan>
+
+    <PaymentDetails paymentMethod="CORPORATE_ACH">
+        <PaymentStatus>AUTHORIZED</PaymentStatus>
+        <AuthorizationCode>AUTH-99482710</AuthorizationCode>
+        <AuthorizedTimestamp>2026-11-10T14:23:01Z</AuthorizedTimestamp>
+        <BillingCurrency>USD</BillingCurrency>
+        <ExchangeRateToUsd>1.0000</ExchangeRateToUsd>
+        <InstallmentSchedule>
+            <Installment installmentNumber="1">
+                <InstallmentId>INST-90010458-01</InstallmentId>
+                <DueDate>2026-11-25</DueDate>
+                <InstallmentPercentage>50.0000</InstallmentPercentage>
+                <InstallmentAmount>25465.7810</InstallmentAmount>
+                <InstallmentStatus>SCHEDULED</InstallmentStatus>
+            </Installment>
+            <Installment installmentNumber="2">
+                <InstallmentId>INST-90010458-02</InstallmentId>
+                <DueDate>2026-12-25</DueDate>
+                <InstallmentPercentage>50.0000</InstallmentPercentage>
+                <InstallmentAmount>25465.7810</InstallmentAmount>
+                <InstallmentStatus>SCHEDULED</InstallmentStatus>
+            </Installment>
+        </InstallmentSchedule>
+    </PaymentDetails>
+
+    <LineItems>
+        <LineItem lineNumber="10" itemCategory="HARDWARE_COMPUTE" hazmat="false">
+            <LineItemId>LI-90010458-010</LineItemId>
+            <ProductCode>SKU-SRV-R760-64G</ProductCode>
+            <ManufacturerPartNumber>DELL-PE-R760-X1</ManufacturerPartNumber>
+            <ProductName>2U Rackmount Enterprise Compute Node Dual Xeon 64GB</ProductName>
+            <ProductFamily>ENTERPRISE_SERVERS</ProductFamily>
+            <UnitOfMeasure>EA</UnitOfMeasure>
+            <Quantity>4</Quantity>
+            <UnitPrice>6450.0000</UnitPrice>
+            <LineDiscountAmount>1290.0000</LineDiscountAmount>
+            <LineTaxRate>0.0800</LineTaxRate>
+            <LineTaxAmount>1960.8000</LineTaxAmount>
+            <ExtendedNetAmount>24510.0000</ExtendedNetAmount>
+            <IsTaxable>true</IsTaxable>
+            <IsDropShip>false</IsDropShip>
+            <RequestedShipDate>2026-11-12</RequestedShipDate>
+            <PhysicalSpecs>
+                <UnitWeightKg>28.4000</UnitWeightKg>
+                <DimensionsCm>73.4x48.2x8.7</DimensionsCm>
+                <CountryOfOrigin>US</CountryOfOrigin>
+                <HarmonizedTariffCode>8471.50.0150</HarmonizedTariffCode>
+            </PhysicalSpecs>
+            <InventoryAllocation>
+                <AllocatedWarehouseId>WH-NJ-02</AllocatedWarehouseId>
+                <BinLocation>AISLE-04-RACK-12-B</BinLocation>
+                <LotNumber>LOT-2026-Q4-881</LotNumber>
+                <AllocationStatus>HARD_RESERVED</AllocationStatus>
+                <AllocationTimestamp>2026-11-10T14:23:12Z</AllocationTimestamp>
+            </InventoryAllocation>
+            <Warranty>
+                <WarrantyPlanCode>PRO-SUPPORT-3YR-NBD</WarrantyPlanCode>
+                <WarrantyDurationMonths>36</WarrantyDurationMonths>
+                <IncludesOnsiteResponse>true</IncludesOnsiteResponse>
+            </Warranty>
+        </LineItem>
+
+        <LineItem lineNumber="20" itemCategory="STORAGE_NVME" hazmat="false">
+            <LineItemId>LI-90010458-020</LineItemId>
+            <ProductCode>SKU-NVME-U3-7T68</ProductCode>
+            <ManufacturerPartNumber>MTFDKCC7T6TGP-1BK1</ManufacturerPartNumber>
+            <ProductName>7.68TB Enterprise U.3 PCIe Gen4 NVMe Solid State Drive</ProductName>
+            <ProductFamily>ENTERPRISE_STORAGE</ProductFamily>
+            <UnitOfMeasure>EA</UnitOfMeasure>
+            <Quantity>16</Quantity>
+            <UnitPrice>780.5000</UnitPrice>
+            <LineDiscountAmount>628.0000</LineDiscountAmount>
+            <LineTaxRate>0.0800</LineTaxRate>
+            <LineTaxAmount>948.8000</LineTaxAmount>
+            <ExtendedNetAmount>11860.0000</ExtendedNetAmount>
+            <IsTaxable>true</IsTaxable>
+            <IsDropShip>false</IsDropShip>
+            <RequestedShipDate>2026-11-12</RequestedShipDate>
+            <PhysicalSpecs>
+                <UnitWeightKg>0.2400</UnitWeightKg>
+                <DimensionsCm>10.0x7.0x1.5</DimensionsCm>
+                <CountryOfOrigin>SG</CountryOfOrigin>
+                <HarmonizedTariffCode>8523.51.0000</HarmonizedTariffCode>
+            </PhysicalSpecs>
+            <InventoryAllocation>
+                <AllocatedWarehouseId>WH-NJ-02</AllocatedWarehouseId>
+                <BinLocation>AISLE-01-CAGE-03-A</BinLocation>
+                <LotNumber>LOT-2026-Q4-904</LotNumber>
+                <AllocationStatus>HARD_RESERVED</AllocationStatus>
+                <AllocationTimestamp>2026-11-10T14:23:14Z</AllocationTimestamp>
+            </InventoryAllocation>
+            <Warranty>
+                <WarrantyPlanCode>SSD-ENTERPRISE-5YR</WarrantyPlanCode>
+                <WarrantyDurationMonths>60</WarrantyDurationMonths>
+                <IncludesOnsiteResponse>false</IncludesOnsiteResponse>
+            </Warranty>
+        </LineItem>
+
+        <LineItem lineNumber="30" itemCategory="NETWORKING_SWITCH" hazmat="false">
+            <LineItemId>LI-90010458-030</LineItemId>
+            <ProductCode>SKU-SW-TOR-100G-48P</ProductCode>
+            <ManufacturerPartNumber>ARISTA-7050SX3-48YC8</ManufacturerPartNumber>
+            <ProductName>48-Port 25G/100G Top-of-Rack Data Center Ethernet Switch</ProductName>
+            <ProductFamily>DATA_CENTER_NETWORKING</ProductFamily>
+            <UnitOfMeasure>EA</UnitOfMeasure>
+            <Quantity>2</Quantity>
+            <UnitPrice>4250.0000</UnitPrice>
+            <LineDiscountAmount>425.0000</LineDiscountAmount>
+            <LineTaxRate>0.0800</LineTaxRate>
+            <LineTaxAmount>646.0000</LineTaxAmount>
+            <ExtendedNetAmount>8075.0000</ExtendedNetAmount>
+            <IsTaxable>true</IsTaxable>
+            <IsDropShip>false</IsDropShip>
+            <RequestedShipDate>2026-11-12</RequestedShipDate>
+            <PhysicalSpecs>
+                <UnitWeightKg>9.8500</UnitWeightKg>
+                <DimensionsCm>48.3x40.6x4.4</DimensionsCm>
+                <CountryOfOrigin>TW</CountryOfOrigin>
+                <HarmonizedTariffCode>8517.62.0020</HarmonizedTariffCode>
+            </PhysicalSpecs>
+            <InventoryAllocation>
+                <AllocatedWarehouseId>WH-NJ-02</AllocatedWarehouseId>
+                <BinLocation>AISLE-06-RACK-02-C</BinLocation>
+                <LotNumber>LOT-2026-Q3-412</LotNumber>
+                <AllocationStatus>HARD_RESERVED</AllocationStatus>
+                <AllocationTimestamp>2026-11-10T14:23:15Z</AllocationTimestamp>
+            </InventoryAllocation>
+            <Warranty>
+                <WarrantyPlanCode>NET-CARE-3YR-24X7</WarrantyPlanCode>
+                <WarrantyDurationMonths>36</WarrantyDurationMonths>
+                <IncludesOnsiteResponse>true</IncludesOnsiteResponse>
+            </Warranty>
+        </LineItem>
+
+        <LineItem lineNumber="40" itemCategory="OPTICS_CABLES" hazmat="false">
+            <LineItemId>LI-90010458-040</LineItemId>
+            <ProductCode>SKU-DAC-QSFP28-3M</ProductCode>
+            <ManufacturerPartNumber>CAB-Q-Q-100G-3M</ManufacturerPartNumber>
+            <ProductName>100G QSFP28 Passive Direct Attach Copper Twinax Cable 3m</ProductName>
+            <ProductFamily>NETWORK_CONNECTIVITY</ProductFamily>
+            <UnitOfMeasure>EA</UnitOfMeasure>
+            <Quantity>24</Quantity>
+            <UnitPrice>68.7500</UnitPrice>
+            <LineDiscountAmount>82.3500</LineDiscountAmount>
+            <LineTaxRate>0.0800</LineTaxRate>
+            <LineTaxAmount>125.4120</LineTaxAmount>
+            <ExtendedNetAmount>1567.6500</ExtendedNetAmount>
+            <IsTaxable>true</IsTaxable>
+            <IsDropShip>false</IsDropShip>
+            <RequestedShipDate>2026-11-12</RequestedShipDate>
+            <PhysicalSpecs>
+                <UnitWeightKg>0.3100</UnitWeightKg>
+                <DimensionsCm>30.0x30.0x3.0</DimensionsCm>
+                <CountryOfOrigin>MX</CountryOfOrigin>
+                <HarmonizedTariffCode>8544.42.2000</HarmonizedTariffCode>
+            </PhysicalSpecs>
+            <InventoryAllocation>
+                <AllocatedWarehouseId>WH-NJ-02</AllocatedWarehouseId>
+                <BinLocation>AISLE-09-BIN-44-D</BinLocation>
+                <LotNumber>LOT-2026-Q4-119</LotNumber>
+                <AllocationStatus>HARD_RESERVED</AllocationStatus>
+                <AllocationTimestamp>2026-11-10T14:23:16Z</AllocationTimestamp>
+            </InventoryAllocation>
+            <Warranty>
+                <WarrantyPlanCode>STD-CABLE-1YR</WarrantyPlanCode>
+                <WarrantyDurationMonths>12</WarrantyDurationMonths>
+                <IncludesOnsiteResponse>false</IncludesOnsiteResponse>
+            </Warranty>
+        </LineItem>
+
+        <LineItem lineNumber="50" itemCategory="POWER_BACKUP" hazmat="true">
+            <LineItemId>LI-90010458-050</LineItemId>
+            <ProductCode>SKU-UPS-LION-3000VA</ProductCode>
+            <ManufacturerPartNumber>APC-SMTL3000RM2UC</ManufacturerPartNumber>
+            <ProductName>Smart-UPS Lithium-Ion 3000VA 2U Rackmount Uninterruptible Power Supply</ProductName>
+            <ProductFamily>POWER_INFRASTRUCTURE</ProductFamily>
+            <UnitOfMeasure>EA</UnitOfMeasure>
+            <Quantity>1</Quantity>
+            <UnitPrice>2804.6500</UnitPrice>
+            <LineDiscountAmount>24.6500</LineDiscountAmount>
+            <LineTaxRate>0.0800</LineTaxRate>
+            <LineTaxAmount>222.4000</LineTaxAmount>
+            <ExtendedNetAmount>2780.0000</ExtendedNetAmount>
+            <IsTaxable>true</IsTaxable>
+            <IsDropShip>false</IsDropShip>
+            <RequestedShipDate>2026-11-12</RequestedShipDate>
+            <PhysicalSpecs>
+                <UnitWeightKg>34.5000</UnitWeightKg>
+                <DimensionsCm>68.3x43.2x8.6</DimensionsCm>
+                <CountryOfOrigin>US</CountryOfOrigin>
+                <HarmonizedTariffCode>8504.40.6018</HarmonizedTariffCode>
+            </PhysicalSpecs>
+            <InventoryAllocation>
+                <AllocatedWarehouseId>WH-NJ-02</AllocatedWarehouseId>
+                <BinLocation>HAZMAT-ZONE-02-RACK-01</BinLocation>
+                <LotNumber>LOT-2026-Q4-552</LotNumber>
+                <AllocationStatus>HARD_RESERVED</AllocationStatus>
+                <AllocationTimestamp>2026-11-10T14:23:18Z</AllocationTimestamp>
+            </InventoryAllocation>
+            <Warranty>
+                <WarrantyPlanCode>BATT-CARE-5YR</WarrantyPlanCode>
+                <WarrantyDurationMonths>60</WarrantyDurationMonths>
+                <IncludesOnsiteResponse>true</IncludesOnsiteResponse>
+            </Warranty>
+        </LineItem>
+    </LineItems>
+
+    <ComplianceAndGovernance>
+        <IsExportControlled>false</IsExportControlled>
+        <ExportControlClassification>EAR99</ExportControlClassification>
+        <SanctionsScreeningPassed>true</SanctionsScreeningPassed>
+        <ScreeningReferenceId>OFAC-SCR-20261110-8812</ScreeningReferenceId>
+        <DataPrivacy>
+            <ContainsPii>true</ContainsPii>
+            <PiiClassification>BUSINESS_CONTACT_ONLY</PiiClassification>
+            <GdprApplicable>false</GdprApplicable>
+            <RetentionPolicyYears>7</RetentionPolicyYears>
+        </DataPrivacy>
+    </ComplianceAndGovernance>
+
+    <AuditTrail>
+        <AuditEvent sequence="1">
+            <EventId>EVT-90010458-001</EventId>
+            <EventType>ORDER_RECEIVED_EDI</EventType>
+            <EventTimestamp>2026-11-10T14:22:35Z</EventTimestamp>
+            <ActorId>SYS-EDI-GATEWAY-01</ActorId>
+            <EventNotes>Inbound EDI 850 document validated against partner trading profile.</EventNotes>
+        </AuditEvent>
+        <AuditEvent sequence="2">
+            <EventId>EVT-90010458-002</EventId>
+            <EventType>CREDIT_CHECK_PASSED</EventType>
+            <EventTimestamp>2026-11-10T14:22:50Z</EventTimestamp>
+            <ActorId>SYS-FINANCE-RISK-ENGINE</ActorId>
+            <EventNotes>Available credit verified ($357,149.75 > order exposure $50,931.56).</EventNotes>
+        </AuditEvent>
+        <AuditEvent sequence="3">
+            <EventId>EVT-90010458-003</EventId>
+            <EventType>INVENTORY_ALLOCATED</EventType>
+            <EventTimestamp>2026-11-10T14:23:18Z</EventTimestamp>
+            <ActorId>SYS-WMS-ALLOCATOR</ActorId>
+            <EventNotes>All 5 line items (47 total units) hard-reserved at WH-NJ-02.</EventNotes>
+        </AuditEvent>
+    </AuditTrail>
+</Order>

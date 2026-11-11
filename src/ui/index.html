@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>XML to Snowflake — Onboarding & Control Plane</title>
+  <title>XML to Snowflake — Agentic Onboarding & Control Plane</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
   <style>
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #0f172a; color: #f8fafc; }
     .glass-card { background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(148, 163, 184, 0.16); }
-    .code-box { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 12.5px; line-height: 1.55; }
+    .code-box { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 12px; line-height: 1.55; }
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-track { background: #0f172a; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
@@ -24,12 +25,14 @@
           ❄️
         </div>
         <div>
-          <div class="flex items-center gap-2.5">
-            <h1 class="text-lg font-bold tracking-tight text-white">XML to Snowflake Pipeline</h1>
+          <div class="flex items-center gap-2.5 flex-wrap">
+            <h1 class="text-lg font-bold tracking-tight text-white">XML to Snowflake Agentic Pipeline</h1>
             <span id="hdr-status" class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">PUBLISHED</span>
             <span id="hdr-version" class="px-2 py-0.5 text-xs font-mono rounded bg-slate-800 text-indigo-300 border border-slate-700">v0.1.0</span>
+            <span id="hdr-llm-badge" class="px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">Claude Haiku: Key Not Set</span>
+            <span id="hdr-sf-badge" class="px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30">❄️ Snowflake: External Browser SSO</span>
           </div>
-          <p class="text-xs text-slate-400">Zero-XSD Schema Bootstrap (C0) · Quality Gates (G1–G3) · Drift Control (C1–C3) · DataHub Catalog</p>
+          <p class="text-xs text-slate-400">Step 1: Data Steward Agent (3-Layer YAMLs) → Human Approval → Step 2: DDL Generator Agent → Step 3: E2E Deployment & Sign-Off</p>
         </div>
       </div>
 
@@ -42,15 +45,15 @@
 
         <div class="grid grid-cols-4 gap-2 text-xs">
           <div class="bg-slate-800/70 border border-slate-700/80 rounded-lg px-3 py-1.5 text-center">
-            <div class="text-slate-400 text-[10px] uppercase">D2 Raw Files</div>
+            <div class="text-slate-400 text-[10px] uppercase">RAW Table</div>
             <div id="kpi-raw" class="font-bold text-indigo-300 text-sm">0</div>
           </div>
           <div class="bg-slate-800/70 border border-slate-700/80 rounded-lg px-3 py-1.5 text-center">
-            <div class="text-slate-400 text-[10px] uppercase">D3 Staged</div>
+            <div class="text-slate-400 text-[10px] uppercase">Stage Dynamic</div>
             <div id="kpi-staging" class="font-bold text-purple-300 text-sm">0</div>
           </div>
           <div class="bg-slate-800/70 border border-slate-700/80 rounded-lg px-3 py-1.5 text-center">
-            <div class="text-slate-400 text-[10px] uppercase">D4 Curated (SCD2)</div>
+            <div class="text-slate-400 text-[10px] uppercase">Gold Dynamic</div>
             <div id="kpi-curated" class="font-bold text-emerald-300 text-sm">0</div>
           </div>
           <div class="bg-slate-800/70 border border-slate-700/80 rounded-lg px-3 py-1.5 text-center">
@@ -67,114 +70,183 @@
     </div>
 
     <!-- NAVIGATION TABS -->
-    <div class="max-w-7xl mx-auto px-6 flex gap-1 border-t border-slate-800/80 pt-2">
+    <div class="max-w-7xl mx-auto px-6 flex flex-wrap gap-1 border-t border-slate-800/80 pt-2">
       <button onclick="showTab('tab-intake')" id="btn-tab-intake" class="tab-btn px-4 py-2.5 text-xs font-semibold rounded-t-lg border-b-2 transition">
-        ① & ② Intake & C0 Bootstrap
+        ① Load Local XML, Claude Key & Step 1 Steward Agent
       </button>
       <button onclick="showTab('tab-schema')" id="btn-tab-schema" class="tab-btn px-4 py-2.5 text-xs font-semibold rounded-t-lg border-b-2 transition">
-        ③ C3 Schema Review & C4 Registry
+        ② Review & Approve 3-Layer YAMLs & Data Model
       </button>
       <button onclick="showTab('tab-provision')" id="btn-tab-provision" class="tab-btn px-4 py-2.5 text-xs font-semibold rounded-t-lg border-b-2 transition">
-        ④–⑩ Provision, DDL, Smoke Test & Go-Live
+        ③–⑨ Step 2 SQLs, Step 3 E2E Deploy & Final Sign-Off
       </button>
       <button onclick="showTab('tab-ops')" id="btn-tab-ops" class="tab-btn px-4 py-2.5 text-xs font-semibold rounded-t-lg border-b-2 transition">
-        ⚡ Runtime: C1/C2 Drift Control & O3 Quarantine
+        ⑩ Runtime: C1/C2 Drift Control & O3 Quarantine
       </button>
     </div>
   </header>
 
   <!-- TOAST BANNER -->
-  <div id="toast" class="hidden fixed bottom-5 right-5 z-50 max-w-md px-4 py-3 rounded-xl shadow-2xl border text-xs font-medium transition-all"></div>
+  <div id="toast" class="hidden fixed bottom-5 right-5 z-50 max-w-lg px-4 py-3 rounded-xl shadow-2xl border text-xs font-medium transition-all"></div>
 
   <!-- MAIN CONTENT -->
   <main class="max-w-7xl w-full mx-auto px-6 py-6 flex-1 space-y-6">
 
     <!-- =================================================================== -->
-    <!-- TAB 1: INTAKE (A0) & SCHEMA BOOTSTRAP (C0)                          -->
+    <!-- TAB 1: LOAD LOCAL XML + ANTHROPIC KEY + KICK OFF STEP 1 AGENT       -->
     <!-- =================================================================== -->
     <section id="tab-intake" class="tab-panel space-y-6">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 glass-card rounded-2xl p-6 space-y-5">
-          <div class="flex items-center justify-between border-b border-slate-700/70 pb-4">
-            <div>
-              <h2 class="text-base font-bold text-white">Stage ① A0: Intake & Stage ② C0: Schema Bootstrap</h2>
-              <p class="text-xs text-slate-400">Onboard a new XML dataset from representative sample XMLs — no XSD document required.</p>
-            </div>
-            <span class="px-2.5 py-1 text-[11px] font-semibold rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30">Agent: A0 + C0</span>
-          </div>
+        <div class="lg:col-span-2 space-y-6">
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            <div>
-              <label class="block text-slate-300 font-medium mb-1">Dataset Name</label>
-              <input id="in-dataset" type="text" value="orders" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none" />
-            </div>
-            <div>
-              <label class="block text-slate-300 font-medium mb-1">Source System</label>
-              <input id="in-source" type="text" value="erp_orders" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none" />
-            </div>
-            <div class="md:col-span-2">
-              <label class="block text-slate-300 font-medium mb-1">D1: ADLS Landing Zone Path</label>
-              <input id="in-adls" type="text" value="abfss://landing@enterpriseadls.dfs.core.windows.net/xml/orders/" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono focus:border-indigo-500 focus:outline-none" />
-            </div>
-            <div>
-              <label class="block text-slate-300 font-medium mb-1">Sample XML Directory</label>
-              <input id="in-sample-dir" type="text" value="samples/orders" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono focus:border-indigo-500 focus:outline-none" />
-            </div>
-            <div class="grid grid-cols-2 gap-2">
+          <!-- ANTHROPIC CLAUDE HAIKU CONFIGURATION CARD -->
+          <div class="glass-card rounded-2xl p-6 space-y-4 border-l-4 border-l-amber-400">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700/70 pb-3">
               <div>
-                <label class="block text-slate-300 font-medium mb-1">SLA Freshness (hrs)</label>
-                <input id="in-sla" type="number" value="24" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none" />
+                <h2 class="text-base font-bold text-white flex items-center gap-2">
+                  🤖 Anthropic Claude Agent Configuration
+                  <span class="px-2 py-0.5 text-[10px] font-mono rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">Default: claude-haiku-5-5</span>
+                </h2>
+                <p class="text-xs text-slate-400">Provide your Anthropic API key so Step 1 (Data Steward Agent) uses Claude Haiku for semantic data modeling, PII tagging, and Gold dimensional modeling.</p>
+              </div>
+              <span id="llm-card-status" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 text-slate-300 border border-slate-700">Checking...</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div class="md:col-span-2">
+                <label class="block text-slate-300 font-medium mb-1">Anthropic API Key (`ANTHROPIC_API_KEY`)</label>
+                <input id="in-anthropic-key" type="password" placeholder="sk-ant-api03-..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono focus:border-amber-400 focus:outline-none" />
               </div>
               <div>
-                <label class="block text-slate-300 font-medium mb-1">C0 Confidence Threshold</label>
-                <input id="in-conf" type="number" step="0.05" value="0.80" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none" />
+                <label class="block text-slate-300 font-medium mb-1">Claude Model</label>
+                <select id="in-llm-model" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono focus:border-amber-400 focus:outline-none">
+                  <option value="claude-haiku-5-5" selected>claude-haiku-5-5 (Default)</option>
+                  <option value="claude-3-5-haiku-latest">claude-3-5-haiku-latest</option>
+                  <option value="claude-sonnet-4-5">claude-sonnet-4-5</option>
+                </select>
               </div>
             </div>
-            <div>
-              <label class="block text-slate-300 font-medium mb-1">Data Steward Owner (Control & Metadata Plane)</label>
-              <input id="in-steward" type="text" value="data-steward@enterprise.io" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none" />
-            </div>
-            <div>
-              <label class="block text-slate-300 font-medium mb-1">Data Engineering Owner (Data Plane)</label>
-              <input id="in-eng" type="text" value="data-eng@enterprise.io" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none" />
+
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+              <div class="text-[11px] text-slate-400">
+                If no key is entered, the agent automatically falls back to deterministic rule-based modeling.
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="saveLlmConfig(false)" class="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-semibold text-white transition">
+                  💾 Save API Key
+                </button>
+                <button onclick="saveLlmConfig(true)" class="px-3.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-xs font-semibold text-amber-300 transition">
+                  🔌 Save & Test Claude Haiku Connection
+                </button>
+              </div>
             </div>
           </div>
 
-          <!-- Optional Custom Sample Upload -->
-          <details class="bg-slate-900/70 border border-slate-800 rounded-xl p-3.5 text-xs">
-            <summary class="cursor-pointer font-semibold text-indigo-300">+ Optional: Add an Extra Sample XML File Before Bootstrapping</summary>
-            <div class="mt-3 space-y-3">
-              <input id="in-custom-xml-name" type="text" placeholder="e.g. order_011.xml" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white font-mono" />
-              <textarea id="in-custom-xml-body" rows="5" placeholder="<Order currency=&quot;USD&quot;>...</Order>" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white code-box"></textarea>
+          <!-- STEP 1: LOAD XML FROM LOCAL FILE SYSTEM & KICK OFF DATA STEWARD AGENT -->
+          <div class="glass-card rounded-2xl p-6 space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-700/70 pb-4">
+              <div>
+                <h2 class="text-base font-bold text-white">Step 1: Data Steward & Modeling Agent</h2>
+                <p class="text-xs text-slate-400">Load sample XML file(s) from your local file system (or choose a workspace sample) to infer `raw_schema.yaml` (Normal Table), `staging_schema.yaml` (Dynamic Table), `gold_schema.yaml` (Dynamic Table), and `data_model.yaml` — <b>without generating DDL yet</b>.</p>
+              </div>
+              <span class="px-2.5 py-1 text-[11px] font-semibold rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30">Step 1 Agent</span>
             </div>
-          </details>
 
-          <div class="flex items-center justify-end gap-3 pt-2">
-            <button onclick="runBootstrap()" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition">
-              ▶ Run ① A0 Intake & ② C0 Schema Bootstrap
-            </button>
+            <!-- LOCAL FILE SYSTEM PICKER -->
+            <div class="p-4 rounded-xl bg-indigo-950/30 border-2 border-dashed border-indigo-500/40 space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <div class="text-xs font-bold text-indigo-200">📂 Load Sample XML File(s) from Local File System</div>
+                  <div class="text-[11px] text-slate-400">Select one or more `.xml` files from your computer to onboard and model.</div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button type="button" onclick="presetEnterpriseHierarchical()" class="px-3 py-1.5 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-400/40 text-[11px] font-semibold text-indigo-200 transition">
+                    ⚡ Preset: Hierarchical `enterprise_order_001.xml` (157 fields)
+                  </button>
+                  <button type="button" onclick="presetStandardOrders()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-[11px] font-semibold text-slate-300 transition">
+                    Preset: Standard `orders`
+                  </button>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-3">
+                <input
+                  id="in-local-files"
+                  type="file"
+                  accept=".xml,text/xml,application/xml"
+                  multiple
+                  onchange="handleLocalFileSelect(this.files)"
+                  class="block w-full text-xs text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer bg-slate-900/90 rounded-lg border border-slate-700 p-1.5"
+                />
+              </div>
+
+              <div id="local-files-preview" class="hidden text-xs bg-slate-950/90 border border-slate-800 rounded-lg p-3 space-y-1.5"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div>
+                <label class="block text-slate-300 font-medium mb-1">Dataset Name</label>
+                <input id="in-dataset" type="text" value="enterprise_orders" oninput="syncAdlsPath(this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono focus:border-indigo-500 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-slate-300 font-medium mb-1">Source System</label>
+                <input id="in-source" type="text" value="sap_s4hana" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none" />
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-slate-300 font-medium mb-1">D1: ADLS Landing Zone Path (Snowpipe Source)</label>
+                <input id="in-adls" type="text" value="abfss://landing@enterpriseadls.dfs.core.windows.net/xml/enterprise_orders/" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono focus:border-indigo-500 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-slate-300 font-medium mb-1">Fallback Workspace Sample Directory (if no local file chosen)</label>
+                <input id="in-sample-dir" type="text" value="datasets/enterprise_orders/samples" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono focus:border-indigo-500 focus:outline-none" />
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-slate-300 font-medium mb-1">SLA Freshness (hrs)</label>
+                  <input id="in-sla" type="number" value="24" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none" />
+                </div>
+                <div>
+                  <label class="block text-slate-300 font-medium mb-1">Confidence Threshold</label>
+                  <input id="in-conf" type="number" step="0.05" value="0.80" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none" />
+                </div>
+              </div>
+              <div>
+                <label class="block text-slate-300 font-medium mb-1">Data Steward Owner</label>
+                <input id="in-steward" type="text" value="data-steward@enterprise.io" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-slate-300 font-medium mb-1">Data Engineering Owner</label>
+                <input id="in-eng" type="text" value="data-eng@enterprise.io" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none" />
+              </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-2">
+              <button id="btn-run-step1" onclick="runBootstrap()" class="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition">
+                ▶ Kick Off Step 1: Data Steward Agent (Generate 3-Layer YAMLs & Data Model)
+              </button>
+            </div>
           </div>
         </div>
 
-        <!-- RIGHT SIDE: WHAT C0 INFERS CARD -->
+        <!-- RIGHT SIDE: 3-STEP WORKFLOW SUMMARY -->
         <div class="glass-card rounded-2xl p-6 space-y-4">
-          <h3 class="text-sm font-bold text-amber-300">What C0 Infers from Sample XMLs</h3>
+          <h3 class="text-sm font-bold text-amber-300">End-to-End 3-Step Agentic Workflow</h3>
           <ul class="space-y-3 text-xs text-slate-300">
-            <li class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-              <div class="font-semibold text-white">1. Element & Attribute Inventory</div>
-              <p class="text-slate-400 mt-0.5">Unions all XPaths across every sample file. Elements present in &lt;100% of samples are marked <code class="text-amber-300">required: false</code>.</p>
+            <li class="p-3.5 rounded-xl bg-slate-900/80 border border-amber-500/30">
+              <div class="font-bold text-amber-300">Step 1: Data Steward Agent (Claude Haiku)</div>
+              <p class="text-slate-400 mt-1">Reads XML schema &amp; creates <code class="text-white">raw_schema.yaml</code> (Normal Table — <b>not DDL</b>). Models Stage &amp; Final Gold layers as <b>Dynamic Tables</b> (<code class="text-white">staging_schema.yaml</code>, <code class="text-white">gold_schema.yaml</code>, <code class="text-white">data_model.yaml</code>) and pauses for human approval.</p>
             </li>
-            <li class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-              <div class="font-semibold text-white">2. Narrowest Snowflake Type Ladder</div>
-              <p class="text-slate-400 mt-0.5">Tests <code class="text-indigo-300">NUMBER(18,0) → NUMBER(18,4) → DATE → TIMESTAMP_NTZ → BOOLEAN → VARCHAR</code> across all values.</p>
+            <li class="p-3.5 rounded-xl bg-slate-900/80 border border-blue-500/30">
+              <div class="font-bold text-blue-300">Human Gate (C3): Approve YAMLs &amp; Model</div>
+              <p class="text-slate-400 mt-1">Review and edit the 3-layer YAML schemas, Claude's semantic descriptions, PII tags, and dimensional Gold model before any SQL is generated.</p>
             </li>
-            <li class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-              <div class="font-semibold text-white">3. Array & LATERAL FLATTEN Detection</div>
-              <p class="text-slate-400 mt-0.5">Repeating nodes under the same parent set <code class="text-purple-300">is_array: true</code> and generate <code class="text-purple-300">LATERAL FLATTEN</code> in DDL.</p>
+            <li class="p-3.5 rounded-xl bg-slate-900/80 border border-indigo-500/30">
+              <div class="font-bold text-indigo-300">Step 2: DDL Generator Agent</div>
+              <p class="text-slate-400 mt-1">Once approved, compiles SQLs for all 3 layers: ADLS → RAW (<b>Snowpipe</b>), RAW → Stage (<b>Dynamic Table</b>), Stage → Final Gold (<b>Dynamic Table</b>) + deployment manifest.</p>
             </li>
-            <li class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-              <div class="font-semibold text-white">4. Confidence Scoring for C3 Review</div>
-              <p class="text-slate-400 mt-0.5">Fields below threshold (e.g. <code class="text-amber-300">0.50</code>) are highlighted for the Data Steward at Stage ③.</p>
+            <li class="p-3.5 rounded-xl bg-slate-900/80 border border-emerald-500/30">
+              <div class="font-bold text-emerald-300">Step 3: E2E Deployment &amp; Final Sign-Off</div>
+              <p class="text-slate-400 mt-1">Deploys all generated SQLs end-to-end (ADLS to Gold), runs Catalog/DQ/Monitoring/Smoke Test, and presents the Final Sign-Off screen.</p>
             </li>
           </ul>
           <div id="intake-manifest-summary" class="p-3.5 rounded-xl bg-indigo-950/40 border border-indigo-500/30 text-xs space-y-1"></div>
@@ -183,38 +255,102 @@
     </section>
 
     <!-- =================================================================== -->
-    <!-- TAB 2: STAGE 3 — C3 SCHEMA REVIEW & C4 REGISTRY EDITOR              -->
+    <!-- TAB 2: HUMAN APPROVAL ON 3-LAYER YAMLS & DATA MODEL (C3 GATE)       -->
     <!-- =================================================================== -->
     <section id="tab-schema" class="tab-panel hidden space-y-6">
-      <div class="glass-card rounded-2xl p-6 space-y-5">
-        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-700/70 pb-4">
+
+      <!-- TOP APPROVAL BANNER -->
+      <div class="glass-card rounded-2xl p-6 space-y-4 border-l-4 border-l-blue-500">
+        <div class="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <div class="flex items-center gap-2">
-              <h2 class="text-base font-bold text-white">Stage ③ C3: Data Steward Schema Review (`mapping.yaml`)</h2>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h2 class="text-base font-bold text-white">Stage ② C3 Human Approval Gate: Data Model & 3-Layer YAML Schemas</h2>
               <span class="px-2.5 py-0.5 text-[11px] font-semibold rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">Human Gate 1 · Owner: Data Steward</span>
+              <span id="ddl-gate-badge" class="px-2.5 py-0.5 text-[11px] font-mono rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">No DDL Generated Yet</span>
             </div>
-            <p class="text-xs text-slate-400 mt-0.5">Inspect C0 inferred fields, adjust low-confidence columns or types, select SCD Type 2 business keys, and approve to provision Snowflake objects.</p>
+            <p class="text-xs text-slate-400 mt-1">Review `raw_schema.yaml` (Normal Table), `staging_schema.yaml` (Dynamic Table), `gold_schema.yaml` (Dynamic Table), and `data_model.yaml`. Approving triggers the Step 2 DDL Generator Agent.</p>
           </div>
-          <div class="flex items-center gap-2.5">
+          <div class="flex flex-wrap items-center gap-2.5">
             <button onclick="saveSchemaOverrides()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-semibold text-white transition">
-              💾 Save Overrides & Recompile DDL
+              💾 Save YAML Overrides
+            </button>
+            <button onclick="approveYamlsOnly()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white shadow-lg shadow-indigo-600/30 transition">
+              ✅ Approve YAMLs → Run Step 2: Generate SQLs
             </button>
             <button onclick="approveAndProvision()" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-lg shadow-blue-600/30 transition">
-              ✅ Approve Schema (C3) & Provision Pipeline (Stages ④–⑧)
+              🚀 Approve YAMLs → Generate SQLs (Step 2) & Deploy E2E (Step 3)
             </button>
           </div>
         </div>
 
-        <!-- EDITABLE MAPPING TABLE -->
-        <div class="overflow-x-auto">
+        <!-- CLAUDE HAIKU MODELING INSIGHTS PANEL -->
+        <div id="claude-proposal-box" class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 text-xs space-y-3"></div>
+      </div>
+
+      <!-- PROPOSED PARENT/CHILD DATA MODEL DIAGRAM (shown before any DDL is generated) -->
+      <div class="glass-card rounded-2xl p-6 space-y-4 border-l-4 border-l-emerald-500">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+          <div>
+            <h3 class="text-sm font-bold text-white">Proposed Data Model Diagram (Parent / Child Tables)</h3>
+            <p class="text-xs text-slate-400">Each repeating XML element becomes its own table in STAGING and CURATED. Child tables reference their parent through <code>&lt;parent&gt;_fk</code> &rarr; <code>&lt;parent&gt;_pk</code>. Review before approving DDL generation.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="selectErLayer('staging')" data-er="staging" class="er-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-emerald-600 text-white">STAGING</button>
+            <button onclick="selectErLayer('curated')" data-er="curated" class="er-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-slate-800 text-slate-300">CURATED</button>
+            <span class="text-slate-700">|</span>
+            <button onclick="exportDbtModels()" class="px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30">📦 dbt Models</button>
+            <button onclick="viewOpenApiSpec()" class="px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/30">📋 OpenAPI 3.1</button>
+            <button onclick="viewJsonSchema()" class="px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-500/30">📜 JSON Schema</button>
+            <button onclick="viewDqCertificate()" class="px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40">🎓 DQ Certificate</button>
+            <button onclick="viewChangelog()" class="px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-purple-950/80 hover:bg-purple-900 text-purple-300 border border-purple-500/40">📝 Changelog</button>
+            <a href="http://localhost:9002" target="_blank" class="px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-blue-950/80 hover:bg-blue-900 text-blue-300 border border-blue-500/40 inline-flex items-center gap-1">🔗 DataHub Lineage</a>
+          </div>
+        </div>
+
+        <!-- HIERARCHICAL CARDINALITY & ORPHAN AUDIT BANNER -->
+        <div id="hierarchical-audit-box" class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 text-xs"></div>
+
+        <div id="er-hierarchy" class="text-xs font-mono text-slate-300 bg-slate-950 border border-slate-800 rounded-xl p-3 overflow-x-auto"></div>
+        <div id="er-diagram" class="bg-slate-950 border border-slate-800 rounded-xl p-4 overflow-x-auto"></div>
+        <div id="er-entity-list" class="space-y-2 text-xs"></div>
+      </div>
+
+      <!-- 3-LAYER YAML FILES INSPECTOR -->
+      <div class="glass-card rounded-2xl p-6 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+          <div>
+            <h3 class="text-sm font-bold text-white">Generated 3-Layer Schema YAMLs & Data Model (Step 1 Output)</h3>
+            <p class="text-xs text-slate-400">Inspect each layer's YAML schema generated by the Data Steward Agent before SQL compilation.</p>
+          </div>
+          <div class="flex flex-wrap gap-1.5" id="yaml-tab-buttons">
+            <button onclick="selectYamlViewer('data_model.yaml')" data-yaml="data_model.yaml" class="yaml-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-indigo-600 text-white">data_model.yaml</button>
+            <button onclick="selectYamlViewer('raw_schema.yaml')" data-yaml="raw_schema.yaml" class="yaml-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-slate-800 text-slate-300">raw_schema.yaml (Table)</button>
+            <button onclick="selectYamlViewer('staging_schema.yaml')" data-yaml="staging_schema.yaml" class="yaml-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-slate-800 text-slate-300">staging_schema.yaml (Dynamic)</button>
+            <button onclick="selectYamlViewer('gold_schema.yaml')" data-yaml="gold_schema.yaml" class="yaml-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-slate-800 text-slate-300">gold_schema.yaml (Dynamic)</button>
+            <button onclick="selectYamlViewer('mapping.yaml')" data-yaml="mapping.yaml" class="yaml-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-slate-800 text-slate-300">mapping.yaml</button>
+            <button onclick="selectYamlViewer('contract.yaml')" data-yaml="contract.yaml" class="yaml-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-slate-800 text-slate-300">contract.yaml</button>
+            <button onclick="selectYamlViewer('quality_rules.yaml')" data-yaml="quality_rules.yaml" class="yaml-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-slate-800 text-slate-300">quality_rules.yaml</button>
+          </div>
+        </div>
+        <pre id="yaml-file-viewer" class="bg-slate-950 border border-slate-800 rounded-xl p-4 overflow-x-auto max-h-80 text-indigo-200 code-box"></pre>
+      </div>
+
+      <!-- EDITABLE FIELD INVENTORY TABLE -->
+      <div class="glass-card rounded-2xl p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold text-white">Editable Field Inventory & Semantic Annotations</h3>
+          <span id="field-count-badge" class="text-xs text-slate-400"></span>
+        </div>
+        <div class="overflow-x-auto max-h-[480px]">
           <table class="w-full text-left border-collapse text-xs">
-            <thead>
+            <thead class="sticky top-0 bg-slate-900 z-10">
               <tr class="border-b border-slate-700 text-slate-400 uppercase text-[10px]">
                 <th class="py-2.5 px-3">XML XPath</th>
                 <th class="py-2.5 px-3">Snowflake Column</th>
                 <th class="py-2.5 px-3">Snowflake Type</th>
-                <th class="py-2.5 px-3 text-center">Required (G2)</th>
-                <th class="py-2.5 px-3 text-center">SCD2 Business Key</th>
+                <th class="py-2.5 px-3">Entity / PII / Description</th>
+                <th class="py-2.5 px-3 text-center">Required</th>
+                <th class="py-2.5 px-3 text-center">Business Key</th>
                 <th class="py-2.5 px-3">Cardinality</th>
                 <th class="py-2.5 px-3">Confidence</th>
                 <th class="py-2.5 px-3">Sample Values</th>
@@ -224,7 +360,7 @@
           </table>
         </div>
 
-        <!-- G3 BUSINESS RULES SUMMARY -->
+        <!-- G2 & G3 SUMMARY -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-slate-800 text-xs">
           <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 space-y-2">
             <div class="font-bold text-purple-300">G2 Contract Baseline (`contract.yaml`)</div>
@@ -239,42 +375,58 @@
     </section>
 
     <!-- =================================================================== -->
-    <!-- TAB 3: STAGES 4-10 — PROVISIONING, DDL, LINEAGE, SMOKE TEST & LIVE  -->
+    <!-- TAB 3: STEP 2 SQLs, STEP 3 DEPLOYMENT & FINAL SIGN-OFF SCREEN       -->
     <!-- =================================================================== -->
     <section id="tab-provision" class="tab-panel hidden space-y-6">
-      <!-- TOP BANNER: SMOKE TEST & GO-LIVE GATE -->
-      <div class="glass-card rounded-2xl p-6 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <div class="flex items-center gap-2">
-            <h2 class="text-base font-bold text-white">Stage ⑧ A5: Smoke Test & Stage ⑨ C3: Go-Live Sign-Off</h2>
-            <span class="px-2.5 py-0.5 text-[11px] font-semibold rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">Human Gate 2 · Owner: Data Engineering</span>
+
+      <!-- STEP 2 GENERATED SQL ARTIFACTS VIEWER -->
+      <div class="glass-card rounded-2xl p-6 space-y-4 border-l-4 border-l-amber-400">
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-base font-bold text-white">Step 2: DDL Generator Agent — 3-Layer SQL & Pipeline Artifacts</h2>
+              <span class="px-2.5 py-0.5 text-[11px] font-semibold rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">ADLS → Snowpipe → RAW Table → Stage Dynamic Table → Gold Dynamic Table</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">Inspect the generated SQL scripts for each layer and deploy the end-to-end pipeline via Step 3.</p>
           </div>
-          <p class="text-xs text-slate-400 mt-0.5">Verify all onboarding sample XMLs pass G1, G2, and G3 with 0 quarantined records before enabling production Snowpipe.</p>
+          <div class="flex items-center gap-2">
+            <button onclick="approveYamlsOnly()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-semibold text-white transition">
+              🔄 Regenerate SQLs (Step 2)
+            </button>
+            <button onclick="approveAndProvision()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white shadow-lg shadow-indigo-600/30 transition">
+              🚀 Run Step 3: Deploy SQLs & Build E2E Pipeline (A1–A5)
+            </button>
+          </div>
         </div>
-        <div class="flex items-center gap-3">
-          <button onclick="approveAndProvision()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-semibold text-white transition">
-            🔄 Re-Run Provision & Smoke Test (A1–A5)
-          </button>
-          <button onclick="approveGoLive()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white shadow-lg shadow-emerald-600/30 transition">
-            🚀 Approve Go-Live (Stage ⑨) & Enable Snowpipe
-          </button>
+
+        <div class="flex flex-wrap gap-1.5" id="sql-tab-buttons">
+          <button onclick="selectSqlViewer('01_raw_snowpipe.sql')" data-sql="01_raw_snowpipe.sql" class="sql-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-indigo-600 text-white">01_raw_snowpipe.sql (Snowpipe + Table)</button>
+          <button onclick="selectSqlViewer('02_staging_dynamic_table.sql')" data-sql="02_staging_dynamic_table.sql" class="sql-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-slate-800 text-slate-300">02_staging_dynamic_table.sql (Dynamic Table)</button>
+          <button onclick="selectSqlViewer('03_gold_dynamic_table.sql')" data-sql="03_gold_dynamic_table.sql" class="sql-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-slate-800 text-slate-300">03_gold_dynamic_table.sql (Dynamic Table)</button>
+          <button onclick="selectSqlViewer('04_ops_quarantine_dq.sql')" data-sql="04_ops_quarantine_dq.sql" class="sql-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-slate-800 text-slate-300">04_ops_quarantine_dq.sql</button>
+          <button onclick="selectSqlViewer('ddl.sql')" data-sql="ddl.sql" class="sql-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-slate-800 text-slate-300">Master ddl.sql</button>
+          <button onclick="selectSqlViewer('pipeline_deployment_manifest.yaml')" data-sql="pipeline_deployment_manifest.yaml" class="sql-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-slate-800 text-slate-300">pipeline_deployment_manifest.yaml</button>
         </div>
+
+        <pre id="ddl-sql-viewer" class="bg-slate-950 border border-slate-800 rounded-xl p-4 overflow-x-auto max-h-96 text-slate-200 code-box"></pre>
       </div>
 
-      <!-- 3 COLUMNS: A1 PROVISIONED OBJECTS, A2 DATAHUB LINEAGE, A4 RUNBOOK -->
+      <!-- 3 COLUMNS: STEP 3 PROVISIONED OBJECTS, A2 DATAHUB LINEAGE, A4 RUNBOOK -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 text-xs">
         <div class="glass-card rounded-2xl p-5 space-y-3">
           <div class="flex items-center justify-between">
-            <h3 class="font-bold text-amber-300 text-sm">④ A1: Snowflake Objects</h3>
-            <span class="text-[11px] text-slate-400">D2 · D3 · D4 · O1 · O3</span>
+            <h3 class="font-bold text-amber-300 text-sm">④ Step 3 (A1): E2E Deployed Objects</h3>
+            <span class="text-[11px] text-slate-400">Snowpipe + Dynamic Tables</span>
           </div>
           <ul id="a1-objects-list" class="space-y-1.5 text-slate-300 font-mono text-[11.5px]"></ul>
         </div>
 
         <div class="glass-card rounded-2xl p-5 space-y-3">
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between gap-2">
             <h3 class="font-bold text-emerald-300 text-sm">⑤ A2: DataHub Catalog & Lineage</h3>
-            <span class="text-[11px] text-slate-400">Metadata Plane</span>
+            <a href="http://localhost:9002" target="_blank" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-200 text-[11px] font-bold transition">
+              🔗 Open DataHub UI (:9002)
+            </a>
           </div>
           <div id="a2-lineage-list" class="space-y-2 text-slate-300"></div>
         </div>
@@ -288,23 +440,136 @@
         </div>
       </div>
 
-      <!-- COMPILED SNOWFLAKE DDL & MONITORING SQL -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="glass-card rounded-2xl p-5 space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-bold text-white">Compiled Snowflake DDL (`ddl.sql`)</h3>
-            <span class="text-[11px] font-mono text-indigo-300">VARIANT · LATERAL FLATTEN · SCD Type 2</span>
+      <!-- =============================================================== -->
+      <!-- FINAL SIGN-OFF SCREEN & SNOWFLAKE EXTERNAL BROWSER DEPLOYMENT   -->
+      <!-- =============================================================== -->
+      <div class="glass-card rounded-2xl p-6 space-y-5 border-2 border-emerald-500/40 bg-emerald-950/10">
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-700/80 pb-4">
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h2 class="text-base font-bold text-white">✍️ Stage ⑨ Final Engineering Sign-Off & Live Snowflake Deployment (External Browser SSO)</h2>
+              <span class="px-2.5 py-0.5 text-[11px] font-semibold rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Human Gate 2 · Final Sign-Off</span>
+              <span class="px-2.5 py-0.5 text-[11px] font-mono rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">authenticator = externalbrowser</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">Verify the pre-flight checklist and Smoke Test report, then connect to Snowflake using <b>External Browser SSO</b> to deploy all 3 layers (RAW Normal Table + Snowpipe, Stage Dynamic Table, Final Gold Dynamic Table) and sign off production traffic.</p>
           </div>
-          <pre id="ddl-sql-viewer" class="bg-slate-950 border border-slate-800 rounded-xl p-4 overflow-x-auto max-h-96 text-slate-200 code-box"></pre>
+          <span id="signoff-status-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700">Awaiting Sign-Off</span>
         </div>
 
-        <div class="glass-card rounded-2xl p-5 space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-bold text-white">O2 Monitoring & O5 SLA Dashboard SQL (`monitoring.sql`)</h3>
-            <span class="text-[11px] font-mono text-emerald-300">Freshness · Latency · Quarantine</span>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 text-xs">
+          <!-- LEFT: PRE-FLIGHT VERIFICATION CHECKLIST & SMOKE TEST -->
+          <div class="space-y-3">
+            <div class="font-bold text-slate-200 uppercase text-[11px] tracking-wider">Pre-Flight Sign-Off Checklist</div>
+            <div id="signoff-checklist" class="space-y-2"></div>
+            <div class="font-bold text-slate-200 uppercase text-[11px] tracking-wider pt-2">A5 Smoke Test Report</div>
+            <pre id="smoke-report-viewer" class="bg-slate-950 border border-slate-800 rounded-xl p-3 overflow-x-auto max-h-56 text-slate-300 code-box"></pre>
           </div>
-          <pre id="monitoring-sql-viewer" class="bg-slate-950 border border-slate-800 rounded-xl p-4 overflow-x-auto max-h-96 text-slate-200 code-box"></pre>
+
+          <!-- RIGHT: SNOWFLAKE EXTERNAL BROWSER CONNECTION & SIGN-OFF FORM -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-5 space-y-4 flex flex-col justify-between">
+            <div class="space-y-4">
+              <!-- SNOWFLAKE CONNECTION SETTINGS -->
+              <div class="p-4 rounded-xl bg-sky-950/30 border border-sky-500/30 space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <div class="font-bold text-sky-300 text-xs flex items-center gap-1.5">
+                      ❄️ Snowflake Live Connection
+                    </div>
+                    <div class="text-[11px] text-slate-400">Use <b>External Browser SSO</b> (requires a SAML IdP like Okta/Entra ID in Snowflake) or <b>Username &amp; Password / PAT</b> (for standalone/trial Snowflake accounts without SAML IdP).</div>
+                  </div>
+                  <span id="sf-conn-badge" class="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-300 border border-slate-700">Not Connected</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                  <div>
+                    <label class="block text-slate-300 font-medium mb-1">Authenticator Mode</label>
+                    <select id="in-sf-auth" onchange="toggleSfPasswordField()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white font-mono focus:border-sky-400 focus:outline-none">
+                      <option value="externalbrowser" selected>externalbrowser (Browser SAML SSO)</option>
+                      <option value="snowflake">snowflake (Username &amp; Password / PAT)</option>
+                      <option value="username_password_mfa">username_password_mfa (Password + Duo MFA)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-slate-300 font-medium mb-1">Snowflake Account Identifier *</label>
+                    <input id="in-sf-account" type="text" placeholder="e.g. YLDULXM-DC69211 (no .snowflakecomputing.com)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white font-mono focus:border-sky-400 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label class="block text-slate-300 font-medium mb-1">User / Login Name</label>
+                    <input id="in-sf-user" type="text" placeholder="your_snowflake_username" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white font-mono focus:border-sky-400 focus:outline-none" />
+                  </div>
+                  <div id="sf-password-wrap" class="hidden">
+                    <label class="block text-amber-300 font-medium mb-1">Password or Programmatic Access Token *</label>
+                    <input id="in-sf-password" type="password" placeholder="Snowflake password or PAT" class="w-full bg-slate-950 border border-amber-500/50 rounded-lg px-2.5 py-1.5 text-white font-mono focus:border-amber-400 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label class="block text-slate-300 font-medium mb-1">Role</label>
+                    <input id="in-sf-role" type="text" value="ACCOUNTADMIN" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white font-mono focus:border-sky-400 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label class="block text-slate-300 font-medium mb-1">Warehouse (for Dynamic Tables)</label>
+                    <input id="in-sf-warehouse" type="text" value="COMPUTE_WH" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white font-mono focus:border-sky-400 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label class="block text-slate-300 font-medium mb-1">Target Database</label>
+                    <input id="in-sf-database" type="text" value="ENTERPRISE_DW" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white font-mono focus:border-sky-400 focus:outline-none" />
+                  </div>
+                  <div class="grid grid-cols-4 gap-1.5 md:col-span-2">
+                    <div>
+                      <label class="block text-indigo-300 font-medium mb-1 text-[10px]">RAW Schema</label>
+                      <input id="in-sf-schema" type="text" value="RAW" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-white font-mono text-[11px] focus:border-sky-400 focus:outline-none" />
+                    </div>
+                    <div>
+                      <label class="block text-purple-300 font-medium mb-1 text-[10px]">STAGE Schema</label>
+                      <input id="in-sf-schema-staging" type="text" value="STAGING" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-white font-mono text-[11px] focus:border-sky-400 focus:outline-none" />
+                    </div>
+                    <div>
+                      <label class="block text-emerald-300 font-medium mb-1 text-[10px]">GOLD Schema</label>
+                      <input id="in-sf-schema-curated" type="text" value="CURATED" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-white font-mono text-[11px] focus:border-sky-400 focus:outline-none" />
+                    </div>
+                    <div>
+                      <label class="block text-amber-300 font-medium mb-1 text-[10px]">OPS Schema</label>
+                      <input id="in-sf-schema-ops" type="text" value="OPS" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-white font-mono text-[11px] focus:border-sky-400 focus:outline-none" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+                  <button type="button" onclick="saveSnowflakeConfig(false)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-[11px] font-semibold text-white transition">
+                    💾 Save Snowflake Config
+                  </button>
+                  <button type="button" id="btn-test-sf-sso" onclick="saveSnowflakeConfig(true)" class="px-3.5 py-1.5 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/40 text-[11px] font-bold text-sky-200 transition">
+                    🔌 Test Snowflake Connection
+                  </button>
+                </div>
+              </div>
+
+              <!-- SIGN-OFF AUTHORIZATION -->
+              <div class="space-y-2.5">
+                <div class="font-bold text-emerald-300 text-xs">Production Sign-Off Authorization</div>
+                <div>
+                  <label class="block text-slate-300 font-medium mb-1">Approving Data Engineer / Architect</label>
+                  <input id="in-signoff-by" type="text" value="lead-data-engineer@enterprise.io" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white font-mono" />
+                </div>
+                <div>
+                  <label class="block text-slate-300 font-medium mb-1">Sign-Off Notes & Change Ticket Ref</label>
+                  <textarea id="in-signoff-notes" rows="2" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white">Verified 3-layer YAML schemas, Snowpipe + Stage/Gold Dynamic Table DDLs, and A5 Smoke Test (0 quarantined rows). Approved for live Snowflake deployment.</textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-800 space-y-2">
+              <button id="btn-deploy-sf-live" onclick="approveGoLive(true)" class="w-full py-3 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white shadow-lg shadow-emerald-600/30 transition">
+                🌐❄️ Sign Off & Deploy Pipeline to Snowflake (External Browser SSO)
+              </button>
+              <button onclick="approveGoLive(false)" class="w-full py-2 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[11px] font-semibold text-slate-300 transition">
+                ✍️ Sign Off Locally Only (Skip Live Snowflake Browser Connection)
+              </button>
+            </div>
+          </div>
         </div>
+
+        <!-- LIVE SNOWFLAKE DEPLOYMENT EXECUTION LOG -->
+        <div id="sf-deployment-log-box" class="hidden p-4 rounded-xl bg-slate-950 border border-sky-500/40 text-xs space-y-3"></div>
       </div>
     </section>
 
@@ -349,7 +614,6 @@
 
         <!-- RIGHT 2 COLS: C2 DRIFT PROPOSALS & O3 QUARANTINE -->
         <div class="lg:col-span-2 space-y-6">
-          <!-- C2 PROPOSALS INBOX -->
           <div class="glass-card rounded-2xl p-5 space-y-3">
             <div class="flex items-center justify-between">
               <div>
@@ -360,11 +624,10 @@
             <div id="proposals-container" class="space-y-3 max-h-80 overflow-y-auto pr-1"></div>
           </div>
 
-          <!-- O3 QUARANTINE TABLE -->
           <div class="glass-card rounded-2xl p-5 space-y-3">
             <div class="flex items-center justify-between">
               <div>
-                <h3 class="text-sm font-bold text-rose-400">O3: Quarantine Table (`quarantine_orders`)</h3>
+                <h3 class="text-sm font-bold text-rose-400">O3: Quarantine Table</h3>
                 <p class="text-xs text-slate-400">Failed files & records held with gate ID (`G1`, `G2`, `G3`) and failure reason.</p>
               </div>
               <button onclick="replayQuarantine()" class="px-3.5 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-300 text-xs font-semibold transition">
@@ -389,12 +652,12 @@
         </div>
       </div>
 
-      <!-- D4 CURATED SCD TYPE 2 DATA BROWSER -->
+      <!-- D4 FINAL GOLD DYNAMIC TABLE DATA BROWSER -->
       <div class="glass-card rounded-2xl p-5 space-y-3">
         <div class="flex items-center justify-between">
           <div>
-            <h3 class="text-sm font-bold text-emerald-300">D4: Curated SCD Type 2 Dataset (`curated_orders`)</h3>
-            <p class="text-xs text-slate-400">Flattened XML rows with temporal validity (`is_valid_start`, `is_valid_end`, `is_current`) and SHA-256 change hash.</p>
+            <h3 class="text-sm font-bold text-emerald-300">D4: Final Gold Dynamic Table Dataset</h3>
+            <p class="text-xs text-slate-400">Flattened & modeled rows with temporal validity (`is_valid_start`, `is_valid_end`, `is_current`) and SHA-256 change hash.</p>
           </div>
         </div>
         <div class="overflow-x-auto max-h-80">
@@ -411,28 +674,31 @@
   <script>
     let currentState = null;
     let activeTab = 'tab-intake';
+    let activeYamlFile = 'data_model.yaml';
+    let activeSqlFile = '01_raw_snowpipe.sql';
+    let selectedLocalFiles = [];
 
     const STAGES = [
-      { num: '①', name: 'A0: Intake', tab: 'tab-intake', role: 'agent' },
-      { num: '②', name: 'C0: Bootstrap', tab: 'tab-intake', role: 'agent' },
-      { num: '③', name: 'C3: Schema Gate', tab: 'tab-schema', role: 'human' },
-      { num: '④', name: 'A1: Provision', tab: 'tab-provision', role: 'agent' },
+      { num: '①', name: 'Step 1: Steward Agent', tab: 'tab-intake', role: 'agent' },
+      { num: '②', name: 'C3: Approve YAMLs', tab: 'tab-schema', role: 'human' },
+      { num: '③', name: 'Step 2: DDL Gen Agent', tab: 'tab-provision', role: 'agent' },
+      { num: '④', name: 'Step 3: E2E Deploy', tab: 'tab-provision', role: 'agent' },
       { num: '⑤', name: 'A2: Catalog', tab: 'tab-provision', role: 'agent' },
       { num: '⑥', name: 'A3: DQ Gates', tab: 'tab-provision', role: 'agent' },
       { num: '⑦', name: 'A4: Monitor', tab: 'tab-provision', role: 'agent' },
       { num: '⑧', name: 'A5: Smoke Test', tab: 'tab-provision', role: 'agent' },
-      { num: '⑨', name: 'C3: Go-Live', tab: 'tab-provision', role: 'human' },
+      { num: '⑨', name: 'C3: Final Sign-Off', tab: 'tab-provision', role: 'human' },
       { num: '⑩', name: 'Dataset Live', tab: 'tab-ops', role: 'live' },
     ];
 
     function showToast(msg, isError = false) {
       const el = document.getElementById('toast');
       el.textContent = msg;
-      el.className = `fixed bottom-5 right-5 z-50 max-w-md px-4 py-3 rounded-xl shadow-2xl border text-xs font-semibold transition-all ${
+      el.className = `fixed bottom-5 right-5 z-50 max-w-lg px-4 py-3 rounded-xl shadow-2xl border text-xs font-semibold transition-all ${
         isError ? 'bg-rose-950 border-rose-500 text-rose-200' : 'bg-emerald-950 border-emerald-500 text-emerald-200'
       }`;
       el.classList.remove('hidden');
-      setTimeout(() => el.classList.add('hidden'), 4500);
+      setTimeout(() => el.classList.add('hidden'), 5000);
     }
 
     function showTab(tabId) {
@@ -451,11 +717,261 @@
       }
     }
 
+    function syncAdlsPath(ds) {
+      const clean = (ds || 'orders').trim().toLowerCase().replace(/\s+/g, '_');
+      document.getElementById('in-adls').value = `abfss://landing@enterpriseadls.dfs.core.windows.net/xml/${clean}/`;
+    }
+
+    function presetEnterpriseHierarchical() {
+      selectedLocalFiles = [];
+      document.getElementById('in-local-files').value = '';
+      document.getElementById('local-files-preview').classList.add('hidden');
+      document.getElementById('in-dataset').value = 'enterprise_orders';
+      document.getElementById('in-source').value = 'sap_s4hana';
+      document.getElementById('in-sample-dir').value = 'datasets/enterprise_orders/samples';
+      syncAdlsPath('enterprise_orders');
+      showToast('Loaded preset: enterprise_orders (157-field hierarchical XML sample). Click Kick Off Step 1 to run!');
+    }
+
+    function presetStandardOrders() {
+      selectedLocalFiles = [];
+      document.getElementById('in-local-files').value = '';
+      document.getElementById('local-files-preview').classList.add('hidden');
+      document.getElementById('in-dataset').value = 'orders';
+      document.getElementById('in-source').value = 'erp_orders';
+      document.getElementById('in-sample-dir').value = 'samples/orders';
+      syncAdlsPath('orders');
+      showToast('Loaded preset: orders (10 sample XML files).');
+    }
+
+    async function handleLocalFileSelect(fileList) {
+      selectedLocalFiles = [];
+      const preview = document.getElementById('local-files-preview');
+      if (!fileList || fileList.length === 0) {
+        preview.classList.add('hidden');
+        return;
+      }
+      for (const file of Array.from(fileList)) {
+        const text = await file.text();
+        selectedLocalFiles.push({ name: file.name, content: text, size: file.size });
+      }
+      const firstStem = selectedLocalFiles[0].name.replace(/\.xml$/i, '').replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase();
+      if (firstStem) {
+        document.getElementById('in-dataset').value = firstStem;
+        syncAdlsPath(firstStem);
+      }
+      preview.classList.remove('hidden');
+      preview.innerHTML = `
+        <div class="font-bold text-emerald-300">✅ ${selectedLocalFiles.length} local XML file(s) staged from your computer:</div>
+        <ul class="list-disc list-inside text-slate-300 font-mono text-[11px]">
+          ${selectedLocalFiles.map(f => `<li>${f.name} (${(f.size / 1024).toFixed(1)} KB)</li>`).join('')}
+        </ul>
+      `;
+    }
+
+    async function saveLlmConfig(testConnection = false) {
+      const apiKey = document.getElementById('in-anthropic-key').value.trim();
+      const model = document.getElementById('in-llm-model').value;
+      const res = await fetch('/api/llm-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          api_key: apiKey,
+          model: model,
+          enabled: true,
+          test_connection: testConnection,
+        }),
+      });
+      const data = await res.json();
+      renderLlmStatus(data.llm_status);
+      if (!data.ok) {
+        showToast(data.error || 'Failed to configure Anthropic Claude.', true);
+        return;
+      }
+      document.getElementById('in-anthropic-key').value = '';
+      if (testConnection) {
+        showToast(`Connected to Anthropic (${data.llm_status.model})! Response: "${data.ping_result}"`);
+      } else {
+        showToast(`Saved Anthropic configuration (${data.llm_status.model}).`);
+      }
+    }
+
+    function renderLlmStatus(llm) {
+      if (!llm) return;
+      const hdr = document.getElementById('hdr-llm-badge');
+      const card = document.getElementById('llm-card-status');
+      document.getElementById('in-llm-model').value = llm.model || 'claude-haiku-5-5';
+      if (llm.api_key_set) {
+        hdr.textContent = `🤖 Claude Active (${llm.model})`;
+        hdr.className = 'px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+        card.textContent = `Active Key: ${llm.api_key_masked} (${llm.model})`;
+        card.className = 'px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+      } else {
+        hdr.textContent = `Claude (${llm.model}): Rule-Based Fallback`;
+        hdr.className = 'px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30';
+        card.textContent = 'No API Key Set (Rule-Based Mode)';
+        card.className = 'px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 text-slate-300 border border-slate-700';
+      }
+    }
+
+    function toggleSfPasswordField() {
+      const auth = document.getElementById('in-sf-auth')?.value || 'externalbrowser';
+      const wrap = document.getElementById('sf-password-wrap');
+      if (wrap) {
+        if (auth === 'externalbrowser') {
+          wrap.classList.add('hidden');
+        } else {
+          wrap.classList.remove('hidden');
+        }
+      }
+    }
+
+    function collectSnowflakeForm() {
+      const auth = (document.getElementById('in-sf-auth')?.value || 'externalbrowser').trim();
+      return {
+        mode: auth === 'externalbrowser' ? 'externalbrowser' : 'snowflake',
+        authenticator: auth,
+        account: (document.getElementById('in-sf-account')?.value || '').trim(),
+        user: (document.getElementById('in-sf-user')?.value || '').trim(),
+        password: (document.getElementById('in-sf-password')?.value || '').trim(),
+        role: (document.getElementById('in-sf-role')?.value || 'ACCOUNTADMIN').trim(),
+        warehouse: (document.getElementById('in-sf-warehouse')?.value || 'COMPUTE_WH').trim(),
+        database: (document.getElementById('in-sf-database')?.value || 'ENTERPRISE_DW').trim(),
+        schema_raw: (document.getElementById('in-sf-schema')?.value || 'RAW').trim(),
+        schema_staging: (document.getElementById('in-sf-schema-staging')?.value || 'STAGING').trim(),
+        schema_curated: (document.getElementById('in-sf-schema-curated')?.value || 'CURATED').trim(),
+        schema_ops: (document.getElementById('in-sf-schema-ops')?.value || 'OPS').trim(),
+      };
+    }
+
+    function renderSnowflakeStatus(sf, liveDeploy) {
+      if (!sf) return;
+      const authSel = document.getElementById('in-sf-auth');
+      if (authSel && sf.authenticator) {
+        authSel.value = sf.authenticator;
+        toggleSfPasswordField();
+      }
+      const accInput = document.getElementById('in-sf-account');
+      if (accInput && sf.account) accInput.value = sf.account;
+      const usrInput = document.getElementById('in-sf-user');
+      if (usrInput && !usrInput.value && sf.user) usrInput.value = sf.user;
+      if (sf.role && document.getElementById('in-sf-role') && !document.getElementById('in-sf-role').value) {
+        document.getElementById('in-sf-role').value = sf.role;
+      }
+      if (sf.warehouse && document.getElementById('in-sf-warehouse')) document.getElementById('in-sf-warehouse').value = sf.warehouse;
+      if (sf.database && document.getElementById('in-sf-database')) document.getElementById('in-sf-database').value = sf.database;
+      if (sf.schema_raw && document.getElementById('in-sf-schema')) document.getElementById('in-sf-schema').value = sf.schema_raw;
+      if (sf.schema_staging && document.getElementById('in-sf-schema-staging')) document.getElementById('in-sf-schema-staging').value = sf.schema_staging;
+      if (sf.schema_curated && document.getElementById('in-sf-schema-curated')) document.getElementById('in-sf-schema-curated').value = sf.schema_curated;
+      if (sf.schema_ops && document.getElementById('in-sf-schema-ops')) document.getElementById('in-sf-schema-ops').value = sf.schema_ops;
+
+      const hdrBadge = document.getElementById('hdr-sf-badge');
+      const cardBadge = document.getElementById('sf-conn-badge');
+      const sess = sf.last_verified_session || liveDeploy?.snowflake_session;
+
+      if (sess && sess.connected) {
+        if (hdrBadge) {
+          hdrBadge.textContent = `❄️ Snowflake SSO: ${sess.current_user}@${sess.current_account}`;
+          hdrBadge.className = 'px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+        }
+        if (cardBadge) {
+          cardBadge.textContent = `✅ Connected (${sess.current_user} · ${sess.current_role})`;
+          cardBadge.className = 'px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+        }
+      } else if (sf.is_configured) {
+        if (hdrBadge) {
+          hdrBadge.textContent = `❄️ Snowflake: ${sf.account} (External Browser SSO Ready)`;
+          hdrBadge.className = 'px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30';
+        }
+        if (cardBadge) {
+          cardBadge.textContent = `Ready (${sf.account})`;
+          cardBadge.className = 'px-2 py-0.5 rounded text-[10px] font-mono bg-sky-500/20 text-sky-300 border border-sky-500/40';
+        }
+      } else {
+        if (hdrBadge) {
+          hdrBadge.textContent = '❄️ Snowflake: External Browser SSO';
+          hdrBadge.className = 'px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-slate-800 text-slate-300 border border-slate-700';
+        }
+        if (cardBadge) {
+          cardBadge.textContent = 'Account Not Configured';
+          cardBadge.className = 'px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-400 border border-slate-700';
+        }
+      }
+
+      const logBox = document.getElementById('sf-deployment-log-box');
+      if (logBox) {
+        if (liveDeploy && liveDeploy.deployed) {
+          logBox.classList.remove('hidden');
+          const logs = liveDeploy.execution_logs || [];
+          const s = liveDeploy.snowflake_session || {};
+          logBox.innerHTML = `
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
+              <div class="font-bold text-sky-300">
+                ❄️ Live Snowflake Deployment Log (Account: <code>${s.current_account || sf.account}</code> · User: <code>${s.current_user || sf.user}</code> · Role: <code>${s.current_role || sf.role}</code>)
+              </div>
+              <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px]">
+                ${liveDeploy.statements_succeeded}/${liveDeploy.statements_executed} SQL Statements Executed · ${liveDeploy.seeded_sample_files || 0} XML Files Seeded
+              </span>
+            </div>
+            <div class="max-h-56 overflow-y-auto space-y-1 font-mono text-[11px]">
+              ${logs.map(l => `
+                <div class="p-1.5 rounded bg-slate-900/90 border border-slate-800 flex items-center justify-between gap-3">
+                  <div class="truncate">
+                    <span class="${l.status === 'SUCCESS' ? 'text-emerald-400' : l.status === 'WARNING' ? 'text-amber-400' : 'text-rose-400'} font-bold">[${l.status}]</span>
+                    <span class="text-indigo-300">${l.step}:</span>
+                    <span class="text-slate-300">${l.sql_preview}</span>
+                  </div>
+                  <span class="text-[10px] text-slate-500 shrink-0">${l.query_id ? 'QID: ' + l.query_id : ''}</span>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        } else {
+          logBox.classList.add('hidden');
+        }
+      }
+    }
+
+    async function saveSnowflakeConfig(testSso = false) {
+      const btn = document.getElementById('btn-test-sf-sso');
+      const orig = btn ? btn.textContent : '';
+      if (testSso && btn) {
+        btn.textContent = '🌐 Opening External Browser for Snowflake SSO...';
+        btn.disabled = true;
+      }
+      try {
+        const payload = { ...collectSnowflakeForm(), test_connection: testSso };
+        const res = await fetch('/api/snowflake-config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        renderSnowflakeStatus(data.snowflake_status, currentState?.snowflake_live_deployment);
+        if (!data.ok) {
+          showToast(data.error || 'Snowflake External Browser SSO failed.', true);
+          return;
+        }
+        if (testSso && data.session) {
+          showToast(`Connected to Snowflake via External Browser SSO as ${data.session.current_user} (${data.session.current_role}, Snowflake v${data.session.snowflake_version})!`);
+        } else {
+          showToast('Saved Snowflake External Browser SSO configuration.');
+        }
+      } finally {
+        if (testSso && btn) {
+          btn.textContent = orig;
+          btn.disabled = false;
+        }
+      }
+    }
+
     function getCompletedStageIndex(status) {
       switch (status) {
-        case 'DRAFT': return 1;
-        case 'BOOTSTRAPPED': return 2;
-        case 'APPROVED': return 3;
+        case 'DRAFT': return 0;
+        case 'BOOTSTRAPPED':
+        case 'PENDING_HUMAN_APPROVAL': return 1;
+        case 'APPROVED': return 2;
+        case 'DDL_GENERATED': return 3;
         case 'PROVISIONED': return 8;
         case 'PUBLISHED': return 10;
         default: return 0;
@@ -482,7 +998,7 @@
         return `
           <button onclick="showTab('${s.tab}')" class="px-2.5 py-1.5 rounded-lg border text-left transition hover:brightness-125 ${bg}">
             <div class="flex items-center justify-between font-bold">
-              <span>${s.num} ${s.name}</span>
+              <span class="truncate">${s.num} ${s.name}</span>
               <span>${isDone ? '✓' : isCurrent ? '●' : ''}</span>
             </div>
           </button>
@@ -490,10 +1006,164 @@
       }).join('');
     }
 
+    function selectYamlViewer(fileName) {
+      activeYamlFile = fileName;
+      document.querySelectorAll('.yaml-tab-btn').forEach(btn => {
+        const isSel = btn.dataset.yaml === fileName;
+        btn.className = `yaml-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition ${
+          isSel ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+        }`;
+      });
+      const ymap = currentState?.yaml_files_text || {};
+      document.getElementById('yaml-file-viewer').textContent = ymap[fileName] || `# ${fileName} not generated yet`;
+    }
+
+    function selectSqlViewer(fileName) {
+      activeSqlFile = fileName;
+      document.querySelectorAll('.sql-tab-btn').forEach(btn => {
+        const isSel = btn.dataset.sql === fileName;
+        btn.className = `sql-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition ${
+          isSel ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+        }`;
+      });
+      const smap = currentState?.sql_files_text || {};
+      document.getElementById('ddl-sql-viewer').textContent =
+        smap[fileName] || `-- ${fileName} has not been generated yet. Approve the 3-Layer YAMLs in Tab ② to trigger the Step 2 DDL Generator Agent.`;
+    }
+
+    let activeErLayer = 'staging';
+    let erRenderSeq = 0;
+
+    function selectErLayer(layer) {
+      activeErLayer = layer;
+      document.querySelectorAll('.er-tab-btn').forEach(btn => {
+        btn.className = `er-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition ${
+          btn.dataset.er === layer ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+        }`;
+      });
+      renderErDiagram(currentState);
+    }
+
+    async function exportDbtModels() {
+      const ds = currentState?.dataset || 'analytics';
+      try {
+        const res = await fetch(`/api/export/dbt?dataset=${ds}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.ok) {
+          alert(`âœ… Exported dbt Project Successfully!\nModels Generated: ${data.models.join(', ')}\nPath: ${data.schema_path}`);
+        } else {
+          alert(`â Œ Failed to export dbt models: ${data.error}`);
+        }
+      } catch (e) {
+        alert(`Error: ${e.message}`);
+      }
+    }
+
+    function viewOpenApiSpec() {
+      const ds = currentState?.dataset || 'analytics';
+      window.open(`/api/export/openapi?dataset=${ds}`, '_blank');
+    }
+
+    function viewJsonSchema() {
+      const ds = currentState?.dataset || 'analytics';
+      window.open(`/api/export/json-schema?dataset=${ds}`, '_blank');
+    }
+
+    function viewDqCertificate() {
+      const ds = currentState?.dataset || 'analytics';
+      window.open(`/api/export/dq-certificate?dataset=${ds}`, '_blank');
+    }
+
+    function viewChangelog() {
+      const ds = currentState?.dataset || 'analytics';
+      window.open(`/api/export/changelog?dataset=${ds}`, '_blank');
+    }
+
+    async function renderErDiagram(st) {
+      const dm = st?.data_model || {};
+      const source = activeErLayer === 'curated' ? dm.er_diagram_curated : dm.er_diagram_staging;
+      const box = document.getElementById('er-diagram');
+      const schema = activeErLayer === 'curated' ? st?.gold_schema : st?.staging_schema;
+      const tables = (schema?.tables || []);
+
+      // Populate hierarchical integrity & cardinality inspector
+      const auditBox = document.getElementById('hierarchical-audit-box');
+      if (auditBox) {
+        const audit = st?.hierarchical_audit;
+        if (audit) {
+          auditBox.innerHTML = `
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-2.5">
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  âœ… Referential Integrity: 100% Passed
+                </span>
+                <span class="text-slate-400 font-mono text-[11px]">Source: ${esc(audit.xml_file)}</span>
+              </div>
+              <div class="text-[11px] font-mono text-slate-500">Declared Container Size Discrepancies: <b class="text-emerald-400">${audit.size_discrepancies}</b></div>
+            </div>
+            <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+              <div class="p-2 rounded-lg bg-slate-950 border border-slate-800">
+                <div class="text-lg font-bold text-white">${audit.total_assets?.toLocaleString()}</div>
+                <div class="text-[10px] uppercase tracking-wider text-slate-400">Parent Assets</div>
+              </div>
+              <div class="p-2 rounded-lg bg-slate-950 border border-slate-800">
+                <div class="text-lg font-bold text-cyan-300">${audit.total_cusip2_records?.toLocaleString()}</div>
+                <div class="text-[10px] uppercase tracking-wider text-slate-400">CUSIP2 Child (${audit.average_cusip2_per_asset}/asset)</div>
+              </div>
+              <div class="p-2 rounded-lg bg-slate-950 border border-slate-800">
+                <div class="text-lg font-bold text-indigo-300">${audit.total_country_classifications?.toLocaleString()}</div>
+                <div class="text-[10px] uppercase tracking-wider text-slate-400">Country Class (${audit.average_cc_per_asset}/asset)</div>
+              </div>
+              <div class="p-2 rounded-lg bg-slate-950 border border-slate-800">
+                <div class="text-lg font-bold text-amber-300">${audit.total_cusip_aliases?.toLocaleString()}</div>
+                <div class="text-[10px] uppercase tracking-wider text-slate-400">CUSIP Alias Child</div>
+              </div>
+            </div>
+          `;
+        } else {
+          auditBox.innerHTML = '<span class="text-slate-500">Hierarchical audit metadata loading...</span>';
+        }
+      }
+
+      // Entity hierarchy tree (works offline) + per-table column lists
+      const kids = {};
+      tables.forEach(t => { (kids[t.parent_table || ''] = kids[t.parent_table || ''] || []).push(t); });
+      const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+      const tree = (parent, depth) => (kids[parent] || []).map(t =>
+        `<div style="padding-left:${depth * 20}px">${depth ? '└─ ' : ''}<b class="text-emerald-300">${esc(t.table_name)}</b>
+          <span class="text-slate-500">${esc(t.flatten_path || st?.mapping?.root_element || '')}</span>
+          ${(t.foreign_keys || []).map(fk => `<span class="text-amber-300">FK ${esc(fk.column)} → ${esc(fk.references_table)}.${esc(fk.references_column)}</span>`).join(' ')}</div>${tree(t.table_name, depth + 1)}`
+      ).join('');
+      document.getElementById('er-hierarchy').innerHTML = tables.length ? tree('', 0) : '<span class="text-slate-500">No model yet — run Step 1.</span>';
+      document.getElementById('er-entity-list').innerHTML = tables.map(t => `
+        <details class="rounded-lg bg-slate-900/80 border border-slate-800 p-2.5">
+          <summary class="cursor-pointer font-mono text-slate-200">${esc(t.table_name)}
+            <span class="text-[10px] text-slate-500">(${(t.columns || []).length} columns · PK ${esc((t.primary_keys || []).join(', '))})</span></summary>
+          <div class="mt-2 grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-0.5 font-mono text-[11px] text-slate-400">
+            ${(t.columns || []).map(c => `<div>${esc(c.name)} <span class="text-slate-600">${esc(c.snowflake_type)}</span></div>`).join('')}
+          </div></details>`).join('');
+
+      if (!source) { box.innerHTML = '<span class="text-slate-500 text-xs">No diagram available yet.</span>'; return; }
+      if (typeof mermaid === 'undefined') {
+        box.innerHTML = `<pre class="text-[11px] text-slate-400">${esc(source)}</pre>`;
+        return;
+      }
+      try {
+        mermaid.initialize({ startOnLoad: false, theme: 'dark', er: { useMaxWidth: false } });
+        const { svg } = await mermaid.render(`er-svg-${++erRenderSeq}`, source);
+        box.innerHTML = svg;
+      } catch (err) {
+        box.innerHTML = `<pre class="text-[11px] text-slate-400">${esc(source)}</pre>`;
+      }
+    }
+
     function renderAll(data) {
       const datasets = data.datasets || ['orders'];
       const st = data.state;
       currentState = st;
+
+      renderLlmStatus(data.llm_status || st?.llm_status);
+      renderSnowflakeStatus(data.snowflake_status || st?.snowflake_status, st?.snowflake_live_deployment);
 
       const dsSelect = document.getElementById('dataset-select');
       dsSelect.innerHTML = datasets.map(d => `<option value="${d}" ${d === st.dataset ? 'selected' : ''}>${d}</option>`).join('');
@@ -513,26 +1183,86 @@
 
       renderStepper(status);
 
-      // Populate Tab 1 inputs
-      if (st.manifest) {
-        document.getElementById('in-dataset').value = st.manifest.dataset;
-        document.getElementById('in-source').value = st.manifest.source_system;
-        document.getElementById('in-adls').value = st.manifest.adls_landing_path;
-        document.getElementById('in-steward').value = st.manifest.data_steward;
-        document.getElementById('in-eng').value = st.manifest.engineering_owner;
-        document.getElementById('in-sla').value = st.manifest.freshness_sla_hours;
+      // DDL Gate Badge in Tab 2
+      const hasDdl = Boolean(st.ddl_sql && st.ddl_sql.trim());
+      const ddlBadge = document.getElementById('ddl-gate-badge');
+      if (hasDdl) {
+        ddlBadge.textContent = '✅ Step 2 DDL Generated';
+        ddlBadge.className = 'px-2.5 py-0.5 text-[11px] font-mono rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+      } else {
+        ddlBadge.textContent = '⏸️ YAML Only (No DDL Generated Yet — Awaiting Approval)';
+        ddlBadge.className = 'px-2.5 py-0.5 text-[11px] font-mono rounded bg-amber-500/20 text-amber-300 border border-amber-500/30';
+      }
 
+      // Claude Proposal Box in Tab 2
+      const dm = st.data_model || {};
+      const prop = dm.llm_proposal;
+      const claudeBox = document.getElementById('claude-proposal-box');
+      if (prop) {
+        const goldEntities = prop.gold_entities || [];
+        const notes = prop.steward_review_notes || [];
+        claudeBox.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-amber-300">🤖 Modeled by Anthropic Claude (<code>${prop.model}</code>)</span>
+            <span class="text-[11px] text-emerald-300">Approval Status: <b>${dm.approval_status || 'PENDING_HUMAN_APPROVAL'}</b></span>
+          </div>
+          <p class="text-slate-300">${prop.summary || ''}</p>
+          ${goldEntities.length ? `
+            <div class="pt-1">
+              <div class="font-semibold text-indigo-300 mb-1">Proposed Gold Dimensional Entities:</div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                ${goldEntities.map(e => `
+                  <div class="p-2.5 rounded bg-slate-950 border border-slate-800">
+                    <div class="font-mono font-bold text-white">${e.name} <span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300">${e.entity_type}</span></div>
+                    <div class="text-[11px] text-slate-400">Grain: ${e.grain} | Keys: <code>${(e.primary_keys || []).join(', ')}</code></div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+          ${notes.length ? `
+            <div class="text-[11px] text-amber-200">
+              <b>Steward Notes:</b> ${notes.slice(0, 3).join(' · ')}
+            </div>
+          ` : ''}
+        `;
+      } else {
+        claudeBox.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-indigo-300">⚙️ Modeled by 3-Layer Medallion Engine (${dm.modeling_engine || 'rule_based'})</span>
+            <span class="text-[11px] text-amber-300">Approval Status: <b>${dm.approval_status || 'PENDING_HUMAN_APPROVAL'}</b></span>
+          </div>
+          <div class="text-slate-400 text-[11px]">${dm.llm_note || 'Set your Anthropic API key in Tab ① and re-run Step 1 to enrich with Claude Haiku semantic modeling.'}</div>
+        `;
+      }
+
+      renderErDiagram(st);
+      selectYamlViewer(activeYamlFile);
+      selectSqlViewer(activeSqlFile);
+
+      // Populate Tab 1 summary
+      if (st.manifest) {
         document.getElementById('intake-manifest-summary').innerHTML = `
-          <div class="font-bold text-indigo-300">Current Intake Manifest (\`onboarding_manifest.yaml\`)</div>
-          <div>Valid Samples: <b class="text-white">${(st.manifest.valid_sample_files || []).length} XML files</b></div>
+          <div class="font-bold text-indigo-300">Active Dataset (\`${st.dataset}\`)</div>
+          <div>Valid Samples: <b class="text-white">${(st.manifest.valid_sample_files || []).length} XML file(s)</b></div>
           <div>Root Element: <code class="text-amber-300">${st.mapping?.root_element || '/Order'}</code></div>
           <div>Inferred Fields: <b class="text-white">${(st.mapping?.fields || []).length} columns</b></div>
+          <div>Stage Dynamic Tables: <b class="text-purple-300">${(st.staging_schema?.tables || []).length}</b></div>
+          <div>Gold Dynamic Tables: <b class="text-emerald-300">${(st.gold_schema?.tables || []).length}</b></div>
           <div>Status: <span class="text-emerald-300 font-semibold">${st.manifest.status}</span></div>
         `;
       }
 
-      // Populate Tab 2: C3 Schema Review Table
+      // Build lookup for Claude column annotations from staging_schema
+      const stgColsByName = {};
+      (st.staging_schema?.tables || []).forEach(tbl => (tbl.columns || []).forEach(c => {
+        if (c.source_xpath) stgColsByName[c.source_xpath] = c;
+        if (!stgColsByName[c.name]) stgColsByName[c.name] = c;
+      }));
+
+      // Populate Tab 2: Editable Schema Table
       const fields = st.mapping?.fields || [];
+      document.getElementById('field-count-badge').textContent = `${fields.length} inferred fields`;
       const bkeys = new Set(st.mapping?.business_keys || []);
       const sfTypes = ['NUMBER(18,0)', 'NUMBER(18,4)', 'VARCHAR', 'DATE', 'TIMESTAMP_NTZ', 'BOOLEAN'];
 
@@ -546,34 +1276,46 @@
           ? `<span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 font-mono text-[10px]">LATERAL FLATTEN</span>`
           : `<span class="text-slate-500">Scalar</span>`;
 
+        const meta = stgColsByName[f.xpath] || stgColsByName[f.column] || {};
+        const pii = meta.pii_category && meta.pii_category !== 'NONE'
+          ? `<span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-bold">PII: ${meta.pii_category}</span>`
+          : '';
+        const ent = meta.semantic_entity
+          ? `<span class="px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-[10px] font-mono">${meta.semantic_entity}</span>`
+          : '';
+        const desc = meta.description ? `<div class="text-[11px] text-slate-400 mt-0.5">${meta.description}</div>` : '';
+
         return `
           <tr class="${lowConf ? 'bg-amber-950/20' : ''} hover:bg-slate-800/50">
-            <td class="py-2.5 px-3 font-mono text-indigo-300">
+            <td class="py-2 px-3 font-mono text-indigo-300 text-[11px]">
               ${f.xpath}
-              <div class="text-[10px] text-slate-500">${f.origin} (v${f.added_in_version})</div>
             </td>
-            <td class="py-2.5 px-3">
+            <td class="py-2 px-3">
               <input data-idx="${idx}" data-field="column" value="${f.column}" class="schema-input bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white font-mono w-44" />
+              ${meta.suggested_name ? `<div class="text-[10px] text-amber-300 mt-0.5">Suggested: <code>${meta.suggested_name}</code></div>` : ''}
             </td>
-            <td class="py-2.5 px-3">
+            <td class="py-2 px-3">
               <select data-idx="${idx}" data-field="snowflake_type" class="schema-input bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white font-mono">
                 ${sfTypes.map(t => `<option value="${t}" ${t === f.snowflake_type ? 'selected' : ''}>${t}</option>`).join('')}
               </select>
             </td>
-            <td class="py-2.5 px-3 text-center">
+            <td class="py-2 px-3">
+              <div class="flex items-center gap-1 flex-wrap">${ent} ${pii}</div>
+              ${desc}
+            </td>
+            <td class="py-2 px-3 text-center">
               <input type="checkbox" data-idx="${idx}" data-field="required" ${f.required ? 'checked' : ''} class="schema-input w-4 h-4 accent-indigo-500" />
             </td>
-            <td class="py-2.5 px-3 text-center">
+            <td class="py-2 px-3 text-center">
               <input type="checkbox" data-col="${f.column}" ${bkeys.has(f.column) ? 'checked' : ''} class="bkey-input w-4 h-4 accent-emerald-500" />
             </td>
-            <td class="py-2.5 px-3">${arrayBadge}</td>
-            <td class="py-2.5 px-3">${confBadge}</td>
-            <td class="py-2.5 px-3 font-mono text-slate-400 text-[11px]">${(f.sample_values || []).slice(0, 3).join(', ')}</td>
+            <td class="py-2 px-3">${arrayBadge}</td>
+            <td class="py-2 px-3">${confBadge}</td>
+            <td class="py-2 px-3 font-mono text-slate-400 text-[11px]">${(f.sample_values || []).slice(0, 2).join(', ')}</td>
           </tr>
         `;
       }).join('');
 
-      // G2 & G3 summaries
       if (st.contract) {
         document.getElementById('g2-contract-summary').innerHTML = `
           <div>Required XPaths: <b>${(st.contract.required_xpaths || []).length}</b></div>
@@ -582,25 +1324,26 @@
         `;
       }
       if (st.quality_rules) {
-        const av = st.quality_rules.accepted_values || {};
-        const avText = Object.entries(av).map(([k, v]) => `${k}: [${v.join(', ')}]`).join(' | ') || 'None';
         document.getElementById('g3-rules-summary').innerHTML = `
-          <div>Primary Keys (SCD2): <code class="text-emerald-300">${(st.quality_rules.primary_keys || []).join(', ')}</code></div>
-          <div>Accepted Domains: <code class="text-slate-200">${avText}</code></div>
+          <div>Primary Keys: <code class="text-emerald-300">${(st.quality_rules.primary_keys || []).join(', ')}</code></div>
           <div>Non-Negative Range Rules: <b>${(st.quality_rules.numeric_ranges || []).length} numeric columns</b></div>
         `;
       }
 
-      // Tab 3: Provisioning, Lineage, Runbook, DDL
+      // Tab 3: Provisioned Objects, Lineage, Runbook & Final Sign-Off Checklist
       const targets = st.mapping?.targets || {};
+      const sfCfg = st.snowflake_status || {};
+      const sRaw = sfCfg.schema_raw || 'RAW';
+      const sStg = sfCfg.schema_staging || 'STAGING';
+      const sCur = sfCfg.schema_curated || 'CURATED';
+      const sOps = sfCfg.schema_ops || 'OPS';
       document.getElementById('a1-objects-list').innerHTML = [
-        `D2 Raw Table: <b>${targets.raw_table}</b> (VARIANT)`,
-        `Snowpipe: <b>pipe_${st.dataset}</b> (${status === 'PUBLISHED' ? 'ACTIVE' : 'PAUSED'})`,
-        `Stream: <b>stream_${targets.raw_table}</b>`,
-        `D3 Staging: <b>${targets.staging_table}</b> (LATERAL FLATTEN)`,
-        `D4 Curated: <b>${targets.curated_table}</b> (SCD Type 2)`,
-        `O3 Quarantine: <b>${targets.quarantine_table}</b>`,
-        `O1 DQ Log: <b>${targets.dq_results_table}</b>`,
+        `Layer 1 (RAW Normal Table): <b class="text-indigo-300">${sRaw}.${targets.raw_table}</b>`,
+        `ADLS → RAW Snowpipe: <b class="text-indigo-300">${sRaw}.pipe_${st.dataset}</b> (${status === 'PUBLISHED' ? 'ACTIVE' : 'PAUSED'})`,
+        `Layer 2 (Stage Dynamic Table): <b class="text-purple-300">${sStg}.${targets.staging_table}</b> (TARGET_LAG = '5 minutes')`,
+        `Layer 3 (Gold Dynamic Table): <b class="text-emerald-300">${sCur}.${targets.curated_table}</b> (TARGET_LAG = '15 minutes')`,
+        `O3 Quarantine Table: <b class="text-amber-300">${sOps}.${targets.quarantine_table}</b>`,
+        `O1 DQ Results Table: <b class="text-amber-300">${sOps}.${targets.dq_results_table}</b>`,
       ].map(item => `<li class="p-2 rounded bg-slate-900/90 border border-slate-800">${item}</li>`).join('');
 
       const dh = st.datahub || {};
@@ -613,7 +1356,7 @@
               <div class="text-[11px] font-mono text-indigo-300 truncate">${e.downstream.split(',')[1] || e.downstream}</div>
             </div>
           `).join('')
-        : '<div class="text-slate-500">Run Stage ④–⑧ Provisioning to register DataHub lineage.</div>';
+        : '<div class="text-slate-500">Run Step 3 Deployment to register DataHub lineage.</div>';
 
       const rb = st.monitoring_config?.o4_operator_runbook || [];
       document.getElementById('a4-runbook-list').innerHTML = rb.length
@@ -624,10 +1367,42 @@
               <div class="text-[10px] text-purple-300 mt-0.5">Owner: ${r.owner}</div>
             </div>
           `).join('')
-        : '<div class="text-slate-500">Run Stage ⑦ Monitoring Agent to generate runbook.</div>';
+        : '<div class="text-slate-500">Run Step 3 Deployment to generate operator runbook.</div>';
 
-      document.getElementById('ddl-sql-viewer').textContent = st.ddl_sql || '-- No DDL generated yet';
-      document.getElementById('monitoring-sql-viewer').textContent = st.monitoring_sql || '-- Run Provisioning (Stages 4-8) to generate monitoring.sql';
+      // Sign-Off Checklist
+      const yamlsApproved = ['APPROVED', 'DDL_GENERATED', 'PROVISIONED', 'PUBLISHED'].includes(status);
+      const e2eProvisioned = ['PROVISIONED', 'PUBLISHED'].includes(status);
+      const smokePassed = e2eProvisioned && (wc.curated_current_rows > 0) && (wc.quarantine_open_rows === 0);
+      const isPublished = status === 'PUBLISHED';
+
+      const signBadge = document.getElementById('signoff-status-badge');
+      if (isPublished) {
+        signBadge.textContent = '✅ SIGNED OFF & LIVE IN PRODUCTION';
+        signBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+      } else if (smokePassed) {
+        signBadge.textContent = '🟢 Ready for Final Engineering Sign-Off';
+        signBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/40';
+      } else {
+        signBadge.textContent = '⏳ Pending Step 2 & Step 3 Deployment';
+        signBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40';
+      }
+
+      const checkItem = (ok, label, detail) => `
+        <div class="p-2.5 rounded-lg border flex items-center justify-between ${ok ? 'bg-emerald-950/30 border-emerald-500/30 text-emerald-200' : 'bg-slate-900 border-slate-800 text-slate-400'}">
+          <span>${ok ? '✅' : '⬜'} <b>${label}</b></span>
+          <span class="font-mono text-[11px]">${detail}</span>
+        </div>
+      `;
+      document.getElementById('signoff-checklist').innerHTML = [
+        checkItem(Boolean(st.raw_schema), 'Step 1: 3-Layer YAMLs & Data Model', 'raw / stage / gold YAMLs'),
+        checkItem(yamlsApproved, 'C3 Gate 1: Human Approval on YAMLs', dm.approval_status || status),
+        checkItem(hasDdl, 'Step 2: DDL Generator Agent SQLs', 'Snowpipe + 2 Dynamic Tables'),
+        checkItem(e2eProvisioned, 'Step 3: E2E Pipeline Deployed', `${wc.raw_rows} raw → ${wc.staging_rows} stage → ${wc.curated_current_rows} gold`),
+        checkItem(smokePassed, 'Stage ⑧: A5 Smoke Test Verified', `${wc.quarantine_open_rows} quarantined rows`),
+      ].join('');
+
+      document.getElementById('smoke-report-viewer').textContent =
+        st.smoke_report || '# Run Step 3 Deployment to execute the A5 Smoke Test and generate smoke_test_report.md';
 
       // Tab 4: Runtime Operations
       const testFiles = st.available_test_files || [];
@@ -650,7 +1425,7 @@
               </details>
             `;
           }).join('')
-        : '<div class="text-xs text-slate-500">No schema drift proposals triggered yet. Use the simulator on the left to test additive or breaking XML drift.</div>';
+        : '<div class="text-xs text-slate-500">No schema drift proposals triggered yet.</div>';
 
       const qRows = st.quarantine_rows || [];
       document.getElementById('quarantine-table-body').innerHTML = qRows.length
@@ -676,7 +1451,7 @@
         `).join('');
       } else {
         document.getElementById('curated-thead').innerHTML = '';
-        document.getElementById('curated-tbody').innerHTML = '<tr><td class="py-4 text-center text-slate-500">No curated rows loaded yet.</td></tr>';
+        document.getElementById('curated-tbody').innerHTML = '<tr><td class="py-4 text-center text-slate-500">No Gold Dynamic Table rows loaded yet.</td></tr>';
       }
     }
 
@@ -692,28 +1467,42 @@
     }
 
     async function runBootstrap() {
-      const payload = {
-        dataset: document.getElementById('in-dataset').value,
-        source_system: document.getElementById('in-source').value,
-        adls_landing_path: document.getElementById('in-adls').value,
-        sample_dir: document.getElementById('in-sample-dir').value,
-        data_steward: document.getElementById('in-steward').value,
-        engineering_owner: document.getElementById('in-eng').value,
-        freshness_sla_hours: Number(document.getElementById('in-sla').value),
-        confidence_threshold: Number(document.getElementById('in-conf').value),
-        custom_xml_name: document.getElementById('in-custom-xml-name').value,
-        custom_xml_content: document.getElementById('in-custom-xml-body').value,
-      };
-      const res = await fetch('/api/bootstrap', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (data.ok) {
-        await fetchState(payload.dataset);
+      const btn = document.getElementById('btn-run-step1');
+      const origText = btn.textContent;
+      btn.textContent = '⏳ Running Step 1 Data Steward Agent...';
+      btn.disabled = true;
+
+      try {
+        const payload = {
+          dataset: document.getElementById('in-dataset').value,
+          source_system: document.getElementById('in-source').value,
+          adls_landing_path: document.getElementById('in-adls').value,
+          sample_dir: document.getElementById('in-sample-dir').value,
+          data_steward: document.getElementById('in-steward').value,
+          engineering_owner: document.getElementById('in-eng').value,
+          freshness_sla_hours: Number(document.getElementById('in-sla').value),
+          confidence_threshold: Number(document.getElementById('in-conf').value),
+          anthropic_api_key: document.getElementById('in-anthropic-key').value,
+          llm_model: document.getElementById('in-llm-model').value,
+          uploaded_files: selectedLocalFiles,
+        };
+        const res = await fetch('/api/bootstrap', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!data.ok) {
+          showToast(data.error || 'Step 1 Data Steward Agent failed.', true);
+          return;
+        }
+        document.getElementById('in-anthropic-key').value = '';
+        renderAll(data);
         showTab('tab-schema');
-        showToast('Stage ① A0 Intake & Stage ② C0 Bootstrap complete! Ready for C3 Steward Schema Review.');
+        showToast('Step 1 Complete! Generated raw_schema.yaml, staging_schema.yaml, gold_schema.yaml & data_model.yaml (No DDL yet). Please review & approve.');
+      } finally {
+        btn.textContent = origText;
+        btn.disabled = false;
       }
     }
 
@@ -730,7 +1519,7 @@
       });
       const bkeys = [];
       document.querySelectorAll('.bkey-input').forEach((el, idx) => {
-        if (el.checked) {
+        if (el.checked && fields[idx]) {
           bkeys.push(fields[idx].column);
         }
       });
@@ -751,7 +1540,25 @@
       const data = await res.json();
       if (data.ok) {
         await fetchState(currentState.dataset);
-        showToast('Saved C3 Steward overrides to mapping.yaml, contract.yaml, quality_rules.yaml & recompiled ddl.sql!');
+        showToast('Saved Steward overrides to raw_schema.yaml, staging_schema.yaml, gold_schema.yaml & data_model.yaml!');
+      }
+    }
+
+    async function approveYamlsOnly() {
+      if (currentState?.mapping?.fields) {
+        await saveSchemaOverrides();
+      }
+      const res = await fetch('/api/approve-yamls', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dataset: currentState.dataset }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        await fetchState(currentState.dataset);
+        showTab('tab-provision');
+        selectSqlViewer('01_raw_snowpipe.sql');
+        showToast('YAMLs Approved! Step 2 DDL Generator Agent compiled Snowpipe + Stage Dynamic Table + Gold Dynamic Table SQLs.');
       }
     }
 
@@ -769,20 +1576,49 @@
         await fetchState(currentState.dataset);
         showTab('tab-provision');
         const st = data.smoke_test;
-        showToast(`Stages ③–⑧ Complete! Smoke Test: ${st.files_passed}/${st.files_processed} files passed, ${st.curated_current_rows} SCD2 rows loaded, ${st.quarantine_open_rows} quarantined.`);
+        showToast(`Step 2 SQLs Generated & Step 3 E2E Pipeline Deployed! Smoke Test: ${st.files_passed}/${st.files_processed} files passed, ${st.curated_current_rows} Gold rows, ${st.quarantine_open_rows} quarantined. Ready for Final Sign-Off.`);
       }
     }
 
-    async function approveGoLive() {
-      const res = await fetch('/api/go-live', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dataset: currentState.dataset }),
-      });
-      const data = await res.json();
-      if (data.ok) {
+    async function approveGoLive(deployToSnowflake = true) {
+      const signedBy = document.getElementById('in-signoff-by').value;
+      const notes = document.getElementById('in-signoff-notes').value;
+      const sfConfig = collectSnowflakeForm();
+      const btn = document.getElementById('btn-deploy-sf-live');
+      const origText = btn ? btn.textContent : '';
+      if (deployToSnowflake && btn) {
+        btn.textContent = '🌐 Opening External Browser for Snowflake SSO & Deploying Pipeline...';
+        btn.disabled = true;
+      }
+      try {
+        const res = await fetch('/api/go-live', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            dataset: currentState.dataset,
+            signed_off_by: signedBy,
+            signoff_notes: notes,
+            deploy_to_snowflake: deployToSnowflake,
+            snowflake_config: sfConfig,
+          }),
+        });
+        const data = await res.json();
+        if (!data.ok) {
+          showToast(data.error || 'Final Sign-Off / Snowflake deployment failed.', true);
+          return;
+        }
         await fetchState(currentState.dataset);
-        showToast('Stage ⑨ & ⑩ Complete! Dataset marked PUBLISHED (v1.0.0-live), Snowpipe enabled, C1 Drift Agent active.');
+        const sfDep = data.go_live?.snowflake_live_deployment;
+        if (sfDep && sfDep.deployed) {
+          showToast(`Deployed to Live Snowflake (${sfDep.target_database}.${sfDep.target_schema}) via External Browser SSO! Executed ${sfDep.statements_succeeded} SQL statements & enabled Snowpipe.`);
+        } else {
+          showToast(`Final Sign-Off Complete by ${signedBy}! Dataset marked PUBLISHED (v1.0.0-live) & Snowpipe enabled.`);
+        }
+      } finally {
+        if (deployToSnowflake && btn) {
+          btn.textContent = origText;
+          btn.disabled = false;
+        }
       }
     }
 
@@ -809,10 +1645,12 @@
       if (data.ok) {
         await fetchState(currentState.dataset);
         const r = data.result;
-        const isQuar = r.ingest_metrics.files_quarantined > 0;
+        const isErr = r.ingest_metrics.files_quarantined > 0;
+        const recon = r.reconciliation?.metrics;
+        const reconMsg = recon ? ` | Reconciled: ${recon.source_assets} = ${recon.curated_assets} + ${recon.quarantined_assets} (Delta: ${recon.discrepancy_delta})` : '';
         showToast(
-          `File ${r.file}: Drift=${r.proposal_status} (${r.drift_findings_count} findings) | ${isQuar ? 'Held in O3 Quarantine' : 'Loaded to Curated SCD2'}`,
-          isQuar
+          `Ingested ${r.file}: Drift=${r.proposal_status} (${r.drift_findings_count} findings), Passed=${r.ingest_metrics.files_passed}, Quarantined=${r.ingest_metrics.files_quarantined}${reconMsg}`,
+          isErr
         );
       }
     }
@@ -826,11 +1664,10 @@
       const data = await res.json();
       if (data.ok) {
         await fetchState(currentState.dataset);
-        showToast('Marked all O3 Quarantined records as Replayed / Resolved.');
+        showToast('All O3 quarantined records marked as resolved & replayed!');
       }
     }
 
-    // Initialize UI
     showTab('tab-intake');
     fetchState();
   </script>

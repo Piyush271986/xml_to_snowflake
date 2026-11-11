@@ -1,0 +1,1925 @@
+dataset: orders
+version: 0.1.0
+layer: STAGE
+table_type: DYNAMIC_TABLE
+tables:
+- table_name: staging_orders
+  entity: order
+  parent_table: null
+  foreign_keys: []
+  layer: STAGE
+  table_type: DYNAMIC_TABLE
+  ingestion_or_refresh: DYNAMIC_TABLE_REFRESH
+  upstream_source: raw_orders
+  target_lag: 5 minutes
+  warehouse: COMPUTE_WH
+  grain: One row per /Order element
+  primary_keys:
+  - order_pk
+  flatten_path: null
+  columns:
+  - name: order_pk
+    snowflake_type: VARCHAR(32)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Surrogate primary key of order (MD5 of file identity + element position)
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: order_type
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/@orderType
+    expression: r.raw_xml:"@orderType"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: version
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/@version
+    expression: TRY_TO_DECIMAL(r.raw_xml:"@version"::VARCHAR, 18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: currency_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/@currency
+    expression: r.raw_xml:"@currency"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: channel
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/@channel
+    expression: r.raw_xml:"@channel"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: region
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/@region
+    expression: r.raw_xml:"@region"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: order_id
+    snowflake_type: NUMBER(18,0)
+    nullable: false
+    source_xpath: /Order/OrderId
+    expression: TRY_TO_NUMBER(XMLGET(r.raw_xml, 'OrderId'):"$"::VARCHAR, 18, 0)
+    description: null
+    is_business_key: true
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: external_purchase_order_number
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/ExternalPurchaseOrderNumber
+    expression: XMLGET(r.raw_xml, 'ExternalPurchaseOrderNumber'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: order_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/OrderDate
+    expression: TRY_TO_DATE(XMLGET(r.raw_xml, 'OrderDate'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: order_timestamp
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: true
+    source_xpath: /Order/OrderTimestamp
+    expression: TRY_TO_TIMESTAMP_NTZ(XMLGET(r.raw_xml, 'OrderTimestamp'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: order_status
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/OrderStatus
+    expression: XMLGET(r.raw_xml, 'OrderStatus'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: is_expedited
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/IsExpedited
+    expression: TRY_TO_BOOLEAN(XMLGET(r.raw_xml, 'IsExpedited'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: is_backorder_allowed
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/IsBackorderAllowed
+    expression: TRY_TO_BOOLEAN(XMLGET(r.raw_xml, 'IsBackorderAllowed'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: priority_score
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/PriorityScore
+    expression: TRY_TO_NUMBER(XMLGET(r.raw_xml, 'PriorityScore'):"$"::VARCHAR, 18,
+      0)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: total_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/TotalAmount
+    expression: TRY_TO_DECIMAL(XMLGET(r.raw_xml, 'TotalAmount'):"$"::VARCHAR, 18,
+      4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: discount_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/DiscountAmount
+    expression: TRY_TO_DECIMAL(XMLGET(r.raw_xml, 'DiscountAmount'):"$"::VARCHAR, 18,
+      4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: tax_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/TaxAmount
+    expression: TRY_TO_DECIMAL(XMLGET(r.raw_xml, 'TaxAmount'):"$"::VARCHAR, 18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: freight_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/FreightAmount
+    expression: TRY_TO_DECIMAL(XMLGET(r.raw_xml, 'FreightAmount'):"$"::VARCHAR, 18,
+      4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: net_payable_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/NetPayableAmount
+    expression: TRY_TO_DECIMAL(XMLGET(r.raw_xml, 'NetPayableAmount'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: shipping_notes
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/ShippingNotes
+    expression: XMLGET(r.raw_xml, 'ShippingNotes'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: source_system
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Header/SourceSystem
+    expression: XMLGET(XMLGET(r.raw_xml, 'Header'), 'SourceSystem'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: sales_org_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Header/SalesOrgCode
+    expression: XMLGET(XMLGET(r.raw_xml, 'Header'), 'SalesOrgCode'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: distribution_channel
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/Header/DistributionChannel
+    expression: TRY_TO_NUMBER(XMLGET(XMLGET(r.raw_xml, 'Header'), 'DistributionChannel'):"$"::VARCHAR,
+      18, 0)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: division_code
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/Header/DivisionCode
+    expression: TRY_TO_NUMBER(XMLGET(XMLGET(r.raw_xml, 'Header'), 'DivisionCode'):"$"::VARCHAR,
+      18, 0)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: master_agreement_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Header/ContractReference/MasterAgreementId
+    expression: XMLGET(XMLGET(XMLGET(r.raw_xml, 'Header'), 'ContractReference'), 'MasterAgreementId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: contract_effective_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/Header/ContractReference/ContractEffectiveDate
+    expression: TRY_TO_DATE(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Header'), 'ContractReference'),
+      'ContractEffectiveDate'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: contract_expiration_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/Header/ContractReference/ContractExpirationDate
+    expression: TRY_TO_DATE(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Header'), 'ContractReference'),
+      'ContractExpirationDate'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: discount_tier_percentage
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Header/ContractReference/DiscountTierPercentage
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Header'), 'ContractReference'),
+      'DiscountTierPercentage'):"$"::VARCHAR, 18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: is_auto_renew
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/Header/ContractReference/IsAutoRenew
+    expression: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Header'), 'ContractReference'),
+      'IsAutoRenew'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: rep_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Header/SalesRepresentative/RepId
+    expression: XMLGET(XMLGET(XMLGET(r.raw_xml, 'Header'), 'SalesRepresentative'),
+      'RepId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: rep_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Header/SalesRepresentative/RepName
+    expression: XMLGET(XMLGET(XMLGET(r.raw_xml, 'Header'), 'SalesRepresentative'),
+      'RepName'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: rep_email
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Header/SalesRepresentative/RepEmail
+    expression: XMLGET(XMLGET(XMLGET(r.raw_xml, 'Header'), 'SalesRepresentative'),
+      'RepEmail'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: territory_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Header/SalesRepresentative/TerritoryCode
+    expression: XMLGET(XMLGET(XMLGET(r.raw_xml, 'Header'), 'SalesRepresentative'),
+      'TerritoryCode'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: commission_rate
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Header/SalesRepresentative/CommissionRate
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Header'), 'SalesRepresentative'),
+      'CommissionRate'):"$"::VARCHAR, 18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: customer_customer_tier
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/@customerTier
+    expression: XMLGET(r.raw_xml, 'Customer'):"@customerTier"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: customer_tax_exempt
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/Customer/@taxExempt
+    expression: TRY_TO_BOOLEAN(XMLGET(r.raw_xml, 'Customer'):"@taxExempt"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: customer_kyc_verified
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/Customer/@kycVerified
+    expression: TRY_TO_BOOLEAN(XMLGET(r.raw_xml, 'Customer'):"@kycVerified"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: customer_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/CustomerId
+    expression: XMLGET(XMLGET(r.raw_xml, 'Customer'), 'CustomerId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: account_number
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/AccountNumber
+    expression: XMLGET(XMLGET(r.raw_xml, 'Customer'), 'AccountNumber'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: company_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/CompanyName
+    expression: XMLGET(XMLGET(r.raw_xml, 'Customer'), 'CompanyName'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: duns_number
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/Customer/DunsNumber
+    expression: TRY_TO_NUMBER(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'DunsNumber'):"$"::VARCHAR,
+      18, 0)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: tax_registration_number
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/TaxRegistrationNumber
+    expression: XMLGET(XMLGET(r.raw_xml, 'Customer'), 'TaxRegistrationNumber'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: account_created_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/Customer/AccountCreatedDate
+    expression: TRY_TO_DATE(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'AccountCreatedDate'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: credit_limit
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Customer/CreditProfile/CreditLimit
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'CreditProfile'),
+      'CreditLimit'):"$"::VARCHAR, 18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: current_balance
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Customer/CreditProfile/CurrentBalance
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'CreditProfile'),
+      'CurrentBalance'):"$"::VARCHAR, 18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: available_credit
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Customer/CreditProfile/AvailableCredit
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'CreditProfile'),
+      'AvailableCredit'):"$"::VARCHAR, 18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: risk_rating
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/CreditProfile/RiskRating
+    expression: XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'CreditProfile'), 'RiskRating'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: payment_terms_days
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/Customer/CreditProfile/PaymentTermsDays
+    expression: TRY_TO_NUMBER(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'CreditProfile'),
+      'PaymentTermsDays'):"$"::VARCHAR, 18, 0)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: is_credit_hold
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/Customer/CreditProfile/IsCreditHold
+    expression: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'CreditProfile'),
+      'IsCreditHold'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: primary_contact_contact_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/PrimaryContact/ContactId
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Contacts'), 'PrimaryContact'),
+      'ContactId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: primary_contact_full_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/PrimaryContact/FullName
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Contacts'), 'PrimaryContact'),
+      'FullName'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: primary_contact_job_title
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/PrimaryContact/JobTitle
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Contacts'), 'PrimaryContact'),
+      'JobTitle'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: primary_contact_email
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/PrimaryContact/Email
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Contacts'), 'PrimaryContact'),
+      'Email'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: primary_contact_phone
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/PrimaryContact/Phone
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Contacts'), 'PrimaryContact'),
+      'Phone'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: accounts_payable_contact_contact_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/AccountsPayableContact/ContactId
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Contacts'), 'AccountsPayableContact'),
+      'ContactId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: accounts_payable_contact_full_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/AccountsPayableContact/FullName
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Contacts'), 'AccountsPayableContact'),
+      'FullName'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: accounts_payable_contact_job_title
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/AccountsPayableContact/JobTitle
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Contacts'), 'AccountsPayableContact'),
+      'JobTitle'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: accounts_payable_contact_email
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/AccountsPayableContact/Email
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Contacts'), 'AccountsPayableContact'),
+      'Email'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: accounts_payable_contact_phone
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/AccountsPayableContact/Phone
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Contacts'), 'AccountsPayableContact'),
+      'Phone'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: billing_address_address_type
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/@addressType
+    expression: XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Addresses'), 'BillingAddress'):"@addressType"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: billing_address_address_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/AddressId
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Addresses'),
+      'BillingAddress'), 'AddressId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: billing_address_attention_line
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/AttentionLine
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Addresses'),
+      'BillingAddress'), 'AttentionLine'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: billing_address_street_line1
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/StreetLine1
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Addresses'),
+      'BillingAddress'), 'StreetLine1'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: billing_address_street_line2
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/StreetLine2
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Addresses'),
+      'BillingAddress'), 'StreetLine2'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: billing_address_city
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/City
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Addresses'),
+      'BillingAddress'), 'City'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: billing_address_state_province
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/StateProvince
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Addresses'),
+      'BillingAddress'), 'StateProvince'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: billing_address_postal_code
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/PostalCode
+    expression: TRY_TO_NUMBER(XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'),
+      'Addresses'), 'BillingAddress'), 'PostalCode'):"$"::VARCHAR, 18, 0)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: billing_address_country_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/CountryCode
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Addresses'),
+      'BillingAddress'), 'CountryCode'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: geo_coordinates_latitude
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/GeoCoordinates/Latitude
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'),
+      'Addresses'), 'BillingAddress'), 'GeoCoordinates'), 'Latitude'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: geo_coordinates_longitude
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/GeoCoordinates/Longitude
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'),
+      'Addresses'), 'BillingAddress'), 'GeoCoordinates'), 'Longitude'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: shipping_address_address_type
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/@addressType
+    expression: XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Addresses'), 'ShippingAddress'):"@addressType"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: shipping_address_address_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/AddressId
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Addresses'),
+      'ShippingAddress'), 'AddressId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: facility_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/FacilityName
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Addresses'),
+      'ShippingAddress'), 'FacilityName'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: shipping_address_attention_line
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/AttentionLine
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Addresses'),
+      'ShippingAddress'), 'AttentionLine'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: shipping_address_street_line1
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/StreetLine1
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Addresses'),
+      'ShippingAddress'), 'StreetLine1'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: shipping_address_street_line2
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/StreetLine2
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Addresses'),
+      'ShippingAddress'), 'StreetLine2'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: shipping_address_city
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/City
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Addresses'),
+      'ShippingAddress'), 'City'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: shipping_address_state_province
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/StateProvince
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Addresses'),
+      'ShippingAddress'), 'StateProvince'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: shipping_address_postal_code
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/PostalCode
+    expression: TRY_TO_NUMBER(XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'),
+      'Addresses'), 'ShippingAddress'), 'PostalCode'):"$"::VARCHAR, 18, 0)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: shipping_address_country_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/CountryCode
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'), 'Addresses'),
+      'ShippingAddress'), 'CountryCode'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: is_residential
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/IsResidential
+    expression: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'),
+      'Addresses'), 'ShippingAddress'), 'IsResidential'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: requires_liftgate
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/RequiresLiftgate
+    expression: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'),
+      'Addresses'), 'ShippingAddress'), 'RequiresLiftgate'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: requires_inside_delivery
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/RequiresInsideDelivery
+    expression: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'),
+      'Addresses'), 'ShippingAddress'), 'RequiresInsideDelivery'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: geo_coordinates_latitude_2
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/GeoCoordinates/Latitude
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'),
+      'Addresses'), 'ShippingAddress'), 'GeoCoordinates'), 'Latitude'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: geo_coordinates_longitude_2
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/GeoCoordinates/Longitude
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(r.raw_xml, 'Customer'),
+      'Addresses'), 'ShippingAddress'), 'GeoCoordinates'), 'Longitude'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: requested_delivery_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/RequestedDeliveryDate
+    expression: TRY_TO_DATE(XMLGET(XMLGET(r.raw_xml, 'FulfillmentPlan'), 'RequestedDeliveryDate'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: promised_ship_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/PromisedShipDate
+    expression: TRY_TO_DATE(XMLGET(XMLGET(r.raw_xml, 'FulfillmentPlan'), 'PromisedShipDate'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: incoterms
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/Incoterms
+    expression: XMLGET(XMLGET(r.raw_xml, 'FulfillmentPlan'), 'Incoterms'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: warehouse_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/OriginWarehouse/WarehouseId
+    expression: XMLGET(XMLGET(XMLGET(r.raw_xml, 'FulfillmentPlan'), 'OriginWarehouse'),
+      'WarehouseId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: warehouse_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/OriginWarehouse/WarehouseName
+    expression: XMLGET(XMLGET(XMLGET(r.raw_xml, 'FulfillmentPlan'), 'OriginWarehouse'),
+      'WarehouseName'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: time_zone
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/OriginWarehouse/TimeZone
+    expression: XMLGET(XMLGET(XMLGET(r.raw_xml, 'FulfillmentPlan'), 'OriginWarehouse'),
+      'TimeZone'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: carrier_routing_carrier_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/@carrierCode
+    expression: XMLGET(XMLGET(r.raw_xml, 'FulfillmentPlan'), 'CarrierRouting'):"@carrierCode"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: carrier_routing_service_level
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/@serviceLevel
+    expression: XMLGET(XMLGET(r.raw_xml, 'FulfillmentPlan'), 'CarrierRouting'):"@serviceLevel"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: carrier_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/CarrierName
+    expression: XMLGET(XMLGET(XMLGET(r.raw_xml, 'FulfillmentPlan'), 'CarrierRouting'),
+      'CarrierName'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: scac_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/ScacCode
+    expression: XMLGET(XMLGET(XMLGET(r.raw_xml, 'FulfillmentPlan'), 'CarrierRouting'),
+      'ScacCode'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: bol_number
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/BolNumber
+    expression: XMLGET(XMLGET(XMLGET(r.raw_xml, 'FulfillmentPlan'), 'CarrierRouting'),
+      'BolNumber'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: pro_number
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/ProNumber
+    expression: XMLGET(XMLGET(XMLGET(r.raw_xml, 'FulfillmentPlan'), 'CarrierRouting'),
+      'ProNumber'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: estimated_transit_days
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/EstimatedTransitDays
+    expression: TRY_TO_NUMBER(XMLGET(XMLGET(XMLGET(r.raw_xml, 'FulfillmentPlan'),
+      'CarrierRouting'), 'EstimatedTransitDays'):"$"::VARCHAR, 18, 0)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: total_pallet_count
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/TotalPalletCount
+    expression: TRY_TO_NUMBER(XMLGET(XMLGET(XMLGET(r.raw_xml, 'FulfillmentPlan'),
+      'CarrierRouting'), 'TotalPalletCount'):"$"::VARCHAR, 18, 0)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: total_gross_weight_kg
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/TotalGrossWeightKg
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(r.raw_xml, 'FulfillmentPlan'),
+      'CarrierRouting'), 'TotalGrossWeightKg'):"$"::VARCHAR, 18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: is_temperature_controlled
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/IsTemperatureControlled
+    expression: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(r.raw_xml, 'FulfillmentPlan'),
+      'CarrierRouting'), 'IsTemperatureControlled'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: insurance_coverage_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/InsuranceCoverageAmount
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(r.raw_xml, 'FulfillmentPlan'),
+      'CarrierRouting'), 'InsuranceCoverageAmount'):"$"::VARCHAR, 18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: payment_details_payment_method
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/PaymentDetails/@paymentMethod
+    expression: XMLGET(r.raw_xml, 'PaymentDetails'):"@paymentMethod"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: payment_status
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/PaymentDetails/PaymentStatus
+    expression: XMLGET(XMLGET(r.raw_xml, 'PaymentDetails'), 'PaymentStatus'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: authorization_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/PaymentDetails/AuthorizationCode
+    expression: XMLGET(XMLGET(r.raw_xml, 'PaymentDetails'), 'AuthorizationCode'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: authorized_timestamp
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: true
+    source_xpath: /Order/PaymentDetails/AuthorizedTimestamp
+    expression: TRY_TO_TIMESTAMP_NTZ(XMLGET(XMLGET(r.raw_xml, 'PaymentDetails'), 'AuthorizedTimestamp'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: billing_currency
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/PaymentDetails/BillingCurrency
+    expression: XMLGET(XMLGET(r.raw_xml, 'PaymentDetails'), 'BillingCurrency'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: exchange_rate_to_usd
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/PaymentDetails/ExchangeRateToUsd
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(r.raw_xml, 'PaymentDetails'), 'ExchangeRateToUsd'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: is_export_controlled
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/IsExportControlled
+    expression: TRY_TO_BOOLEAN(XMLGET(XMLGET(r.raw_xml, 'ComplianceAndGovernance'),
+      'IsExportControlled'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: export_control_classification
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/ExportControlClassification
+    expression: XMLGET(XMLGET(r.raw_xml, 'ComplianceAndGovernance'), 'ExportControlClassification'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: sanctions_screening_passed
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/SanctionsScreeningPassed
+    expression: TRY_TO_BOOLEAN(XMLGET(XMLGET(r.raw_xml, 'ComplianceAndGovernance'),
+      'SanctionsScreeningPassed'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: screening_reference_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/ScreeningReferenceId
+    expression: XMLGET(XMLGET(r.raw_xml, 'ComplianceAndGovernance'), 'ScreeningReferenceId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: contains_pii
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/DataPrivacy/ContainsPii
+    expression: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(r.raw_xml, 'ComplianceAndGovernance'),
+      'DataPrivacy'), 'ContainsPii'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: pii_classification
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/DataPrivacy/PiiClassification
+    expression: XMLGET(XMLGET(XMLGET(r.raw_xml, 'ComplianceAndGovernance'), 'DataPrivacy'),
+      'PiiClassification'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: gdpr_applicable
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/DataPrivacy/GdprApplicable
+    expression: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(r.raw_xml, 'ComplianceAndGovernance'),
+      'DataPrivacy'), 'GdprApplicable'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: retention_policy_years
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/DataPrivacy/RetentionPolicyYears
+    expression: TRY_TO_NUMBER(XMLGET(XMLGET(XMLGET(r.raw_xml, 'ComplianceAndGovernance'),
+      'DataPrivacy'), 'RetentionPolicyYears'):"$"::VARCHAR, 18, 0)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _file_name
+    snowflake_type: VARCHAR(512)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _file_sha256
+    snowflake_type: VARCHAR(64)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _staged_ts
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+- table_name: staging_orders_audit_event
+  entity: audit_event
+  parent_table: staging_orders
+  foreign_keys:
+  - column: order_fk
+    references_table: staging_orders
+    references_column: order_pk
+  layer: STAGE
+  table_type: DYNAMIC_TABLE
+  ingestion_or_refresh: DYNAMIC_TABLE_REFRESH
+  upstream_source: raw_orders
+  target_lag: 5 minutes
+  warehouse: COMPUTE_WH
+  grain: One row per /Order/AuditTrail/AuditEvent element
+  primary_keys:
+  - audit_event_pk
+  flatten_path: /Order/AuditTrail/AuditEvent
+  columns:
+  - name: audit_event_pk
+    snowflake_type: VARCHAR(32)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Surrogate primary key of audit_event (MD5 of file identity + element
+      position)
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: order_fk
+    snowflake_type: VARCHAR(32)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Foreign key to order.order_pk
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: sequence
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/AuditTrail/AuditEvent/@sequence
+    expression: TRY_TO_NUMBER(a1.value:"@sequence"::VARCHAR, 18, 0)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: event_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/AuditTrail/AuditEvent/EventId
+    expression: XMLGET(a1.value, 'EventId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: event_type
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/AuditTrail/AuditEvent/EventType
+    expression: XMLGET(a1.value, 'EventType'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: event_timestamp
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: true
+    source_xpath: /Order/AuditTrail/AuditEvent/EventTimestamp
+    expression: TRY_TO_TIMESTAMP_NTZ(XMLGET(a1.value, 'EventTimestamp'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: actor_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/AuditTrail/AuditEvent/ActorId
+    expression: XMLGET(a1.value, 'ActorId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: event_notes
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/AuditTrail/AuditEvent/EventNotes
+    expression: XMLGET(a1.value, 'EventNotes'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _file_name
+    snowflake_type: VARCHAR(512)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _file_sha256
+    snowflake_type: VARCHAR(64)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _staged_ts
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+- table_name: staging_orders_line
+  entity: line
+  parent_table: staging_orders
+  foreign_keys:
+  - column: order_fk
+    references_table: staging_orders
+    references_column: order_pk
+  layer: STAGE
+  table_type: DYNAMIC_TABLE
+  ingestion_or_refresh: DYNAMIC_TABLE_REFRESH
+  upstream_source: raw_orders
+  target_lag: 5 minutes
+  warehouse: COMPUTE_WH
+  grain: One row per /Order/LineItems/LineItem element
+  primary_keys:
+  - line_pk
+  flatten_path: /Order/LineItems/LineItem
+  columns:
+  - name: line_pk
+    snowflake_type: VARCHAR(32)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Surrogate primary key of line (MD5 of file identity + element position)
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: order_fk
+    snowflake_type: VARCHAR(32)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Foreign key to order.order_pk
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: line_number
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/@lineNumber
+    expression: TRY_TO_NUMBER(a1.value:"@lineNumber"::VARCHAR, 18, 0)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: item_category
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/@itemCategory
+    expression: a1.value:"@itemCategory"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: hazmat
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/@hazmat
+    expression: TRY_TO_BOOLEAN(a1.value:"@hazmat"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/LineItemId
+    expression: XMLGET(a1.value, 'LineItemId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: product_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/ProductCode
+    expression: XMLGET(a1.value, 'ProductCode'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: manufacturer_part_number
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/ManufacturerPartNumber
+    expression: XMLGET(a1.value, 'ManufacturerPartNumber'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: product_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/ProductName
+    expression: XMLGET(a1.value, 'ProductName'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: product_family
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/ProductFamily
+    expression: XMLGET(a1.value, 'ProductFamily'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: unit_of_measure
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/UnitOfMeasure
+    expression: XMLGET(a1.value, 'UnitOfMeasure'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: quantity
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/Quantity
+    expression: TRY_TO_NUMBER(XMLGET(a1.value, 'Quantity'):"$"::VARCHAR, 18, 0)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: unit_price
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/UnitPrice
+    expression: TRY_TO_DECIMAL(XMLGET(a1.value, 'UnitPrice'):"$"::VARCHAR, 18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: line_discount_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/LineDiscountAmount
+    expression: TRY_TO_DECIMAL(XMLGET(a1.value, 'LineDiscountAmount'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: line_tax_rate
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/LineTaxRate
+    expression: TRY_TO_DECIMAL(XMLGET(a1.value, 'LineTaxRate'):"$"::VARCHAR, 18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: line_tax_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/LineTaxAmount
+    expression: TRY_TO_DECIMAL(XMLGET(a1.value, 'LineTaxAmount'):"$"::VARCHAR, 18,
+      4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: extended_net_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/ExtendedNetAmount
+    expression: TRY_TO_DECIMAL(XMLGET(a1.value, 'ExtendedNetAmount'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: is_taxable
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/IsTaxable
+    expression: TRY_TO_BOOLEAN(XMLGET(a1.value, 'IsTaxable'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: is_drop_ship
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/IsDropShip
+    expression: TRY_TO_BOOLEAN(XMLGET(a1.value, 'IsDropShip'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: requested_ship_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/RequestedShipDate
+    expression: TRY_TO_DATE(XMLGET(a1.value, 'RequestedShipDate'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: unit_weight_kg
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/PhysicalSpecs/UnitWeightKg
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(a1.value, 'PhysicalSpecs'), 'UnitWeightKg'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: dimensions_cm
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/PhysicalSpecs/DimensionsCm
+    expression: XMLGET(XMLGET(a1.value, 'PhysicalSpecs'), 'DimensionsCm'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: country_of_origin
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/PhysicalSpecs/CountryOfOrigin
+    expression: XMLGET(XMLGET(a1.value, 'PhysicalSpecs'), 'CountryOfOrigin'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: harmonized_tariff_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/PhysicalSpecs/HarmonizedTariffCode
+    expression: XMLGET(XMLGET(a1.value, 'PhysicalSpecs'), 'HarmonizedTariffCode'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: allocated_warehouse_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/InventoryAllocation/AllocatedWarehouseId
+    expression: XMLGET(XMLGET(a1.value, 'InventoryAllocation'), 'AllocatedWarehouseId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: bin_location
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/InventoryAllocation/BinLocation
+    expression: XMLGET(XMLGET(a1.value, 'InventoryAllocation'), 'BinLocation'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: lot_number
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/InventoryAllocation/LotNumber
+    expression: XMLGET(XMLGET(a1.value, 'InventoryAllocation'), 'LotNumber'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: allocation_status
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/InventoryAllocation/AllocationStatus
+    expression: XMLGET(XMLGET(a1.value, 'InventoryAllocation'), 'AllocationStatus'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: allocation_timestamp
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/InventoryAllocation/AllocationTimestamp
+    expression: TRY_TO_TIMESTAMP_NTZ(XMLGET(XMLGET(a1.value, 'InventoryAllocation'),
+      'AllocationTimestamp'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: warranty_plan_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/Warranty/WarrantyPlanCode
+    expression: XMLGET(XMLGET(a1.value, 'Warranty'), 'WarrantyPlanCode'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: warranty_duration_months
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/Warranty/WarrantyDurationMonths
+    expression: TRY_TO_NUMBER(XMLGET(XMLGET(a1.value, 'Warranty'), 'WarrantyDurationMonths'):"$"::VARCHAR,
+      18, 0)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: includes_onsite_response
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/Warranty/IncludesOnsiteResponse
+    expression: TRY_TO_BOOLEAN(XMLGET(XMLGET(a1.value, 'Warranty'), 'IncludesOnsiteResponse'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _file_name
+    snowflake_type: VARCHAR(512)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _file_sha256
+    snowflake_type: VARCHAR(64)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _staged_ts
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+- table_name: staging_orders_installment
+  entity: installment
+  parent_table: staging_orders
+  foreign_keys:
+  - column: order_fk
+    references_table: staging_orders
+    references_column: order_pk
+  layer: STAGE
+  table_type: DYNAMIC_TABLE
+  ingestion_or_refresh: DYNAMIC_TABLE_REFRESH
+  upstream_source: raw_orders
+  target_lag: 5 minutes
+  warehouse: COMPUTE_WH
+  grain: One row per /Order/PaymentDetails/InstallmentSchedule/Installment element
+  primary_keys:
+  - installment_pk
+  flatten_path: /Order/PaymentDetails/InstallmentSchedule/Installment
+  columns:
+  - name: installment_pk
+    snowflake_type: VARCHAR(32)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Surrogate primary key of installment (MD5 of file identity + element
+      position)
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: order_fk
+    snowflake_type: VARCHAR(32)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Foreign key to order.order_pk
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: installment_number
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/@installmentNumber
+    expression: TRY_TO_NUMBER(a1.value:"@installmentNumber"::VARCHAR, 18, 0)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentId
+    expression: XMLGET(a1.value, 'InstallmentId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: due_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/DueDate
+    expression: TRY_TO_DATE(XMLGET(a1.value, 'DueDate'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: percentage
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentPercentage
+    expression: TRY_TO_DECIMAL(XMLGET(a1.value, 'InstallmentPercentage'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentAmount
+    expression: TRY_TO_DECIMAL(XMLGET(a1.value, 'InstallmentAmount'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: status
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentStatus
+    expression: XMLGET(a1.value, 'InstallmentStatus'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _file_name
+    snowflake_type: VARCHAR(512)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _file_sha256
+    snowflake_type: VARCHAR(64)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _staged_ts
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+generated_by: step1_data_steward_agent
+ddl_generated: true

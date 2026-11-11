@@ -1,69 +1,94 @@
-"""Compiles a DatasetMapping (mapping.yaml) into Snowflake DDL, Snowpipe, Streams, Tasks, and SCD2 MERGE SQL."""
+"""Compiles 3-layer YAML schemas & DatasetMapping into Snowflake DDL (Snowpipe + Dynamic Tables)."""
 from __future__ import annotations
 
+from src.entity_model import Entity, EntityColumn, build_entity_model
 from src.models import DatasetMapping, FieldMapping
+from src.xml_infer import cast_varchar_expr
 
 
-def compile_snowflake_ddl(mapping: DatasetMapping, adls_stage: str = "@RAW.ADLS_XML_STAGE") -> str:
-    """Generate complete idempotent Snowflake DDL for D2, D3, D4 (SCD2), O1, and O3."""
-    ds = mapping.dataset
-    raw_tbl = mapping.targets.raw_table
-    stg_tbl = mapping.targets.staging_table
-    cur_tbl = mapping.targets.curated_table
-    quar_tbl = mapping.targets.quarantine_table
-    dq_tbl = mapping.targets.dq_results_table
+def _xmlget_chain(base: str, parts: list[str]) -> str:
+    expr = base
+    for p in parts:
+        expr = f"XMLGET({expr}, '{p}')"
+    return expr
 
-    col_defs = []
-    select_exprs = []
-    for f in mapping.fields:
-        null_clause = "NOT NULL" if (f.required and f.column in mapping.business_keys) else "NULL"
-        col_defs.append(f"    {f.column:<30} {f.snowflake_type:<16} {null_clause}")
-        select_exprs.append(f"    {f.xml_expr} AS {f.column}")
 
-    cols_sql = ",\n".join(col_defs)
-    select_sql = ",\n".join(select_exprs)
+def _flatten_plan(entity: Entity, root_path: str) -> tuple[list[str], list[str]]:
+    """LATERAL FLATTEN joins (aliases a1..ak) and WHERE predicates reaching `entity` from `r.raw_xml`."""
+    joins: list[str] = []
+    wheres: list[str] = []
+    base = "r.raw_xml"
+    parent_parts = [p for p in root_path.strip("/").split("/") if p]
+    level = 0
+    for ent in entity.chain():
+        if not ent.is_flattened:
+            continue
+        level += 1
+        parts = [p for p in ent.path.strip("/").split("/") if p]
+        container = _xmlget_chain(base, parts[len(parent_parts) : -1])
+        content = f"GET({container}, '$')"
+        joins.append(
+            f"LATERAL FLATTEN(INPUT => IFF(IS_ARRAY({content}), {content}, ARRAY_CONSTRUCT({content}))) a{level}"
+        )
+        wheres.append(f"GET(a{level}.value, '@')::VARCHAR = '{parts[-1]}'")
+        base = f"a{level}.value"
+        parent_parts = parts
+    return joins, wheres
 
-    # Build LATERAL FLATTEN clause if any array field exists
-    array_fields = [f for f in mapping.fields if f.is_array and f.flatten_path]
-    if array_fields:
-        fp = array_fields[0].flatten_path or ""
-        fp_parts = [p for p in fp.strip("/").split("/") if p]
-        root_prefix = mapping.root_element.strip("/")
-        rel_parts = fp_parts[1:] if (fp_parts and fp_parts[0] == root_prefix) else fp_parts
-        parent_Parts = rel_parts[:-1]
-        expr = "r.raw_xml"
-        for p in parent_Parts:
-            expr = f"XMLGET({expr}, '{p}')"
-        flatten_clause = f",\n    LATERAL FLATTEN(INPUT => {expr}:'$') item\nWHERE GET(item.value, '@') = '{rel_parts[-1]}'"
+
+def _levels(entity: Entity) -> int:
+    return sum(1 for e in entity.chain() if e.is_flattened)
+
+
+def _pk_expr(levels: int) -> str:
+    """Deterministic surrogate key: file identity plus the element position at every repeating level."""
+    idx = "".join(f", a{i}.index::VARCHAR" for i in range(1, levels + 1))
+    return f"MD5(CONCAT_WS('|', r._file_name, r._file_sha256{idx}))"
+
+
+def _column_expr(entity: Entity, col: EntityColumn) -> str:
+    if col.from_document or not entity.is_flattened:
+        base = "r.raw_xml"
     else:
-        flatten_clause = ""
+        base = f"a{_levels(entity)}.value"
+    node = _xmlget_chain(base, col.element_parts)
+    raw = f'{node}:"@{col.attribute}"::VARCHAR' if col.attribute else f'{node}:"$"::VARCHAR'
+    return cast_varchar_expr(raw, col.field.snowflake_type)
 
-    # SCD Type 2 join & hash expressions
-    bk_join = " AND ".join(f"tgt.{k} = src.{k}" for k in mapping.business_keys)
-    non_key_cols = [f.column for f in mapping.fields if f.column not in mapping.business_keys]
-    hash_cols = ", ".join(f"COALESCE(TO_VARCHAR({c}), '')" for c in non_key_cols) or "'1'"
-    all_field_cols = ", ".join(f.column for f in mapping.fields)
-    src_field_cols = ", ".join(f"src.{f.column}" for f in mapping.fields)
 
+def _fk_comment(entity: Entity, layer_table: str, parent_table: str | None) -> str:
+    if entity.parent is None or parent_table is None:
+        return f"{layer_table}: root entity {entity.name} (PK {entity.pk_column})"
+    return f"{layer_table}: child of {parent_table} via {entity.fk_column} -> {parent_table}.{entity.parent.pk_column} (logical FK)"
+
+def compile_raw_snowpipe_sql(
+    mapping: DatasetMapping,
+    adls_stage: str = "@RAW.ADLS_XML_STAGE",
+    schema_raw: str = "RAW",
+) -> str:
+    """Layer 1 DDL: ADLS -> RAW Normal Table + Snowpipe (deployed under RAW schema)."""
+    ds = mapping.dataset
+    raw_tbl = f"{schema_raw}.{mapping.targets.raw_table}" if schema_raw else mapping.targets.raw_table
+    pipe_fqn = f"{schema_raw}.pipe_{ds}" if schema_raw else f"pipe_{ds}"
     return f"""-- =============================================================================
--- AUTO-GENERATED SNOWFLAKE DDL FROM C4 REGISTRY: {ds} (version {mapping.version})
--- Source: {mapping.source} | Root XML Element: {mapping.root_element}
+-- LAYER 1 (RAW): NORMAL TABLE + ADLS SNOWPIPE ({ds} v{mapping.version}) [Schema: {schema_raw}]
 -- =============================================================================
 
--- 1. D2: IMMUTABLE RAW LAYER (VARIANT + FILE METADATA)
+CREATE SCHEMA IF NOT EXISTS {schema_raw};
+
 CREATE TABLE IF NOT EXISTS {raw_tbl} (
     _file_name          VARCHAR(512)    NOT NULL,
     _file_sha256        VARCHAR(64)     NOT NULL,
     _source_system      VARCHAR(128)    NOT NULL,
     _load_ts            TIMESTAMP_NTZ   DEFAULT CURRENT_TIMESTAMP(),
     raw_xml             VARIANT         NOT NULL,
-    CONSTRAINT uq_{raw_tbl}_file_hash UNIQUE (_file_name, _file_sha256)
+    CONSTRAINT uq_{mapping.targets.raw_table}_file_hash UNIQUE (_file_name, _file_sha256)
 );
 
--- Snowpipe (Created PAUSED during onboarding; enabled at Stage 9 Go-Live)
-CREATE PIPE IF NOT EXISTS pipe_{ds}
+-- Snowpipe: ADLS to RAW Normal Table (Created PAUSED during onboarding; enabled at Stage 9 Go-Live)
+CREATE PIPE IF NOT EXISTS {pipe_fqn}
     AUTO_INGEST = TRUE
-    COMMENT = 'Snowpipe for {ds} XML ingestion from ADLS'
+    COMMENT = 'Snowpipe for {ds} XML ingestion from ADLS into {raw_tbl}'
 AS
 COPY INTO {raw_tbl} (_file_name, _file_sha256, _source_system, raw_xml)
 FROM (
@@ -76,105 +101,163 @@ FROM (
 )
 FILE_FORMAT = (TYPE = 'XML' STRIP_OUTER_ELEMENT = FALSE);
 
-ALTER PIPE IF EXISTS pipe_{ds} SET PIPE_EXECUTION_PAUSED = TRUE;
+ALTER PIPE IF EXISTS {pipe_fqn} SET PIPE_EXECUTION_PAUSED = TRUE;
+"""
 
--- Stream on Raw Table for incremental D2 -> D3 processing
-CREATE STREAM IF NOT EXISTS stream_{raw_tbl}
-    ON TABLE {raw_tbl}
-    APPEND_ONLY = TRUE;
 
--- 2. D3: TYPED STAGING TABLE (LATERAL FLATTEN)
-CREATE TABLE IF NOT EXISTS {stg_tbl} (
-{cols_sql},
-    _file_name          VARCHAR(512)    NOT NULL,
-    _file_sha256        VARCHAR(64)     NOT NULL,
-    _staged_ts          TIMESTAMP_NTZ   DEFAULT CURRENT_TIMESTAMP()
-);
+def compile_staging_dynamic_table_sql(
+    mapping: DatasetMapping,
+    target_lag: str = "5 minutes",
+    warehouse: str = "COMPUTE_WH",
+    schema_raw: str = "RAW",
+    schema_staging: str = "STAGING",
+) -> str:
+    """Layer 2 DDL: RAW -> one Stage Dynamic Table per XML entity (parent + each child), under the STAGING schema."""
+    ds = mapping.dataset
+    model = build_entity_model(mapping)
+    raw_tbl = f"{schema_raw}.{mapping.targets.raw_table}" if schema_raw else mapping.targets.raw_table
+    prefix = f"{schema_staging}." if schema_staging else ""
 
--- Task to flatten XML from Stream into Typed Staging
-CREATE OR REPLACE TASK task_flatten_{ds}
-    WAREHOUSE = COMPUTE_WH
-    SCHEDULE = '5 MINUTE'
-    WHEN SYSTEM$STREAM_HAS_DATA('stream_{raw_tbl}')
+    blocks: list[str] = [
+        f"""-- =============================================================================
+-- LAYER 2 (STAGE): ONE DYNAMIC TABLE PER XML ENTITY FROM RAW ({ds} v{mapping.version}) [Schema: {schema_staging}]
+-- Entities: {', '.join(e.name for e in model.entities)}
+-- =============================================================================
+
+CREATE SCHEMA IF NOT EXISTS {schema_staging};
+"""
+    ]
+    for ent in model.entities:
+        stg_tbl = f"{prefix}{ent.stage_table}"
+        parent_tbl = f"{prefix}{ent.parent.stage_table}" if ent.parent else None
+        joins, wheres = _flatten_plan(ent, model.root_path)
+        levels = _levels(ent)
+
+        select_exprs = [f"    {_pk_expr(levels)} AS {ent.pk_column}"]
+        if ent.parent is not None:
+            select_exprs.append(f"    {_pk_expr(levels - 1)} AS {ent.fk_column}")
+        select_exprs.extend(f"    {_column_expr(ent, c)} AS {c.name}" for c in ent.columns)
+        select_exprs.extend(
+            [
+                "    r._file_name AS _file_name",
+                "    r._file_sha256 AS _file_sha256",
+                "    r._load_ts AS _staged_ts",
+            ]
+        )
+        from_sql = f"FROM {raw_tbl} r"
+        if joins:
+            from_sql += ",\n    " + ",\n    ".join(joins)
+        where_sql = ("\nWHERE " + "\n  AND ".join(wheres)) if wheres else ""
+        blocks.append(
+            f"""-- Entity `{ent.name}` ({ent.path})
+CREATE OR REPLACE DYNAMIC TABLE {stg_tbl}
+    TARGET_LAG = '{target_lag}'
+    WAREHOUSE = {warehouse}
+    REFRESH_MODE = AUTO
+    INITIALIZE = ON_CREATE
+    COMMENT = '{_fk_comment(ent, stg_tbl, parent_tbl)}'
 AS
-INSERT INTO {stg_tbl} (
-    {all_field_cols},
-    _file_name,
-    _file_sha256
-)
 SELECT
-{select_sql},
-    r._file_name,
-    r._file_sha256
-FROM stream_{raw_tbl} r{flatten_clause};
+{",\n".join(select_exprs)}
+{from_sql}{where_sql};
+"""
+        )
+    return "\n".join(blocks)
 
--- 3. D4: CURATED DATASET WITH CDC SCD TYPE 2
-CREATE TABLE IF NOT EXISTS {cur_tbl} (
-{cols_sql},
-    _row_hash           VARCHAR(64)     NOT NULL,
-    is_valid_start      TIMESTAMP_NTZ   NOT NULL,
-    is_valid_end        TIMESTAMP_NTZ   NULL,
-    is_current          BOOLEAN         NOT NULL DEFAULT TRUE,
-    system_start_time   TIMESTAMP_NTZ   DEFAULT CURRENT_TIMESTAMP(),
-    system_end_time     TIMESTAMP_NTZ   NULL,
-    _source_file        VARCHAR(512)    NOT NULL
-);
 
--- Task to apply SCD Type 2 (close changed current rows, insert new version)
-CREATE OR REPLACE TASK task_scd2_{ds}
-    WAREHOUSE = COMPUTE_WH
-    AFTER task_flatten_{ds}
-AS
-BEGIN
-    -- Step A: Close existing current rows where non-key attributes changed
-    UPDATE {cur_tbl} tgt
-    SET
-        tgt.is_valid_end = CURRENT_TIMESTAMP(),
-        tgt.is_current = FALSE,
-        tgt.system_end_time = CURRENT_TIMESTAMP()
-    FROM (
-        SELECT
-            {all_field_cols},
-            SHA2(CONCAT_WS('|', {hash_cols}), 256) AS _row_hash
-        FROM {stg_tbl}
-    ) src
-    WHERE {bk_join}
-      AND tgt.is_current = TRUE
-      AND tgt._row_hash <> src._row_hash;
+def compile_gold_dynamic_table_sql(
+    mapping: DatasetMapping,
+    target_lag: str = "15 minutes",
+    warehouse: str = "COMPUTE_WH",
+    schema_staging: str = "STAGING",
+    schema_curated: str = "CURATED",
+) -> str:
+    """Layer 3 DDL: Stage -> one curated Dynamic Table per XML entity (parent versioned SCD2, children keyed by FK)."""
+    ds = mapping.dataset
+    model = build_entity_model(mapping)
+    stg_prefix = f"{schema_staging}." if schema_staging else ""
+    cur_prefix = f"{schema_curated}." if schema_curated else ""
 
-    -- Step B: Insert brand-new keys or newly versioned rows
-    INSERT INTO {cur_tbl} (
-        {all_field_cols},
-        _row_hash,
-        is_valid_start,
-        is_valid_end,
-        is_current,
-        system_start_time,
-        system_end_time,
-        _source_file
-    )
+    blocks: list[str] = [
+        f"""-- =============================================================================
+-- LAYER 3 (CURATED): ONE DYNAMIC TABLE PER XML ENTITY FROM STAGE ({ds} v{mapping.version}) [Schema: {schema_curated}]
+-- Entities: {', '.join(e.name for e in model.entities)}
+-- =============================================================================
+
+CREATE SCHEMA IF NOT EXISTS {schema_curated};
+"""
+    ]
+    for ent in model.entities:
+        stg_tbl = f"{stg_prefix}{ent.stage_table}"
+        cur_tbl = f"{cur_prefix}{ent.curated_table}"
+        parent_tbl = f"{cur_prefix}{ent.parent.curated_table}" if ent.parent else None
+        key_cols = [ent.pk_column] + ([ent.fk_column] if ent.fk_column else [])
+        data_cols = [c.name for c in ent.columns]
+        non_key = [c for c in data_cols if c not in ent.business_keys]
+        hash_cols = ", ".join(f"COALESCE(TO_VARCHAR({c}), '')" for c in non_key) or "'1'"
+        select_cols = ",\n        ".join(key_cols + data_cols)
+
+        if ent.parent is None:
+            partition = ", ".join(ent.business_keys) if ent.business_keys else ent.pk_column
+            body = f"""WITH versioned AS (
     SELECT
-        {src_field_cols},
-        src._row_hash,
-        CURRENT_TIMESTAMP(),
-        NULL,
-        TRUE,
-        CURRENT_TIMESTAMP(),
-        NULL,
-        src._file_name
-    FROM (
-        SELECT
-            {all_field_cols},
-            _file_name,
-            SHA2(CONCAT_WS('|', {hash_cols}), 256) AS _row_hash
-        FROM {stg_tbl}
-    ) src
-    LEFT JOIN {cur_tbl} tgt
-      ON {bk_join} AND tgt.is_current = TRUE
-    WHERE tgt.{mapping.business_keys[0]} IS NULL;
-END;
+        {select_cols},
+        SHA2(CONCAT_WS('|', {hash_cols}), 256) AS _row_hash,
+        _staged_ts AS is_valid_start,
+        LEAD(_staged_ts) OVER (
+            PARTITION BY {partition}
+            ORDER BY _staged_ts ASC
+        ) AS is_valid_end,
+        CASE
+            WHEN LEAD(_staged_ts) OVER (
+                PARTITION BY {partition}
+                ORDER BY _staged_ts ASC
+            ) IS NULL THEN TRUE
+            ELSE FALSE
+        END AS is_current,
+        _staged_ts AS system_start_time,
+        LEAD(_staged_ts) OVER (
+            PARTITION BY {partition}
+            ORDER BY _staged_ts ASC
+        ) AS system_end_time,
+        _file_name AS _source_file
+    FROM {stg_tbl}
+)
+SELECT * FROM versioned"""
+        else:
+            body = f"""SELECT
+        {select_cols},
+        SHA2(CONCAT_WS('|', {hash_cols}), 256) AS _row_hash,
+        _staged_ts AS system_start_time,
+        _file_name AS _source_file
+FROM {stg_tbl}"""
+        blocks.append(
+            f"""-- Entity `{ent.name}` ({ent.path})
+CREATE OR REPLACE DYNAMIC TABLE {cur_tbl}
+    TARGET_LAG = '{target_lag}'
+    WAREHOUSE = {warehouse}
+    REFRESH_MODE = AUTO
+    INITIALIZE = ON_CREATE
+    COMMENT = '{_fk_comment(ent, cur_tbl, parent_tbl)}'
+AS
+{body};
+"""
+        )
+    return "\n".join(blocks)
 
--- 4. O3: QUARANTINE TABLE & O1: DQ RESULTS TABLE
+def compile_ops_tables_sql(
+    mapping: DatasetMapping,
+    schema_ops: str = "OPS",
+) -> str:
+    """Operational tables: O3 Quarantine & O1 DQ Results (deployed under OPS schema)."""
+    quar_tbl = f"{schema_ops}.{mapping.targets.quarantine_table}" if schema_ops else mapping.targets.quarantine_table
+    dq_tbl = f"{schema_ops}.{mapping.targets.dq_results_table}" if schema_ops else mapping.targets.dq_results_table
+    return f"""-- =============================================================================
+-- OPERATIONAL TABLES: O3 QUARANTINE & O1 DQ RESULTS [Schema: {schema_ops}]
+-- =============================================================================
+
+CREATE SCHEMA IF NOT EXISTS {schema_ops};
+
 CREATE TABLE IF NOT EXISTS {quar_tbl} (
     quarantine_id       VARCHAR(64)     DEFAULT UUID_STRING(),
     dataset             VARCHAR(128)    NOT NULL,
@@ -201,14 +284,39 @@ CREATE TABLE IF NOT EXISTS {dq_tbl} (
 """
 
 
+def compile_snowflake_ddl(
+    mapping: DatasetMapping,
+    adls_stage: str = "@RAW.ADLS_XML_STAGE",
+    schema_raw: str = "RAW",
+    schema_staging: str = "STAGING",
+    schema_curated: str = "CURATED",
+    schema_ops: str = "OPS",
+) -> str:
+    """Generate complete idempotent Snowflake DDL for RAW (Snowpipe), STAGE (Dynamic Table), GOLD (Dynamic Table), O1, and O3."""
+    parts = [
+        f"-- =============================================================================",
+        f"-- AUTO-GENERATED SNOWFLAKE DDL BY STEP 2 DDL GENERATOR AGENT: {mapping.dataset} (v{mapping.version})",
+        f"-- Architecture: ADLS -> Snowpipe ({schema_raw}) -> STAGE Dynamic Table ({schema_staging}) -> GOLD Dynamic Table ({schema_curated})",
+        f"-- =============================================================================\n",
+        compile_raw_snowpipe_sql(mapping, adls_stage=adls_stage, schema_raw=schema_raw),
+        compile_staging_dynamic_table_sql(mapping, schema_raw=schema_raw, schema_staging=schema_staging),
+        compile_gold_dynamic_table_sql(mapping, schema_staging=schema_staging, schema_curated=schema_curated),
+        compile_ops_tables_sql(mapping, schema_ops=schema_ops),
+    ]
+    return "\n".join(parts)
+
+
 def compile_additive_drift_sql(dataset: str, new_fields: list[FieldMapping]) -> list[str]:
-    """Generate ALTER TABLE ADD COLUMN statements for auto-applied additive schema drift."""
+    """Generate DDL statements for auto-applied additive schema drift on Stage and Gold Dynamic Tables."""
     statements: list[str] = []
     for f in new_fields:
         statements.append(
-            f"ALTER TABLE staging_{dataset} ADD COLUMN IF NOT EXISTS {f.column} {f.snowflake_type} NULL;"
+            f"-- Additive drift column for Dynamic Table staging_{dataset}: {f.column} ({f.snowflake_type})"
         )
         statements.append(
-            f"ALTER TABLE curated_{dataset} ADD COLUMN IF NOT EXISTS {f.column} {f.snowflake_type} NULL;"
+            f"ALTER DYNAMIC TABLE IF EXISTS staging_{dataset} REFRESH;"
+        )
+        statements.append(
+            f"ALTER DYNAMIC TABLE IF EXISTS curated_{dataset} REFRESH;"
         )
     return statements

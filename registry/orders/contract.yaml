@@ -1,0 +1,322 @@
+dataset: orders
+version: 0.1.0
+root_element: /Order
+required_xpaths:
+- /Order/@orderType
+- /Order/@version
+- /Order/@currency
+- /Order/@channel
+- /Order/@region
+- /Order/OrderId
+- /Order/ExternalPurchaseOrderNumber
+- /Order/OrderDate
+- /Order/OrderTimestamp
+- /Order/OrderStatus
+- /Order/IsExpedited
+- /Order/IsBackorderAllowed
+- /Order/PriorityScore
+- /Order/TotalAmount
+- /Order/DiscountAmount
+- /Order/TaxAmount
+- /Order/FreightAmount
+- /Order/NetPayableAmount
+- /Order/ShippingNotes
+- /Order/Header/SourceSystem
+- /Order/Header/SalesOrgCode
+- /Order/Header/DistributionChannel
+- /Order/Header/DivisionCode
+- /Order/Header/ContractReference/MasterAgreementId
+- /Order/Header/ContractReference/ContractEffectiveDate
+- /Order/Header/ContractReference/ContractExpirationDate
+- /Order/Header/ContractReference/DiscountTierPercentage
+- /Order/Header/ContractReference/IsAutoRenew
+- /Order/Header/SalesRepresentative/RepId
+- /Order/Header/SalesRepresentative/RepName
+- /Order/Header/SalesRepresentative/RepEmail
+- /Order/Header/SalesRepresentative/TerritoryCode
+- /Order/Header/SalesRepresentative/CommissionRate
+- /Order/Customer/@customerTier
+- /Order/Customer/@taxExempt
+- /Order/Customer/@kycVerified
+- /Order/Customer/CustomerId
+- /Order/Customer/AccountNumber
+- /Order/Customer/CompanyName
+- /Order/Customer/DunsNumber
+- /Order/Customer/TaxRegistrationNumber
+- /Order/Customer/AccountCreatedDate
+- /Order/Customer/CreditProfile/CreditLimit
+- /Order/Customer/CreditProfile/CurrentBalance
+- /Order/Customer/CreditProfile/AvailableCredit
+- /Order/Customer/CreditProfile/RiskRating
+- /Order/Customer/CreditProfile/PaymentTermsDays
+- /Order/Customer/CreditProfile/IsCreditHold
+- /Order/Customer/Contacts/PrimaryContact/ContactId
+- /Order/Customer/Contacts/PrimaryContact/FullName
+- /Order/Customer/Contacts/PrimaryContact/JobTitle
+- /Order/Customer/Contacts/PrimaryContact/Email
+- /Order/Customer/Contacts/PrimaryContact/Phone
+- /Order/Customer/Contacts/AccountsPayableContact/ContactId
+- /Order/Customer/Contacts/AccountsPayableContact/FullName
+- /Order/Customer/Contacts/AccountsPayableContact/JobTitle
+- /Order/Customer/Contacts/AccountsPayableContact/Email
+- /Order/Customer/Contacts/AccountsPayableContact/Phone
+- /Order/Customer/Addresses/BillingAddress/@addressType
+- /Order/Customer/Addresses/BillingAddress/AddressId
+- /Order/Customer/Addresses/BillingAddress/AttentionLine
+- /Order/Customer/Addresses/BillingAddress/StreetLine1
+- /Order/Customer/Addresses/BillingAddress/StreetLine2
+- /Order/Customer/Addresses/BillingAddress/City
+- /Order/Customer/Addresses/BillingAddress/StateProvince
+- /Order/Customer/Addresses/BillingAddress/PostalCode
+- /Order/Customer/Addresses/BillingAddress/CountryCode
+- /Order/Customer/Addresses/BillingAddress/GeoCoordinates/Latitude
+- /Order/Customer/Addresses/BillingAddress/GeoCoordinates/Longitude
+- /Order/Customer/Addresses/ShippingAddress/@addressType
+- /Order/Customer/Addresses/ShippingAddress/AddressId
+- /Order/Customer/Addresses/ShippingAddress/FacilityName
+- /Order/Customer/Addresses/ShippingAddress/AttentionLine
+- /Order/Customer/Addresses/ShippingAddress/StreetLine1
+- /Order/Customer/Addresses/ShippingAddress/StreetLine2
+- /Order/Customer/Addresses/ShippingAddress/City
+- /Order/Customer/Addresses/ShippingAddress/StateProvince
+- /Order/Customer/Addresses/ShippingAddress/PostalCode
+- /Order/Customer/Addresses/ShippingAddress/CountryCode
+- /Order/Customer/Addresses/ShippingAddress/IsResidential
+- /Order/Customer/Addresses/ShippingAddress/RequiresLiftgate
+- /Order/Customer/Addresses/ShippingAddress/RequiresInsideDelivery
+- /Order/Customer/Addresses/ShippingAddress/GeoCoordinates/Latitude
+- /Order/Customer/Addresses/ShippingAddress/GeoCoordinates/Longitude
+- /Order/FulfillmentPlan/RequestedDeliveryDate
+- /Order/FulfillmentPlan/PromisedShipDate
+- /Order/FulfillmentPlan/Incoterms
+- /Order/FulfillmentPlan/OriginWarehouse/WarehouseId
+- /Order/FulfillmentPlan/OriginWarehouse/WarehouseName
+- /Order/FulfillmentPlan/OriginWarehouse/TimeZone
+- /Order/FulfillmentPlan/CarrierRouting/@carrierCode
+- /Order/FulfillmentPlan/CarrierRouting/@serviceLevel
+- /Order/FulfillmentPlan/CarrierRouting/CarrierName
+- /Order/FulfillmentPlan/CarrierRouting/ScacCode
+- /Order/FulfillmentPlan/CarrierRouting/BolNumber
+- /Order/FulfillmentPlan/CarrierRouting/ProNumber
+- /Order/FulfillmentPlan/CarrierRouting/EstimatedTransitDays
+- /Order/FulfillmentPlan/CarrierRouting/TotalPalletCount
+- /Order/FulfillmentPlan/CarrierRouting/TotalGrossWeightKg
+- /Order/FulfillmentPlan/CarrierRouting/IsTemperatureControlled
+- /Order/FulfillmentPlan/CarrierRouting/InsuranceCoverageAmount
+- /Order/PaymentDetails/@paymentMethod
+- /Order/PaymentDetails/PaymentStatus
+- /Order/PaymentDetails/AuthorizationCode
+- /Order/PaymentDetails/AuthorizedTimestamp
+- /Order/PaymentDetails/BillingCurrency
+- /Order/PaymentDetails/ExchangeRateToUsd
+- /Order/PaymentDetails/InstallmentSchedule/Installment/@installmentNumber
+- /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentId
+- /Order/PaymentDetails/InstallmentSchedule/Installment/DueDate
+- /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentPercentage
+- /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentAmount
+- /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentStatus
+- /Order/LineItems/LineItem/@lineNumber
+- /Order/LineItems/LineItem/@itemCategory
+- /Order/LineItems/LineItem/@hazmat
+- /Order/LineItems/LineItem/LineItemId
+- /Order/LineItems/LineItem/ProductCode
+- /Order/LineItems/LineItem/ManufacturerPartNumber
+- /Order/LineItems/LineItem/ProductName
+- /Order/LineItems/LineItem/ProductFamily
+- /Order/LineItems/LineItem/UnitOfMeasure
+- /Order/LineItems/LineItem/Quantity
+- /Order/LineItems/LineItem/UnitPrice
+- /Order/LineItems/LineItem/LineDiscountAmount
+- /Order/LineItems/LineItem/LineTaxRate
+- /Order/LineItems/LineItem/LineTaxAmount
+- /Order/LineItems/LineItem/ExtendedNetAmount
+- /Order/LineItems/LineItem/IsTaxable
+- /Order/LineItems/LineItem/IsDropShip
+- /Order/LineItems/LineItem/RequestedShipDate
+- /Order/LineItems/LineItem/PhysicalSpecs/UnitWeightKg
+- /Order/LineItems/LineItem/PhysicalSpecs/DimensionsCm
+- /Order/LineItems/LineItem/PhysicalSpecs/CountryOfOrigin
+- /Order/LineItems/LineItem/PhysicalSpecs/HarmonizedTariffCode
+- /Order/LineItems/LineItem/InventoryAllocation/AllocatedWarehouseId
+- /Order/LineItems/LineItem/InventoryAllocation/BinLocation
+- /Order/LineItems/LineItem/InventoryAllocation/LotNumber
+- /Order/LineItems/LineItem/InventoryAllocation/AllocationStatus
+- /Order/LineItems/LineItem/InventoryAllocation/AllocationTimestamp
+- /Order/LineItems/LineItem/Warranty/WarrantyPlanCode
+- /Order/LineItems/LineItem/Warranty/WarrantyDurationMonths
+- /Order/LineItems/LineItem/Warranty/IncludesOnsiteResponse
+- /Order/ComplianceAndGovernance/IsExportControlled
+- /Order/ComplianceAndGovernance/ExportControlClassification
+- /Order/ComplianceAndGovernance/SanctionsScreeningPassed
+- /Order/ComplianceAndGovernance/ScreeningReferenceId
+- /Order/ComplianceAndGovernance/DataPrivacy/ContainsPii
+- /Order/ComplianceAndGovernance/DataPrivacy/PiiClassification
+- /Order/ComplianceAndGovernance/DataPrivacy/GdprApplicable
+- /Order/ComplianceAndGovernance/DataPrivacy/RetentionPolicyYears
+- /Order/AuditTrail/AuditEvent/@sequence
+- /Order/AuditTrail/AuditEvent/EventId
+- /Order/AuditTrail/AuditEvent/EventType
+- /Order/AuditTrail/AuditEvent/EventTimestamp
+- /Order/AuditTrail/AuditEvent/ActorId
+- /Order/AuditTrail/AuditEvent/EventNotes
+type_assertions:
+  /Order/@orderType: VARCHAR
+  /Order/@version: NUMBER(18,4)
+  /Order/@currency: VARCHAR
+  /Order/@channel: VARCHAR
+  /Order/@region: VARCHAR
+  /Order/OrderId: NUMBER(18,0)
+  /Order/ExternalPurchaseOrderNumber: VARCHAR
+  /Order/OrderDate: DATE
+  /Order/OrderTimestamp: TIMESTAMP_NTZ
+  /Order/OrderStatus: VARCHAR
+  /Order/IsExpedited: BOOLEAN
+  /Order/IsBackorderAllowed: BOOLEAN
+  /Order/PriorityScore: NUMBER(18,0)
+  /Order/TotalAmount: NUMBER(18,4)
+  /Order/DiscountAmount: NUMBER(18,4)
+  /Order/TaxAmount: NUMBER(18,4)
+  /Order/FreightAmount: NUMBER(18,4)
+  /Order/NetPayableAmount: NUMBER(18,4)
+  /Order/ShippingNotes: VARCHAR
+  /Order/Header/SourceSystem: VARCHAR
+  /Order/Header/SalesOrgCode: VARCHAR
+  /Order/Header/DistributionChannel: NUMBER(18,0)
+  /Order/Header/DivisionCode: NUMBER(18,0)
+  /Order/Header/ContractReference/MasterAgreementId: VARCHAR
+  /Order/Header/ContractReference/ContractEffectiveDate: DATE
+  /Order/Header/ContractReference/ContractExpirationDate: DATE
+  /Order/Header/ContractReference/DiscountTierPercentage: NUMBER(18,4)
+  /Order/Header/ContractReference/IsAutoRenew: BOOLEAN
+  /Order/Header/SalesRepresentative/RepId: VARCHAR
+  /Order/Header/SalesRepresentative/RepName: VARCHAR
+  /Order/Header/SalesRepresentative/RepEmail: VARCHAR
+  /Order/Header/SalesRepresentative/TerritoryCode: VARCHAR
+  /Order/Header/SalesRepresentative/CommissionRate: NUMBER(18,4)
+  /Order/Customer/@customerTier: VARCHAR
+  /Order/Customer/@taxExempt: BOOLEAN
+  /Order/Customer/@kycVerified: BOOLEAN
+  /Order/Customer/CustomerId: VARCHAR
+  /Order/Customer/AccountNumber: VARCHAR
+  /Order/Customer/CompanyName: VARCHAR
+  /Order/Customer/DunsNumber: NUMBER(18,0)
+  /Order/Customer/TaxRegistrationNumber: VARCHAR
+  /Order/Customer/AccountCreatedDate: DATE
+  /Order/Customer/CreditProfile/CreditLimit: NUMBER(18,4)
+  /Order/Customer/CreditProfile/CurrentBalance: NUMBER(18,4)
+  /Order/Customer/CreditProfile/AvailableCredit: NUMBER(18,4)
+  /Order/Customer/CreditProfile/RiskRating: VARCHAR
+  /Order/Customer/CreditProfile/PaymentTermsDays: NUMBER(18,0)
+  /Order/Customer/CreditProfile/IsCreditHold: BOOLEAN
+  /Order/Customer/Contacts/PrimaryContact/ContactId: VARCHAR
+  /Order/Customer/Contacts/PrimaryContact/FullName: VARCHAR
+  /Order/Customer/Contacts/PrimaryContact/JobTitle: VARCHAR
+  /Order/Customer/Contacts/PrimaryContact/Email: VARCHAR
+  /Order/Customer/Contacts/PrimaryContact/Phone: VARCHAR
+  /Order/Customer/Contacts/AccountsPayableContact/ContactId: VARCHAR
+  /Order/Customer/Contacts/AccountsPayableContact/FullName: VARCHAR
+  /Order/Customer/Contacts/AccountsPayableContact/JobTitle: VARCHAR
+  /Order/Customer/Contacts/AccountsPayableContact/Email: VARCHAR
+  /Order/Customer/Contacts/AccountsPayableContact/Phone: VARCHAR
+  /Order/Customer/Addresses/BillingAddress/@addressType: VARCHAR
+  /Order/Customer/Addresses/BillingAddress/AddressId: VARCHAR
+  /Order/Customer/Addresses/BillingAddress/AttentionLine: VARCHAR
+  /Order/Customer/Addresses/BillingAddress/StreetLine1: VARCHAR
+  /Order/Customer/Addresses/BillingAddress/StreetLine2: VARCHAR
+  /Order/Customer/Addresses/BillingAddress/City: VARCHAR
+  /Order/Customer/Addresses/BillingAddress/StateProvince: VARCHAR
+  /Order/Customer/Addresses/BillingAddress/PostalCode: NUMBER(18,0)
+  /Order/Customer/Addresses/BillingAddress/CountryCode: VARCHAR
+  /Order/Customer/Addresses/BillingAddress/GeoCoordinates/Latitude: NUMBER(18,4)
+  /Order/Customer/Addresses/BillingAddress/GeoCoordinates/Longitude: NUMBER(18,4)
+  /Order/Customer/Addresses/ShippingAddress/@addressType: VARCHAR
+  /Order/Customer/Addresses/ShippingAddress/AddressId: VARCHAR
+  /Order/Customer/Addresses/ShippingAddress/FacilityName: VARCHAR
+  /Order/Customer/Addresses/ShippingAddress/AttentionLine: VARCHAR
+  /Order/Customer/Addresses/ShippingAddress/StreetLine1: VARCHAR
+  /Order/Customer/Addresses/ShippingAddress/StreetLine2: VARCHAR
+  /Order/Customer/Addresses/ShippingAddress/City: VARCHAR
+  /Order/Customer/Addresses/ShippingAddress/StateProvince: VARCHAR
+  /Order/Customer/Addresses/ShippingAddress/PostalCode: NUMBER(18,0)
+  /Order/Customer/Addresses/ShippingAddress/CountryCode: VARCHAR
+  /Order/Customer/Addresses/ShippingAddress/IsResidential: BOOLEAN
+  /Order/Customer/Addresses/ShippingAddress/RequiresLiftgate: BOOLEAN
+  /Order/Customer/Addresses/ShippingAddress/RequiresInsideDelivery: BOOLEAN
+  /Order/Customer/Addresses/ShippingAddress/GeoCoordinates/Latitude: NUMBER(18,4)
+  /Order/Customer/Addresses/ShippingAddress/GeoCoordinates/Longitude: NUMBER(18,4)
+  /Order/FulfillmentPlan/RequestedDeliveryDate: DATE
+  /Order/FulfillmentPlan/PromisedShipDate: DATE
+  /Order/FulfillmentPlan/Incoterms: VARCHAR
+  /Order/FulfillmentPlan/OriginWarehouse/WarehouseId: VARCHAR
+  /Order/FulfillmentPlan/OriginWarehouse/WarehouseName: VARCHAR
+  /Order/FulfillmentPlan/OriginWarehouse/TimeZone: VARCHAR
+  /Order/FulfillmentPlan/CarrierRouting/@carrierCode: VARCHAR
+  /Order/FulfillmentPlan/CarrierRouting/@serviceLevel: VARCHAR
+  /Order/FulfillmentPlan/CarrierRouting/CarrierName: VARCHAR
+  /Order/FulfillmentPlan/CarrierRouting/ScacCode: VARCHAR
+  /Order/FulfillmentPlan/CarrierRouting/BolNumber: VARCHAR
+  /Order/FulfillmentPlan/CarrierRouting/ProNumber: VARCHAR
+  /Order/FulfillmentPlan/CarrierRouting/EstimatedTransitDays: NUMBER(18,0)
+  /Order/FulfillmentPlan/CarrierRouting/TotalPalletCount: NUMBER(18,0)
+  /Order/FulfillmentPlan/CarrierRouting/TotalGrossWeightKg: NUMBER(18,4)
+  /Order/FulfillmentPlan/CarrierRouting/IsTemperatureControlled: BOOLEAN
+  /Order/FulfillmentPlan/CarrierRouting/InsuranceCoverageAmount: NUMBER(18,4)
+  /Order/PaymentDetails/@paymentMethod: VARCHAR
+  /Order/PaymentDetails/PaymentStatus: VARCHAR
+  /Order/PaymentDetails/AuthorizationCode: VARCHAR
+  /Order/PaymentDetails/AuthorizedTimestamp: TIMESTAMP_NTZ
+  /Order/PaymentDetails/BillingCurrency: VARCHAR
+  /Order/PaymentDetails/ExchangeRateToUsd: NUMBER(18,4)
+  /Order/PaymentDetails/InstallmentSchedule/Installment/@installmentNumber: NUMBER(18,0)
+  /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentId: VARCHAR
+  /Order/PaymentDetails/InstallmentSchedule/Installment/DueDate: DATE
+  /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentPercentage: NUMBER(18,4)
+  /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentAmount: NUMBER(18,4)
+  /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentStatus: VARCHAR
+  /Order/LineItems/LineItem/@lineNumber: NUMBER(18,0)
+  /Order/LineItems/LineItem/@itemCategory: VARCHAR
+  /Order/LineItems/LineItem/@hazmat: BOOLEAN
+  /Order/LineItems/LineItem/LineItemId: VARCHAR
+  /Order/LineItems/LineItem/ProductCode: VARCHAR
+  /Order/LineItems/LineItem/ManufacturerPartNumber: VARCHAR
+  /Order/LineItems/LineItem/ProductName: VARCHAR
+  /Order/LineItems/LineItem/ProductFamily: VARCHAR
+  /Order/LineItems/LineItem/UnitOfMeasure: VARCHAR
+  /Order/LineItems/LineItem/Quantity: NUMBER(18,0)
+  /Order/LineItems/LineItem/UnitPrice: NUMBER(18,4)
+  /Order/LineItems/LineItem/LineDiscountAmount: NUMBER(18,4)
+  /Order/LineItems/LineItem/LineTaxRate: NUMBER(18,4)
+  /Order/LineItems/LineItem/LineTaxAmount: NUMBER(18,4)
+  /Order/LineItems/LineItem/ExtendedNetAmount: NUMBER(18,4)
+  /Order/LineItems/LineItem/IsTaxable: BOOLEAN
+  /Order/LineItems/LineItem/IsDropShip: BOOLEAN
+  /Order/LineItems/LineItem/RequestedShipDate: DATE
+  /Order/LineItems/LineItem/PhysicalSpecs/UnitWeightKg: NUMBER(18,4)
+  /Order/LineItems/LineItem/PhysicalSpecs/DimensionsCm: VARCHAR
+  /Order/LineItems/LineItem/PhysicalSpecs/CountryOfOrigin: VARCHAR
+  /Order/LineItems/LineItem/PhysicalSpecs/HarmonizedTariffCode: VARCHAR
+  /Order/LineItems/LineItem/InventoryAllocation/AllocatedWarehouseId: VARCHAR
+  /Order/LineItems/LineItem/InventoryAllocation/BinLocation: VARCHAR
+  /Order/LineItems/LineItem/InventoryAllocation/LotNumber: VARCHAR
+  /Order/LineItems/LineItem/InventoryAllocation/AllocationStatus: VARCHAR
+  /Order/LineItems/LineItem/InventoryAllocation/AllocationTimestamp: TIMESTAMP_NTZ
+  /Order/LineItems/LineItem/Warranty/WarrantyPlanCode: VARCHAR
+  /Order/LineItems/LineItem/Warranty/WarrantyDurationMonths: NUMBER(18,0)
+  /Order/LineItems/LineItem/Warranty/IncludesOnsiteResponse: BOOLEAN
+  /Order/ComplianceAndGovernance/IsExportControlled: BOOLEAN
+  /Order/ComplianceAndGovernance/ExportControlClassification: VARCHAR
+  /Order/ComplianceAndGovernance/SanctionsScreeningPassed: BOOLEAN
+  /Order/ComplianceAndGovernance/ScreeningReferenceId: VARCHAR
+  /Order/ComplianceAndGovernance/DataPrivacy/ContainsPii: BOOLEAN
+  /Order/ComplianceAndGovernance/DataPrivacy/PiiClassification: VARCHAR
+  /Order/ComplianceAndGovernance/DataPrivacy/GdprApplicable: BOOLEAN
+  /Order/ComplianceAndGovernance/DataPrivacy/RetentionPolicyYears: NUMBER(18,0)
+  /Order/AuditTrail/AuditEvent/@sequence: NUMBER(18,0)
+  /Order/AuditTrail/AuditEvent/EventId: VARCHAR
+  /Order/AuditTrail/AuditEvent/EventType: VARCHAR
+  /Order/AuditTrail/AuditEvent/EventTimestamp: TIMESTAMP_NTZ
+  /Order/AuditTrail/AuditEvent/ActorId: VARCHAR
+  /Order/AuditTrail/AuditEvent/EventNotes: VARCHAR
+expected_rows_per_file_min: 5
+expected_rows_per_file_max: 25
+allow_unknown_elements: true

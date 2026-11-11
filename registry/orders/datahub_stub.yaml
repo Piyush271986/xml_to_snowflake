@@ -1,0 +1,7 @@
+urn: urn:li:dataset:(urn:li:dataPlatform:snowflake,orders,PROD)
+status: DRAFT
+owners:
+- data-steward@enterprise.io
+- data-eng@enterprise.io
+created_by: A0_Intake_Agent
+created_at: '2026-11-11T13:59:28.915389+00:00'

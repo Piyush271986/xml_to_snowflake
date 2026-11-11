@@ -1,0 +1,55 @@
+dataset: enterprise_orders
+version: 0.1.0
+layer: RAW
+table_type: NORMAL_TABLE
+tables:
+- table_name: raw_enterprise_orders
+  layer: RAW
+  table_type: NORMAL_TABLE
+  ingestion_or_refresh: SNOWPIPE
+  upstream_source: '@RAW.ADLS_XML_STAGE/enterprise_orders/'
+  target_lag: null
+  warehouse: COMPUTE_WH
+  grain: One row per ingested XML file from ADLS
+  primary_keys:
+  - _file_name
+  - _file_sha256
+  flatten_path: null
+  columns:
+  - name: _file_name
+    snowflake_type: VARCHAR(512)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Source XML filename in ADLS landing zone
+    is_business_key: true
+  - name: _file_sha256
+    snowflake_type: VARCHAR(64)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: SHA-256 content hash for idempotent ingestion
+    is_business_key: true
+  - name: _source_system
+    snowflake_type: VARCHAR(128)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Source ERP / upstream system identifier
+    is_business_key: false
+  - name: _load_ts
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Snowpipe ingestion timestamp
+    is_business_key: false
+  - name: raw_xml
+    snowflake_type: VARIANT
+    nullable: false
+    source_xpath: /Order
+    expression: null
+    description: Immutable raw XML payload stored as Snowflake VARIANT
+    is_business_key: false
+generated_by: step1_data_steward_agent
+ddl_generated: true

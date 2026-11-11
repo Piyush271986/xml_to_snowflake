@@ -25,7 +25,11 @@ def detect_schema_drift(xml_file: Path, registry_root: Path, dataset: str) -> li
     )
 
     xml_text = xml_file.read_text(encoding="utf-8")
-    _, observed = extract_xml_xpaths_and_values(xml_text)
+    try:
+        _, observed = extract_xml_xpaths_and_values(xml_text)
+    except Exception:
+        # Malformed XML syntax error is caught and quarantined downstream by Gate G1
+        return []
     known_by_xpath = {f.xpath: f for f in mapping.fields}
     findings: list[DriftFinding] = []
 

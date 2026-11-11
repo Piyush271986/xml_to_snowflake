@@ -1,0 +1,2225 @@
+dataset: orders
+version: 0.1.0
+source: sample_inference
+root_element: /Order
+business_keys:
+- order_id
+- line_item_id
+targets:
+  raw_table: raw_orders
+  staging_table: staging_orders
+  curated_table: curated_orders
+  quarantine_table: quarantine_orders
+  dq_results_table: dq_results_orders
+fields:
+- xpath: /Order/@orderType
+  column: order_type
+  snowflake_type: VARCHAR
+  xml_expr: raw_xml:"@orderType"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - B2B_ENTERPRISE
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/@version
+  column: version
+  snowflake_type: NUMBER(18,4)
+  xml_expr: raw_xml:"@version"::NUMBER(18,4)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - '2.4'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/@currency
+  column: currency_code
+  snowflake_type: VARCHAR
+  xml_expr: raw_xml:"@currency"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - USD
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/@channel
+  column: channel
+  snowflake_type: VARCHAR
+  xml_expr: raw_xml:"@channel"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - EDI_850
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/@region
+  column: region
+  snowflake_type: VARCHAR
+  xml_expr: raw_xml:"@region"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - NA-EAST
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/OrderId
+  column: order_id
+  snowflake_type: NUMBER(18,0)
+  xml_expr: TRY_TO_NUMBER(XMLGET(raw_xml, 'OrderId'):"$"::VARCHAR, 18, 0)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '90010458'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/ExternalPurchaseOrderNumber
+  column: external_purchase_order_number
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(raw_xml, 'ExternalPurchaseOrderNumber'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - PO-2026-GLB-88412
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/OrderDate
+  column: order_date
+  snowflake_type: DATE
+  xml_expr: TRY_TO_DATE(XMLGET(raw_xml, 'OrderDate'):"$"::VARCHAR)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '2026-11-10'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/OrderTimestamp
+  column: order_timestamp
+  snowflake_type: TIMESTAMP_NTZ
+  xml_expr: TRY_TO_TIMESTAMP_NTZ(XMLGET(raw_xml, 'OrderTimestamp'):"$"::VARCHAR)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '2026-11-10T14:22:35Z'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/OrderStatus
+  column: order_status
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(raw_xml, 'OrderStatus'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - APPROVED_FOR_FULFILLMENT
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/IsExpedited
+  column: is_expedited
+  snowflake_type: BOOLEAN
+  xml_expr: TRY_TO_BOOLEAN(XMLGET(raw_xml, 'IsExpedited'):"$"::VARCHAR)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 'true'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/IsBackorderAllowed
+  column: is_backorder_allowed
+  snowflake_type: BOOLEAN
+  xml_expr: TRY_TO_BOOLEAN(XMLGET(raw_xml, 'IsBackorderAllowed'):"$"::VARCHAR)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 'false'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/PriorityScore
+  column: priority_score
+  snowflake_type: NUMBER(18,0)
+  xml_expr: TRY_TO_NUMBER(XMLGET(raw_xml, 'PriorityScore'):"$"::VARCHAR, 18, 0)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '1'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/TotalAmount
+  column: total_amount
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(raw_xml, 'TotalAmount'):"$"::VARCHAR, 18, 4)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '48792.6500'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/DiscountAmount
+  column: discount_amount
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(raw_xml, 'DiscountAmount'):"$"::VARCHAR, 18, 4)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '2450.0000'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/TaxAmount
+  column: tax_amount
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(raw_xml, 'TaxAmount'):"$"::VARCHAR, 18, 4)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '3903.4120'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/FreightAmount
+  column: freight_amount
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(raw_xml, 'FreightAmount'):"$"::VARCHAR, 18, 4)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '685.5000'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/NetPayableAmount
+  column: net_payable_amount
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(raw_xml, 'NetPayableAmount'):"$"::VARCHAR, 18, 4)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '50931.5620'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/ShippingNotes
+  column: shipping_notes
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(raw_xml, 'ShippingNotes'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - Deliver to Central Receiving Bay 4. Forklift required for palletized server racks.
+    Call dock manager 30 mins prior to arrival.
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Header/SourceSystem
+  column: source_system
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(raw_xml, 'Header'), 'SourceSystem'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - SAP_S4HANA_ERP
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Header/SalesOrgCode
+  column: sales_org_code
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(raw_xml, 'Header'), 'SalesOrgCode'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - US10
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Header/DistributionChannel
+  column: distribution_channel
+  snowflake_type: NUMBER(18,0)
+  xml_expr: TRY_TO_NUMBER(XMLGET(XMLGET(raw_xml, 'Header'), 'DistributionChannel'):"$"::VARCHAR,
+    18, 0)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '10'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Header/DivisionCode
+  column: division_code
+  snowflake_type: NUMBER(18,0)
+  xml_expr: TRY_TO_NUMBER(XMLGET(XMLGET(raw_xml, 'Header'), 'DivisionCode'):"$"::VARCHAR,
+    18, 0)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '02'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Header/ContractReference/MasterAgreementId
+  column: master_agreement_id
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(raw_xml, 'Header'), 'ContractReference'), 'MasterAgreementId'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - MSA-2024-9921
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Header/ContractReference/ContractEffectiveDate
+  column: contract_effective_date
+  snowflake_type: DATE
+  xml_expr: TRY_TO_DATE(XMLGET(XMLGET(XMLGET(raw_xml, 'Header'), 'ContractReference'),
+    'ContractEffectiveDate'):"$"::VARCHAR)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '2024-01-15'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Header/ContractReference/ContractExpirationDate
+  column: contract_expiration_date
+  snowflake_type: DATE
+  xml_expr: TRY_TO_DATE(XMLGET(XMLGET(XMLGET(raw_xml, 'Header'), 'ContractReference'),
+    'ContractExpirationDate'):"$"::VARCHAR)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '2027-12-31'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Header/ContractReference/DiscountTierPercentage
+  column: discount_tier_percentage
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(raw_xml, 'Header'), 'ContractReference'),
+    'DiscountTierPercentage'):"$"::VARCHAR, 18, 4)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '5.0000'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Header/ContractReference/IsAutoRenew
+  column: is_auto_renew
+  snowflake_type: BOOLEAN
+  xml_expr: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(raw_xml, 'Header'), 'ContractReference'),
+    'IsAutoRenew'):"$"::VARCHAR)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 'true'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Header/SalesRepresentative/RepId
+  column: rep_id
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(raw_xml, 'Header'), 'SalesRepresentative'), 'RepId'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - REP-4409
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Header/SalesRepresentative/RepName
+  column: rep_name
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(raw_xml, 'Header'), 'SalesRepresentative'), 'RepName'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - Marcus Vance
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Header/SalesRepresentative/RepEmail
+  column: rep_email
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(raw_xml, 'Header'), 'SalesRepresentative'), 'RepEmail'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - m.vance@enterprise-supply.io
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Header/SalesRepresentative/TerritoryCode
+  column: territory_code
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(raw_xml, 'Header'), 'SalesRepresentative'), 'TerritoryCode'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - US-NE-ENTERPRISE
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Header/SalesRepresentative/CommissionRate
+  column: commission_rate
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(raw_xml, 'Header'), 'SalesRepresentative'),
+    'CommissionRate'):"$"::VARCHAR, 18, 4)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '0.0325'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/@customerTier
+  column: customer_customer_tier
+  snowflake_type: VARCHAR
+  xml_expr: raw_xml:"@customerTier"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - PLATINUM
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/@taxExempt
+  column: customer_tax_exempt
+  snowflake_type: BOOLEAN
+  xml_expr: raw_xml:"@taxExempt"::BOOLEAN
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - 'false'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/@kycVerified
+  column: customer_kyc_verified
+  snowflake_type: BOOLEAN
+  xml_expr: raw_xml:"@kycVerified"::BOOLEAN
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - 'true'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/CustomerId
+  column: customer_id
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(raw_xml, 'Customer'), 'CustomerId'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - CUST-88401
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/AccountNumber
+  column: account_number
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(raw_xml, 'Customer'), 'AccountNumber'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - ACCT-US-9920144
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/CompanyName
+  column: company_name
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(raw_xml, 'Customer'), 'CompanyName'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - Apex Global Cloud Infrastructure Corp
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/DunsNumber
+  column: duns_number
+  snowflake_type: NUMBER(18,0)
+  xml_expr: TRY_TO_NUMBER(XMLGET(XMLGET(raw_xml, 'Customer'), 'DunsNumber'):"$"::VARCHAR,
+    18, 0)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '149028831'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/TaxRegistrationNumber
+  column: tax_registration_number
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(raw_xml, 'Customer'), 'TaxRegistrationNumber'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - US-EIN-84-2901145
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/AccountCreatedDate
+  column: account_created_date
+  snowflake_type: DATE
+  xml_expr: TRY_TO_DATE(XMLGET(XMLGET(raw_xml, 'Customer'), 'AccountCreatedDate'):"$"::VARCHAR)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '2021-06-01'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/CreditProfile/CreditLimit
+  column: credit_limit
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'CreditProfile'),
+    'CreditLimit'):"$"::VARCHAR, 18, 4)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '500000.0000'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/CreditProfile/CurrentBalance
+  column: current_balance
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'CreditProfile'),
+    'CurrentBalance'):"$"::VARCHAR, 18, 4)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '142850.2500'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/CreditProfile/AvailableCredit
+  column: available_credit
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'CreditProfile'),
+    'AvailableCredit'):"$"::VARCHAR, 18, 4)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '357149.7500'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/CreditProfile/RiskRating
+  column: risk_rating
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'CreditProfile'), 'RiskRating'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - LOW
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/CreditProfile/PaymentTermsDays
+  column: payment_terms_days
+  snowflake_type: NUMBER(18,0)
+  xml_expr: TRY_TO_NUMBER(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'CreditProfile'),
+    'PaymentTermsDays'):"$"::VARCHAR, 18, 0)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '45'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/CreditProfile/IsCreditHold
+  column: is_credit_hold
+  snowflake_type: BOOLEAN
+  xml_expr: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'CreditProfile'),
+    'IsCreditHold'):"$"::VARCHAR)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 'false'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Contacts/PrimaryContact/ContactId
+  column: primary_contact_contact_id
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Contacts'), 'PrimaryContact'),
+    'ContactId'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - CNT-101
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Contacts/PrimaryContact/FullName
+  column: primary_contact_full_name
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Contacts'), 'PrimaryContact'),
+    'FullName'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - Elena Rostova
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Contacts/PrimaryContact/JobTitle
+  column: primary_contact_job_title
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Contacts'), 'PrimaryContact'),
+    'JobTitle'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - VP of Data Center Procurement
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Contacts/PrimaryContact/Email
+  column: primary_contact_email
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Contacts'), 'PrimaryContact'),
+    'Email'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - elena.rostova@apexcloud.example.com
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Contacts/PrimaryContact/Phone
+  column: primary_contact_phone
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Contacts'), 'PrimaryContact'),
+    'Phone'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - +1-617-555-0192
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Contacts/AccountsPayableContact/ContactId
+  column: accounts_payable_contact_contact_id
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Contacts'), 'AccountsPayableContact'),
+    'ContactId'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - CNT-102
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Contacts/AccountsPayableContact/FullName
+  column: accounts_payable_contact_full_name
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Contacts'), 'AccountsPayableContact'),
+    'FullName'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - David Chen
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Contacts/AccountsPayableContact/JobTitle
+  column: accounts_payable_contact_job_title
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Contacts'), 'AccountsPayableContact'),
+    'JobTitle'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - Senior AP Controller
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Contacts/AccountsPayableContact/Email
+  column: accounts_payable_contact_email
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Contacts'), 'AccountsPayableContact'),
+    'Email'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - ap-invoices@apexcloud.example.com
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Contacts/AccountsPayableContact/Phone
+  column: accounts_payable_contact_phone
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Contacts'), 'AccountsPayableContact'),
+    'Phone'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - +1-617-555-0148
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/BillingAddress/@addressType
+  column: billing_address_address_type
+  snowflake_type: VARCHAR
+  xml_expr: raw_xml:"@addressType"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - CORPORATE_HQ
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/BillingAddress/AddressId
+  column: billing_address_address_id
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'BillingAddress'),
+    'AddressId'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - ADDR-BILL-701
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/BillingAddress/AttentionLine
+  column: billing_address_attention_line
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'BillingAddress'),
+    'AttentionLine'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 'Attn: Accounts Payable Dept'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/BillingAddress/StreetLine1
+  column: billing_address_street_line1
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'BillingAddress'),
+    'StreetLine1'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 450 Technology Square
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/BillingAddress/StreetLine2
+  column: billing_address_street_line2
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'BillingAddress'),
+    'StreetLine2'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - Suite 1800
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/BillingAddress/City
+  column: billing_address_city
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'BillingAddress'),
+    'City'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - Cambridge
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/BillingAddress/StateProvince
+  column: billing_address_state_province
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'BillingAddress'),
+    'StateProvince'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - MA
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/BillingAddress/PostalCode
+  column: billing_address_postal_code
+  snowflake_type: NUMBER(18,0)
+  xml_expr: TRY_TO_NUMBER(XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'),
+    'BillingAddress'), 'PostalCode'):"$"::VARCHAR, 18, 0)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 02139
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/BillingAddress/CountryCode
+  column: billing_address_country_code
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'BillingAddress'),
+    'CountryCode'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - US
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/BillingAddress/GeoCoordinates/Latitude
+  column: geo_coordinates_latitude
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'),
+    'Addresses'), 'BillingAddress'), 'GeoCoordinates'), 'Latitude'):"$"::VARCHAR,
+    18, 4)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '42.3629'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/BillingAddress/GeoCoordinates/Longitude
+  column: geo_coordinates_longitude
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'),
+    'Addresses'), 'BillingAddress'), 'GeoCoordinates'), 'Longitude'):"$"::VARCHAR,
+    18, 4)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '-71.0921'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/ShippingAddress/@addressType
+  column: shipping_address_address_type
+  snowflake_type: VARCHAR
+  xml_expr: raw_xml:"@addressType"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - DATA_CENTER_SITE
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/ShippingAddress/AddressId
+  column: shipping_address_address_id
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'ShippingAddress'),
+    'AddressId'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - ADDR-SHIP-709
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/ShippingAddress/FacilityName
+  column: facility_name
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'ShippingAddress'),
+    'FacilityName'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - Apex Ashburn Hyperscale Facility DC-04
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/ShippingAddress/AttentionLine
+  column: shipping_address_attention_line
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'ShippingAddress'),
+    'AttentionLine'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 'Attn: Hardware Provisioning Dock B'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/ShippingAddress/StreetLine1
+  column: shipping_address_street_line1
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'ShippingAddress'),
+    'StreetLine1'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 21700 Filigree Court
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/ShippingAddress/StreetLine2
+  column: shipping_address_street_line2
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'ShippingAddress'),
+    'StreetLine2'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - Building C, Bay 4
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/ShippingAddress/City
+  column: shipping_address_city
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'ShippingAddress'),
+    'City'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - Ashburn
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/ShippingAddress/StateProvince
+  column: shipping_address_state_province
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'ShippingAddress'),
+    'StateProvince'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - VA
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/ShippingAddress/PostalCode
+  column: shipping_address_postal_code
+  snowflake_type: NUMBER(18,0)
+  xml_expr: TRY_TO_NUMBER(XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'),
+    'ShippingAddress'), 'PostalCode'):"$"::VARCHAR, 18, 0)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '20147'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/ShippingAddress/CountryCode
+  column: shipping_address_country_code
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'ShippingAddress'),
+    'CountryCode'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - US
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/ShippingAddress/IsResidential
+  column: is_residential
+  snowflake_type: BOOLEAN
+  xml_expr: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'),
+    'ShippingAddress'), 'IsResidential'):"$"::VARCHAR)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 'false'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/ShippingAddress/RequiresLiftgate
+  column: requires_liftgate
+  snowflake_type: BOOLEAN
+  xml_expr: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'),
+    'ShippingAddress'), 'RequiresLiftgate'):"$"::VARCHAR)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 'false'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/ShippingAddress/RequiresInsideDelivery
+  column: requires_inside_delivery
+  snowflake_type: BOOLEAN
+  xml_expr: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'),
+    'ShippingAddress'), 'RequiresInsideDelivery'):"$"::VARCHAR)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 'true'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/ShippingAddress/GeoCoordinates/Latitude
+  column: geo_coordinates_latitude_2
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'),
+    'Addresses'), 'ShippingAddress'), 'GeoCoordinates'), 'Latitude'):"$"::VARCHAR,
+    18, 4)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '39.0163'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/Customer/Addresses/ShippingAddress/GeoCoordinates/Longitude
+  column: geo_coordinates_longitude_2
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'),
+    'Addresses'), 'ShippingAddress'), 'GeoCoordinates'), 'Longitude'):"$"::VARCHAR,
+    18, 4)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '-77.4590'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/FulfillmentPlan/RequestedDeliveryDate
+  column: requested_delivery_date
+  snowflake_type: DATE
+  xml_expr: TRY_TO_DATE(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'RequestedDeliveryDate'):"$"::VARCHAR)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '2026-11-18'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/FulfillmentPlan/PromisedShipDate
+  column: promised_ship_date
+  snowflake_type: DATE
+  xml_expr: TRY_TO_DATE(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'PromisedShipDate'):"$"::VARCHAR)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '2026-11-12'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/FulfillmentPlan/Incoterms
+  column: incoterms
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'Incoterms'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - DDP
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/FulfillmentPlan/OriginWarehouse/WarehouseId
+  column: warehouse_id
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'OriginWarehouse'),
+    'WarehouseId'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - WH-NJ-02
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/FulfillmentPlan/OriginWarehouse/WarehouseName
+  column: warehouse_name
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'OriginWarehouse'),
+    'WarehouseName'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - Newark Enterprise Distribution Hub
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/FulfillmentPlan/OriginWarehouse/TimeZone
+  column: time_zone
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'OriginWarehouse'),
+    'TimeZone'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - America/New_York
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/FulfillmentPlan/CarrierRouting/@carrierCode
+  column: carrier_routing_carrier_code
+  snowflake_type: VARCHAR
+  xml_expr: raw_xml:"@carrierCode"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - FEDEX_FREIGHT
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/FulfillmentPlan/CarrierRouting/@serviceLevel
+  column: carrier_routing_service_level
+  snowflake_type: VARCHAR
+  xml_expr: raw_xml:"@serviceLevel"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - PRIORITY_FREIGHT
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/FulfillmentPlan/CarrierRouting/CarrierName
+  column: carrier_name
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'CarrierRouting'), 'CarrierName'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - FedEx Freight Priority
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/FulfillmentPlan/CarrierRouting/ScacCode
+  column: scac_code
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'CarrierRouting'), 'ScacCode'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - FXFE
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/FulfillmentPlan/CarrierRouting/BolNumber
+  column: bol_number
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'CarrierRouting'), 'BolNumber'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - BOL-2026-1110-9941
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/FulfillmentPlan/CarrierRouting/ProNumber
+  column: pro_number
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'CarrierRouting'), 'ProNumber'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - PRO-778291044
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/FulfillmentPlan/CarrierRouting/EstimatedTransitDays
+  column: estimated_transit_days
+  snowflake_type: NUMBER(18,0)
+  xml_expr: TRY_TO_NUMBER(XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'CarrierRouting'),
+    'EstimatedTransitDays'):"$"::VARCHAR, 18, 0)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '2'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/FulfillmentPlan/CarrierRouting/TotalPalletCount
+  column: total_pallet_count
+  snowflake_type: NUMBER(18,0)
+  xml_expr: TRY_TO_NUMBER(XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'CarrierRouting'),
+    'TotalPalletCount'):"$"::VARCHAR, 18, 0)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '4'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/FulfillmentPlan/CarrierRouting/TotalGrossWeightKg
+  column: total_gross_weight_kg
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'CarrierRouting'),
+    'TotalGrossWeightKg'):"$"::VARCHAR, 18, 4)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '842.6000'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/FulfillmentPlan/CarrierRouting/IsTemperatureControlled
+  column: is_temperature_controlled
+  snowflake_type: BOOLEAN
+  xml_expr: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'CarrierRouting'),
+    'IsTemperatureControlled'):"$"::VARCHAR)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 'false'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/FulfillmentPlan/CarrierRouting/InsuranceCoverageAmount
+  column: insurance_coverage_amount
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'CarrierRouting'),
+    'InsuranceCoverageAmount'):"$"::VARCHAR, 18, 4)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '75000.0000'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/PaymentDetails/@paymentMethod
+  column: payment_details_payment_method
+  snowflake_type: VARCHAR
+  xml_expr: raw_xml:"@paymentMethod"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - CORPORATE_ACH
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/PaymentDetails/PaymentStatus
+  column: payment_status
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(raw_xml, 'PaymentDetails'), 'PaymentStatus'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - AUTHORIZED
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/PaymentDetails/AuthorizationCode
+  column: authorization_code
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(raw_xml, 'PaymentDetails'), 'AuthorizationCode'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - AUTH-99482710
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/PaymentDetails/AuthorizedTimestamp
+  column: authorized_timestamp
+  snowflake_type: TIMESTAMP_NTZ
+  xml_expr: TRY_TO_TIMESTAMP_NTZ(XMLGET(XMLGET(raw_xml, 'PaymentDetails'), 'AuthorizedTimestamp'):"$"::VARCHAR)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '2026-11-10T14:23:01Z'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/PaymentDetails/BillingCurrency
+  column: billing_currency
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(raw_xml, 'PaymentDetails'), 'BillingCurrency'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - USD
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/PaymentDetails/ExchangeRateToUsd
+  column: exchange_rate_to_usd
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(XMLGET(raw_xml, 'PaymentDetails'), 'ExchangeRateToUsd'):"$"::VARCHAR,
+    18, 4)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '1.0000'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/@installmentNumber
+  column: installment_installment_number
+  snowflake_type: NUMBER(18,0)
+  xml_expr: raw_xml:"@installmentNumber"::NUMBER(18,0)
+  required: true
+  is_array: true
+  flatten_path: /Order/PaymentDetails/InstallmentSchedule/Installment
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - '1'
+  - '2'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentId
+  column: installment_id
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(item.value, 'InstallmentId'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /Order/PaymentDetails/InstallmentSchedule/Installment
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - INST-90010458-01
+  - INST-90010458-02
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/DueDate
+  column: installment_due_date
+  snowflake_type: DATE
+  xml_expr: TRY_TO_DATE(XMLGET(item.value, 'DueDate'):"$"::VARCHAR)
+  required: true
+  is_array: true
+  flatten_path: /Order/PaymentDetails/InstallmentSchedule/Installment
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '2026-11-25'
+  - '2026-12-25'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentPercentage
+  column: installment_percentage
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(item.value, 'InstallmentPercentage'):"$"::VARCHAR,
+    18, 4)
+  required: true
+  is_array: true
+  flatten_path: /Order/PaymentDetails/InstallmentSchedule/Installment
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '50.0000'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentAmount
+  column: installment_amount
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(item.value, 'InstallmentAmount'):"$"::VARCHAR, 18,
+    4)
+  required: true
+  is_array: true
+  flatten_path: /Order/PaymentDetails/InstallmentSchedule/Installment
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '25465.7810'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentStatus
+  column: installment_status
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(item.value, 'InstallmentStatus'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /Order/PaymentDetails/InstallmentSchedule/Installment
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - SCHEDULED
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/@lineNumber
+  column: line_item_line_number
+  snowflake_type: NUMBER(18,0)
+  xml_expr: raw_xml:"@lineNumber"::NUMBER(18,0)
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - '10'
+  - '20'
+  - '30'
+  - '40'
+  - '50'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/@itemCategory
+  column: line_item_item_category
+  snowflake_type: VARCHAR
+  xml_expr: raw_xml:"@itemCategory"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - HARDWARE_COMPUTE
+  - STORAGE_NVME
+  - NETWORKING_SWITCH
+  - OPTICS_CABLES
+  - POWER_BACKUP
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/@hazmat
+  column: line_item_hazmat
+  snowflake_type: BOOLEAN
+  xml_expr: raw_xml:"@hazmat"::BOOLEAN
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - 'false'
+  - 'true'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/LineItemId
+  column: line_item_id
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(item.value, 'LineItemId'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - LI-90010458-010
+  - LI-90010458-020
+  - LI-90010458-030
+  - LI-90010458-040
+  - LI-90010458-050
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/ProductCode
+  column: line_item_product_code
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(item.value, 'ProductCode'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - SKU-SRV-R760-64G
+  - SKU-NVME-U3-7T68
+  - SKU-SW-TOR-100G-48P
+  - SKU-DAC-QSFP28-3M
+  - SKU-UPS-LION-3000VA
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/ManufacturerPartNumber
+  column: line_item_manufacturer_part_number
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(item.value, 'ManufacturerPartNumber'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - DELL-PE-R760-X1
+  - MTFDKCC7T6TGP-1BK1
+  - ARISTA-7050SX3-48YC8
+  - CAB-Q-Q-100G-3M
+  - APC-SMTL3000RM2UC
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/ProductName
+  column: line_item_product_name
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(item.value, 'ProductName'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 2U Rackmount Enterprise Compute Node Dual Xeon 64GB
+  - 7.68TB Enterprise U.3 PCIe Gen4 NVMe Solid State Drive
+  - 48-Port 25G/100G Top-of-Rack Data Center Ethernet Switch
+  - 100G QSFP28 Passive Direct Attach Copper Twinax Cable 3m
+  - Smart-UPS Lithium-Ion 3000VA 2U Rackmount Uninterruptible Power Supply
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/ProductFamily
+  column: line_item_product_family
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(item.value, 'ProductFamily'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - ENTERPRISE_SERVERS
+  - ENTERPRISE_STORAGE
+  - DATA_CENTER_NETWORKING
+  - NETWORK_CONNECTIVITY
+  - POWER_INFRASTRUCTURE
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/UnitOfMeasure
+  column: line_item_unit_of_measure
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(item.value, 'UnitOfMeasure'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - EA
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/Quantity
+  column: line_item_quantity
+  snowflake_type: NUMBER(18,0)
+  xml_expr: TRY_TO_NUMBER(XMLGET(item.value, 'Quantity'):"$"::VARCHAR, 18, 0)
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '4'
+  - '16'
+  - '2'
+  - '24'
+  - '1'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/UnitPrice
+  column: line_item_unit_price
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(item.value, 'UnitPrice'):"$"::VARCHAR, 18, 4)
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '6450.0000'
+  - '780.5000'
+  - '4250.0000'
+  - '68.7500'
+  - '2804.6500'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/LineDiscountAmount
+  column: line_item_line_discount_amount
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(item.value, 'LineDiscountAmount'):"$"::VARCHAR,
+    18, 4)
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '1290.0000'
+  - '628.0000'
+  - '425.0000'
+  - '82.3500'
+  - '24.6500'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/LineTaxRate
+  column: line_item_line_tax_rate
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(item.value, 'LineTaxRate'):"$"::VARCHAR, 18, 4)
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '0.0800'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/LineTaxAmount
+  column: line_item_line_tax_amount
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(item.value, 'LineTaxAmount'):"$"::VARCHAR, 18, 4)
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '1960.8000'
+  - '948.8000'
+  - '646.0000'
+  - '125.4120'
+  - '222.4000'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/ExtendedNetAmount
+  column: line_item_extended_net_amount
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(item.value, 'ExtendedNetAmount'):"$"::VARCHAR, 18,
+    4)
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '24510.0000'
+  - '11860.0000'
+  - '8075.0000'
+  - '1567.6500'
+  - '2780.0000'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/IsTaxable
+  column: line_item_is_taxable
+  snowflake_type: BOOLEAN
+  xml_expr: TRY_TO_BOOLEAN(XMLGET(item.value, 'IsTaxable'):"$"::VARCHAR)
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 'true'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/IsDropShip
+  column: line_item_is_drop_ship
+  snowflake_type: BOOLEAN
+  xml_expr: TRY_TO_BOOLEAN(XMLGET(item.value, 'IsDropShip'):"$"::VARCHAR)
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 'false'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/RequestedShipDate
+  column: line_item_requested_ship_date
+  snowflake_type: DATE
+  xml_expr: TRY_TO_DATE(XMLGET(item.value, 'RequestedShipDate'):"$"::VARCHAR)
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '2026-11-12'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/PhysicalSpecs/UnitWeightKg
+  column: line_item_unit_weight_kg
+  snowflake_type: NUMBER(18,4)
+  xml_expr: TRY_TO_DECIMAL(XMLGET(XMLGET(item.value, 'PhysicalSpecs'), 'UnitWeightKg'):"$"::VARCHAR,
+    18, 4)
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '28.4000'
+  - '0.2400'
+  - '9.8500'
+  - '0.3100'
+  - '34.5000'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/PhysicalSpecs/DimensionsCm
+  column: line_item_dimensions_cm
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'PhysicalSpecs'), 'DimensionsCm'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 73.4x48.2x8.7
+  - 10.0x7.0x1.5
+  - 48.3x40.6x4.4
+  - 30.0x30.0x3.0
+  - 68.3x43.2x8.6
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/PhysicalSpecs/CountryOfOrigin
+  column: line_item_country_of_origin
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'PhysicalSpecs'), 'CountryOfOrigin'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - US
+  - SG
+  - TW
+  - MX
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/PhysicalSpecs/HarmonizedTariffCode
+  column: line_item_harmonized_tariff_code
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'PhysicalSpecs'), 'HarmonizedTariffCode'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 8471.50.0150
+  - 8523.51.0000
+  - 8517.62.0020
+  - 8544.42.2000
+  - 8504.40.6018
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/InventoryAllocation/AllocatedWarehouseId
+  column: line_item_allocated_warehouse_id
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'InventoryAllocation'), 'AllocatedWarehouseId'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - WH-NJ-02
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/InventoryAllocation/BinLocation
+  column: line_item_bin_location
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'InventoryAllocation'), 'BinLocation'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - AISLE-04-RACK-12-B
+  - AISLE-01-CAGE-03-A
+  - AISLE-06-RACK-02-C
+  - AISLE-09-BIN-44-D
+  - HAZMAT-ZONE-02-RACK-01
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/InventoryAllocation/LotNumber
+  column: line_item_lot_number
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'InventoryAllocation'), 'LotNumber'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - LOT-2026-Q4-881
+  - LOT-2026-Q4-904
+  - LOT-2026-Q3-412
+  - LOT-2026-Q4-119
+  - LOT-2026-Q4-552
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/InventoryAllocation/AllocationStatus
+  column: line_item_allocation_status
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'InventoryAllocation'), 'AllocationStatus'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - HARD_RESERVED
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/InventoryAllocation/AllocationTimestamp
+  column: line_item_allocation_timestamp
+  snowflake_type: TIMESTAMP_NTZ
+  xml_expr: TRY_TO_TIMESTAMP_NTZ(XMLGET(XMLGET(item.value, 'InventoryAllocation'),
+    'AllocationTimestamp'):"$"::VARCHAR)
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '2026-11-10T14:23:12Z'
+  - '2026-11-10T14:23:14Z'
+  - '2026-11-10T14:23:15Z'
+  - '2026-11-10T14:23:16Z'
+  - '2026-11-10T14:23:18Z'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/Warranty/WarrantyPlanCode
+  column: line_item_warranty_plan_code
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(item.value, 'Warranty'), 'WarrantyPlanCode'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - PRO-SUPPORT-3YR-NBD
+  - SSD-ENTERPRISE-5YR
+  - NET-CARE-3YR-24X7
+  - STD-CABLE-1YR
+  - BATT-CARE-5YR
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/Warranty/WarrantyDurationMonths
+  column: line_item_warranty_duration_months
+  snowflake_type: NUMBER(18,0)
+  xml_expr: TRY_TO_NUMBER(XMLGET(XMLGET(item.value, 'Warranty'), 'WarrantyDurationMonths'):"$"::VARCHAR,
+    18, 0)
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '36'
+  - '60'
+  - '12'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/LineItems/LineItem/Warranty/IncludesOnsiteResponse
+  column: line_item_includes_onsite_response
+  snowflake_type: BOOLEAN
+  xml_expr: TRY_TO_BOOLEAN(XMLGET(XMLGET(item.value, 'Warranty'), 'IncludesOnsiteResponse'):"$"::VARCHAR)
+  required: true
+  is_array: true
+  flatten_path: /Order/LineItems/LineItem
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 'true'
+  - 'false'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/ComplianceAndGovernance/IsExportControlled
+  column: is_export_controlled
+  snowflake_type: BOOLEAN
+  xml_expr: TRY_TO_BOOLEAN(XMLGET(XMLGET(raw_xml, 'ComplianceAndGovernance'), 'IsExportControlled'):"$"::VARCHAR)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 'false'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/ComplianceAndGovernance/ExportControlClassification
+  column: export_control_classification
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(raw_xml, 'ComplianceAndGovernance'), 'ExportControlClassification'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - EAR99
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/ComplianceAndGovernance/SanctionsScreeningPassed
+  column: sanctions_screening_passed
+  snowflake_type: BOOLEAN
+  xml_expr: TRY_TO_BOOLEAN(XMLGET(XMLGET(raw_xml, 'ComplianceAndGovernance'), 'SanctionsScreeningPassed'):"$"::VARCHAR)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 'true'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/ComplianceAndGovernance/ScreeningReferenceId
+  column: screening_reference_id
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(raw_xml, 'ComplianceAndGovernance'), 'ScreeningReferenceId'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - OFAC-SCR-20261110-8812
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/ComplianceAndGovernance/DataPrivacy/ContainsPii
+  column: contains_pii
+  snowflake_type: BOOLEAN
+  xml_expr: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(raw_xml, 'ComplianceAndGovernance'),
+    'DataPrivacy'), 'ContainsPii'):"$"::VARCHAR)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 'true'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/ComplianceAndGovernance/DataPrivacy/PiiClassification
+  column: pii_classification
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(XMLGET(XMLGET(raw_xml, 'ComplianceAndGovernance'), 'DataPrivacy'),
+    'PiiClassification'):"$"::VARCHAR
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - BUSINESS_CONTACT_ONLY
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/ComplianceAndGovernance/DataPrivacy/GdprApplicable
+  column: gdpr_applicable
+  snowflake_type: BOOLEAN
+  xml_expr: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(raw_xml, 'ComplianceAndGovernance'),
+    'DataPrivacy'), 'GdprApplicable'):"$"::VARCHAR)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - 'false'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/ComplianceAndGovernance/DataPrivacy/RetentionPolicyYears
+  column: retention_policy_years
+  snowflake_type: NUMBER(18,0)
+  xml_expr: TRY_TO_NUMBER(XMLGET(XMLGET(XMLGET(raw_xml, 'ComplianceAndGovernance'),
+    'DataPrivacy'), 'RetentionPolicyYears'):"$"::VARCHAR, 18, 0)
+  required: true
+  is_array: false
+  flatten_path: null
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '7'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/AuditTrail/AuditEvent/@sequence
+  column: audit_event_sequence
+  snowflake_type: NUMBER(18,0)
+  xml_expr: raw_xml:"@sequence"::NUMBER(18,0)
+  required: true
+  is_array: true
+  flatten_path: /Order/AuditTrail/AuditEvent
+  is_attribute: true
+  confidence: 1.0
+  sample_values:
+  - '1'
+  - '2'
+  - '3'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/AuditTrail/AuditEvent/EventId
+  column: audit_event_event_id
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(item.value, 'EventId'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /Order/AuditTrail/AuditEvent
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - EVT-90010458-001
+  - EVT-90010458-002
+  - EVT-90010458-003
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/AuditTrail/AuditEvent/EventType
+  column: audit_event_event_type
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(item.value, 'EventType'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /Order/AuditTrail/AuditEvent
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - ORDER_RECEIVED_EDI
+  - CREDIT_CHECK_PASSED
+  - INVENTORY_ALLOCATED
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/AuditTrail/AuditEvent/EventTimestamp
+  column: audit_event_event_timestamp
+  snowflake_type: TIMESTAMP_NTZ
+  xml_expr: TRY_TO_TIMESTAMP_NTZ(XMLGET(item.value, 'EventTimestamp'):"$"::VARCHAR)
+  required: true
+  is_array: true
+  flatten_path: /Order/AuditTrail/AuditEvent
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - '2026-11-10T14:22:35Z'
+  - '2026-11-10T14:22:50Z'
+  - '2026-11-10T14:23:18Z'
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/AuditTrail/AuditEvent/ActorId
+  column: audit_event_actor_id
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(item.value, 'ActorId'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /Order/AuditTrail/AuditEvent
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - SYS-EDI-GATEWAY-01
+  - SYS-FINANCE-RISK-ENGINE
+  - SYS-WMS-ALLOCATOR
+  origin: c0_bootstrap
+  added_in_version: 0.1.0
+- xpath: /Order/AuditTrail/AuditEvent/EventNotes
+  column: audit_event_event_notes
+  snowflake_type: VARCHAR
+  xml_expr: XMLGET(item.value, 'EventNotes'):"$"::VARCHAR
+  required: true
+  is_array: true
+  flatten_path: /Order/AuditTrail/AuditEvent
+  is_attribute: false
+  confidence: 1.0
+  sample_values:
+  - Inbound EDI 850 document validated against partner trading profile.
+  - Available credit verified ($357,149.75 > order exposure $50,931.56).
+  - All 5 line items (47 total units) hard-reserved at WH-NJ-02.
+  origin: c0_bootstrap
+  added_in_version: 0.1.0

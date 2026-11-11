@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Order currency="USD">
+    <OrderId>ORD-BREAKING-999</OrderId>
+    <CustomerId>CUST-512</CustomerId>
+    <OrderTimestamp>2026-10-20T11:00:00</OrderTimestamp>
+    <IsExpedited>false</IsExpedited>
+    <TotalOrderValue>320.00</TotalOrderValue>
+    <LineItems>
+        <LineItem>
+            <ProductCode>SKU-204</ProductCode>
+            <Quantity>TWO</Quantity>
+            <UnitPrice>160.00</UnitPrice>
+        </LineItem>
+    </LineItems>
+</Order>

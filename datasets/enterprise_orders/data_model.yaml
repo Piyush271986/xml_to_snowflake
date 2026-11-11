@@ -1,0 +1,2591 @@
+dataset: enterprise_orders
+version: 0.1.0
+modeling_strategy: Medallion 3-Layer (RAW Normal Table -> STAGE Dynamic Table -> GOLD
+  Dynamic Table)
+root_element: /Order
+business_keys:
+- order_id
+- line_item_id
+raw_layer_file: raw_schema.yaml
+staging_layer_file: staging_schema.yaml
+gold_layer_file: gold_schema.yaml
+entities:
+- table_name: raw_enterprise_orders
+  layer: RAW
+  table_type: NORMAL_TABLE
+  ingestion_or_refresh: SNOWPIPE
+  upstream_source: '@RAW.ADLS_XML_STAGE/enterprise_orders/'
+  target_lag: null
+  warehouse: COMPUTE_WH
+  grain: One row per ingested XML file from ADLS
+  primary_keys:
+  - _file_name
+  - _file_sha256
+  flatten_path: null
+  columns:
+  - name: _file_name
+    snowflake_type: VARCHAR(512)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Source XML filename in ADLS landing zone
+    is_business_key: true
+  - name: _file_sha256
+    snowflake_type: VARCHAR(64)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: SHA-256 content hash for idempotent ingestion
+    is_business_key: true
+  - name: _source_system
+    snowflake_type: VARCHAR(128)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Source ERP / upstream system identifier
+    is_business_key: false
+  - name: _load_ts
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Snowpipe ingestion timestamp
+    is_business_key: false
+  - name: raw_xml
+    snowflake_type: VARIANT
+    nullable: false
+    source_xpath: /Order
+    expression: null
+    description: Immutable raw XML payload stored as Snowflake VARIANT
+    is_business_key: false
+- table_name: staging_enterprise_orders
+  layer: STAGE
+  table_type: DYNAMIC_TABLE
+  ingestion_or_refresh: DYNAMIC_TABLE_REFRESH
+  upstream_source: raw_enterprise_orders
+  target_lag: 5 minutes
+  warehouse: COMPUTE_WH
+  grain: Flattened XML rows (/Order/LineItems/LineItem)
+  primary_keys:
+  - order_id
+  - line_item_id
+  flatten_path: /Order/LineItems/LineItem
+  columns:
+  - name: order_type
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/@orderType
+    expression: raw_xml:"@orderType"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: version
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/@version
+    expression: raw_xml:"@version"::NUMBER(18,4)
+    description: null
+    is_business_key: false
+  - name: currency_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/@currency
+    expression: raw_xml:"@currency"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: channel
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/@channel
+    expression: raw_xml:"@channel"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: region
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/@region
+    expression: raw_xml:"@region"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: order_id
+    snowflake_type: NUMBER(18,0)
+    nullable: false
+    source_xpath: /Order/OrderId
+    expression: TRY_TO_NUMBER(XMLGET(raw_xml, 'OrderId'):"$"::VARCHAR, 18, 0)
+    description: null
+    is_business_key: true
+  - name: external_purchase_order_number
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/ExternalPurchaseOrderNumber
+    expression: XMLGET(raw_xml, 'ExternalPurchaseOrderNumber'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: order_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/OrderDate
+    expression: TRY_TO_DATE(XMLGET(raw_xml, 'OrderDate'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: order_timestamp
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: true
+    source_xpath: /Order/OrderTimestamp
+    expression: TRY_TO_TIMESTAMP_NTZ(XMLGET(raw_xml, 'OrderTimestamp'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: order_status
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/OrderStatus
+    expression: XMLGET(raw_xml, 'OrderStatus'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: is_expedited
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/IsExpedited
+    expression: TRY_TO_BOOLEAN(XMLGET(raw_xml, 'IsExpedited'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: is_backorder_allowed
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/IsBackorderAllowed
+    expression: TRY_TO_BOOLEAN(XMLGET(raw_xml, 'IsBackorderAllowed'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: priority_score
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/PriorityScore
+    expression: TRY_TO_NUMBER(XMLGET(raw_xml, 'PriorityScore'):"$"::VARCHAR, 18, 0)
+    description: null
+    is_business_key: false
+  - name: total_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/TotalAmount
+    expression: TRY_TO_DECIMAL(XMLGET(raw_xml, 'TotalAmount'):"$"::VARCHAR, 18, 4)
+    description: null
+    is_business_key: false
+  - name: discount_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/DiscountAmount
+    expression: TRY_TO_DECIMAL(XMLGET(raw_xml, 'DiscountAmount'):"$"::VARCHAR, 18,
+      4)
+    description: null
+    is_business_key: false
+  - name: tax_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/TaxAmount
+    expression: TRY_TO_DECIMAL(XMLGET(raw_xml, 'TaxAmount'):"$"::VARCHAR, 18, 4)
+    description: null
+    is_business_key: false
+  - name: freight_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/FreightAmount
+    expression: TRY_TO_DECIMAL(XMLGET(raw_xml, 'FreightAmount'):"$"::VARCHAR, 18,
+      4)
+    description: null
+    is_business_key: false
+  - name: net_payable_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/NetPayableAmount
+    expression: TRY_TO_DECIMAL(XMLGET(raw_xml, 'NetPayableAmount'):"$"::VARCHAR, 18,
+      4)
+    description: null
+    is_business_key: false
+  - name: shipping_notes
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/ShippingNotes
+    expression: XMLGET(raw_xml, 'ShippingNotes'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: source_system
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Header/SourceSystem
+    expression: XMLGET(XMLGET(raw_xml, 'Header'), 'SourceSystem'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: sales_org_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Header/SalesOrgCode
+    expression: XMLGET(XMLGET(raw_xml, 'Header'), 'SalesOrgCode'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: distribution_channel
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/Header/DistributionChannel
+    expression: TRY_TO_NUMBER(XMLGET(XMLGET(raw_xml, 'Header'), 'DistributionChannel'):"$"::VARCHAR,
+      18, 0)
+    description: null
+    is_business_key: false
+  - name: division_code
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/Header/DivisionCode
+    expression: TRY_TO_NUMBER(XMLGET(XMLGET(raw_xml, 'Header'), 'DivisionCode'):"$"::VARCHAR,
+      18, 0)
+    description: null
+    is_business_key: false
+  - name: master_agreement_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Header/ContractReference/MasterAgreementId
+    expression: XMLGET(XMLGET(XMLGET(raw_xml, 'Header'), 'ContractReference'), 'MasterAgreementId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: contract_effective_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/Header/ContractReference/ContractEffectiveDate
+    expression: TRY_TO_DATE(XMLGET(XMLGET(XMLGET(raw_xml, 'Header'), 'ContractReference'),
+      'ContractEffectiveDate'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: contract_expiration_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/Header/ContractReference/ContractExpirationDate
+    expression: TRY_TO_DATE(XMLGET(XMLGET(XMLGET(raw_xml, 'Header'), 'ContractReference'),
+      'ContractExpirationDate'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: discount_tier_percentage
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Header/ContractReference/DiscountTierPercentage
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(raw_xml, 'Header'), 'ContractReference'),
+      'DiscountTierPercentage'):"$"::VARCHAR, 18, 4)
+    description: null
+    is_business_key: false
+  - name: is_auto_renew
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/Header/ContractReference/IsAutoRenew
+    expression: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(raw_xml, 'Header'), 'ContractReference'),
+      'IsAutoRenew'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: rep_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Header/SalesRepresentative/RepId
+    expression: XMLGET(XMLGET(XMLGET(raw_xml, 'Header'), 'SalesRepresentative'), 'RepId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: rep_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Header/SalesRepresentative/RepName
+    expression: XMLGET(XMLGET(XMLGET(raw_xml, 'Header'), 'SalesRepresentative'), 'RepName'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: rep_email
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Header/SalesRepresentative/RepEmail
+    expression: XMLGET(XMLGET(XMLGET(raw_xml, 'Header'), 'SalesRepresentative'), 'RepEmail'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: territory_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Header/SalesRepresentative/TerritoryCode
+    expression: XMLGET(XMLGET(XMLGET(raw_xml, 'Header'), 'SalesRepresentative'), 'TerritoryCode'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: commission_rate
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Header/SalesRepresentative/CommissionRate
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(raw_xml, 'Header'), 'SalesRepresentative'),
+      'CommissionRate'):"$"::VARCHAR, 18, 4)
+    description: null
+    is_business_key: false
+  - name: customer_customer_tier
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/@customerTier
+    expression: raw_xml:"@customerTier"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: customer_tax_exempt
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/Customer/@taxExempt
+    expression: raw_xml:"@taxExempt"::BOOLEAN
+    description: null
+    is_business_key: false
+  - name: customer_kyc_verified
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/Customer/@kycVerified
+    expression: raw_xml:"@kycVerified"::BOOLEAN
+    description: null
+    is_business_key: false
+  - name: customer_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/CustomerId
+    expression: XMLGET(XMLGET(raw_xml, 'Customer'), 'CustomerId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: account_number
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/AccountNumber
+    expression: XMLGET(XMLGET(raw_xml, 'Customer'), 'AccountNumber'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: company_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/CompanyName
+    expression: XMLGET(XMLGET(raw_xml, 'Customer'), 'CompanyName'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: duns_number
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/Customer/DunsNumber
+    expression: TRY_TO_NUMBER(XMLGET(XMLGET(raw_xml, 'Customer'), 'DunsNumber'):"$"::VARCHAR,
+      18, 0)
+    description: null
+    is_business_key: false
+  - name: tax_registration_number
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/TaxRegistrationNumber
+    expression: XMLGET(XMLGET(raw_xml, 'Customer'), 'TaxRegistrationNumber'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: account_created_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/Customer/AccountCreatedDate
+    expression: TRY_TO_DATE(XMLGET(XMLGET(raw_xml, 'Customer'), 'AccountCreatedDate'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: credit_limit
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Customer/CreditProfile/CreditLimit
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'CreditProfile'),
+      'CreditLimit'):"$"::VARCHAR, 18, 4)
+    description: null
+    is_business_key: false
+  - name: current_balance
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Customer/CreditProfile/CurrentBalance
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'CreditProfile'),
+      'CurrentBalance'):"$"::VARCHAR, 18, 4)
+    description: null
+    is_business_key: false
+  - name: available_credit
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Customer/CreditProfile/AvailableCredit
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'CreditProfile'),
+      'AvailableCredit'):"$"::VARCHAR, 18, 4)
+    description: null
+    is_business_key: false
+  - name: risk_rating
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/CreditProfile/RiskRating
+    expression: XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'CreditProfile'), 'RiskRating'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: payment_terms_days
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/Customer/CreditProfile/PaymentTermsDays
+    expression: TRY_TO_NUMBER(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'CreditProfile'),
+      'PaymentTermsDays'):"$"::VARCHAR, 18, 0)
+    description: null
+    is_business_key: false
+  - name: is_credit_hold
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/Customer/CreditProfile/IsCreditHold
+    expression: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'CreditProfile'),
+      'IsCreditHold'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: primary_contact_contact_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/PrimaryContact/ContactId
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Contacts'), 'PrimaryContact'),
+      'ContactId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: primary_contact_full_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/PrimaryContact/FullName
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Contacts'), 'PrimaryContact'),
+      'FullName'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: primary_contact_job_title
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/PrimaryContact/JobTitle
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Contacts'), 'PrimaryContact'),
+      'JobTitle'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: primary_contact_email
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/PrimaryContact/Email
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Contacts'), 'PrimaryContact'),
+      'Email'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: primary_contact_phone
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/PrimaryContact/Phone
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Contacts'), 'PrimaryContact'),
+      'Phone'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: accounts_payable_contact_contact_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/AccountsPayableContact/ContactId
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Contacts'), 'AccountsPayableContact'),
+      'ContactId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: accounts_payable_contact_full_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/AccountsPayableContact/FullName
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Contacts'), 'AccountsPayableContact'),
+      'FullName'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: accounts_payable_contact_job_title
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/AccountsPayableContact/JobTitle
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Contacts'), 'AccountsPayableContact'),
+      'JobTitle'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: accounts_payable_contact_email
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/AccountsPayableContact/Email
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Contacts'), 'AccountsPayableContact'),
+      'Email'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: accounts_payable_contact_phone
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/AccountsPayableContact/Phone
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Contacts'), 'AccountsPayableContact'),
+      'Phone'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: billing_address_address_type
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/@addressType
+    expression: raw_xml:"@addressType"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: billing_address_address_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/AddressId
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'BillingAddress'),
+      'AddressId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: billing_address_attention_line
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/AttentionLine
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'BillingAddress'),
+      'AttentionLine'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: billing_address_street_line1
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/StreetLine1
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'BillingAddress'),
+      'StreetLine1'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: billing_address_street_line2
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/StreetLine2
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'BillingAddress'),
+      'StreetLine2'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: billing_address_city
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/City
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'BillingAddress'),
+      'City'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: billing_address_state_province
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/StateProvince
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'BillingAddress'),
+      'StateProvince'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: billing_address_postal_code
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/PostalCode
+    expression: TRY_TO_NUMBER(XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'),
+      'BillingAddress'), 'PostalCode'):"$"::VARCHAR, 18, 0)
+    description: null
+    is_business_key: false
+  - name: billing_address_country_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/CountryCode
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'BillingAddress'),
+      'CountryCode'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: geo_coordinates_latitude
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/GeoCoordinates/Latitude
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'),
+      'Addresses'), 'BillingAddress'), 'GeoCoordinates'), 'Latitude'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+  - name: geo_coordinates_longitude
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/GeoCoordinates/Longitude
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'),
+      'Addresses'), 'BillingAddress'), 'GeoCoordinates'), 'Longitude'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+  - name: shipping_address_address_type
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/@addressType
+    expression: raw_xml:"@addressType"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: shipping_address_address_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/AddressId
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'ShippingAddress'),
+      'AddressId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: facility_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/FacilityName
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'ShippingAddress'),
+      'FacilityName'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: shipping_address_attention_line
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/AttentionLine
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'ShippingAddress'),
+      'AttentionLine'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: shipping_address_street_line1
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/StreetLine1
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'ShippingAddress'),
+      'StreetLine1'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: shipping_address_street_line2
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/StreetLine2
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'ShippingAddress'),
+      'StreetLine2'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: shipping_address_city
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/City
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'ShippingAddress'),
+      'City'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: shipping_address_state_province
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/StateProvince
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'ShippingAddress'),
+      'StateProvince'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: shipping_address_postal_code
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/PostalCode
+    expression: TRY_TO_NUMBER(XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'),
+      'ShippingAddress'), 'PostalCode'):"$"::VARCHAR, 18, 0)
+    description: null
+    is_business_key: false
+  - name: shipping_address_country_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/CountryCode
+    expression: XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'), 'ShippingAddress'),
+      'CountryCode'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: is_residential
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/IsResidential
+    expression: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'),
+      'ShippingAddress'), 'IsResidential'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: requires_liftgate
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/RequiresLiftgate
+    expression: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'),
+      'ShippingAddress'), 'RequiresLiftgate'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: requires_inside_delivery
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/RequiresInsideDelivery
+    expression: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'), 'Addresses'),
+      'ShippingAddress'), 'RequiresInsideDelivery'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: geo_coordinates_latitude_2
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/GeoCoordinates/Latitude
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'),
+      'Addresses'), 'ShippingAddress'), 'GeoCoordinates'), 'Latitude'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+  - name: geo_coordinates_longitude_2
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/GeoCoordinates/Longitude
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(XMLGET(XMLGET(raw_xml, 'Customer'),
+      'Addresses'), 'ShippingAddress'), 'GeoCoordinates'), 'Longitude'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+  - name: requested_delivery_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/RequestedDeliveryDate
+    expression: TRY_TO_DATE(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'RequestedDeliveryDate'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: promised_ship_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/PromisedShipDate
+    expression: TRY_TO_DATE(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'PromisedShipDate'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: incoterms
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/Incoterms
+    expression: XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'Incoterms'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: warehouse_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/OriginWarehouse/WarehouseId
+    expression: XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'OriginWarehouse'),
+      'WarehouseId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: warehouse_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/OriginWarehouse/WarehouseName
+    expression: XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'OriginWarehouse'),
+      'WarehouseName'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: time_zone
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/OriginWarehouse/TimeZone
+    expression: XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'OriginWarehouse'),
+      'TimeZone'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: carrier_routing_carrier_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/@carrierCode
+    expression: raw_xml:"@carrierCode"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: carrier_routing_service_level
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/@serviceLevel
+    expression: raw_xml:"@serviceLevel"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: carrier_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/CarrierName
+    expression: XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'CarrierRouting'),
+      'CarrierName'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: scac_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/ScacCode
+    expression: XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'CarrierRouting'),
+      'ScacCode'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: bol_number
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/BolNumber
+    expression: XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'CarrierRouting'),
+      'BolNumber'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: pro_number
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/ProNumber
+    expression: XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'CarrierRouting'),
+      'ProNumber'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: estimated_transit_days
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/EstimatedTransitDays
+    expression: TRY_TO_NUMBER(XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'CarrierRouting'),
+      'EstimatedTransitDays'):"$"::VARCHAR, 18, 0)
+    description: null
+    is_business_key: false
+  - name: total_pallet_count
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/TotalPalletCount
+    expression: TRY_TO_NUMBER(XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'CarrierRouting'),
+      'TotalPalletCount'):"$"::VARCHAR, 18, 0)
+    description: null
+    is_business_key: false
+  - name: total_gross_weight_kg
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/TotalGrossWeightKg
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'CarrierRouting'),
+      'TotalGrossWeightKg'):"$"::VARCHAR, 18, 4)
+    description: null
+    is_business_key: false
+  - name: is_temperature_controlled
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/IsTemperatureControlled
+    expression: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'CarrierRouting'),
+      'IsTemperatureControlled'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: insurance_coverage_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/InsuranceCoverageAmount
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(XMLGET(raw_xml, 'FulfillmentPlan'), 'CarrierRouting'),
+      'InsuranceCoverageAmount'):"$"::VARCHAR, 18, 4)
+    description: null
+    is_business_key: false
+  - name: payment_details_payment_method
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/PaymentDetails/@paymentMethod
+    expression: raw_xml:"@paymentMethod"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: payment_status
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/PaymentDetails/PaymentStatus
+    expression: XMLGET(XMLGET(raw_xml, 'PaymentDetails'), 'PaymentStatus'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: authorization_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/PaymentDetails/AuthorizationCode
+    expression: XMLGET(XMLGET(raw_xml, 'PaymentDetails'), 'AuthorizationCode'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: authorized_timestamp
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: true
+    source_xpath: /Order/PaymentDetails/AuthorizedTimestamp
+    expression: TRY_TO_TIMESTAMP_NTZ(XMLGET(XMLGET(raw_xml, 'PaymentDetails'), 'AuthorizedTimestamp'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: billing_currency
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/PaymentDetails/BillingCurrency
+    expression: XMLGET(XMLGET(raw_xml, 'PaymentDetails'), 'BillingCurrency'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: exchange_rate_to_usd
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/PaymentDetails/ExchangeRateToUsd
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(raw_xml, 'PaymentDetails'), 'ExchangeRateToUsd'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+  - name: installment_installment_number
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/@installmentNumber
+    expression: raw_xml:"@installmentNumber"::NUMBER(18,0)
+    description: null
+    is_business_key: false
+  - name: installment_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentId
+    expression: XMLGET(item.value, 'InstallmentId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: installment_due_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/DueDate
+    expression: TRY_TO_DATE(XMLGET(item.value, 'DueDate'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: installment_percentage
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentPercentage
+    expression: TRY_TO_DECIMAL(XMLGET(item.value, 'InstallmentPercentage'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+  - name: installment_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentAmount
+    expression: TRY_TO_DECIMAL(XMLGET(item.value, 'InstallmentAmount'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+  - name: installment_status
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentStatus
+    expression: XMLGET(item.value, 'InstallmentStatus'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: line_item_line_number
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/@lineNumber
+    expression: raw_xml:"@lineNumber"::NUMBER(18,0)
+    description: null
+    is_business_key: false
+  - name: line_item_item_category
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/@itemCategory
+    expression: raw_xml:"@itemCategory"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: line_item_hazmat
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/@hazmat
+    expression: raw_xml:"@hazmat"::BOOLEAN
+    description: null
+    is_business_key: false
+  - name: line_item_id
+    snowflake_type: VARCHAR
+    nullable: false
+    source_xpath: /Order/LineItems/LineItem/LineItemId
+    expression: XMLGET(item.value, 'LineItemId'):"$"::VARCHAR
+    description: null
+    is_business_key: true
+  - name: line_item_product_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/ProductCode
+    expression: XMLGET(item.value, 'ProductCode'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: line_item_manufacturer_part_number
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/ManufacturerPartNumber
+    expression: XMLGET(item.value, 'ManufacturerPartNumber'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: line_item_product_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/ProductName
+    expression: XMLGET(item.value, 'ProductName'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: line_item_product_family
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/ProductFamily
+    expression: XMLGET(item.value, 'ProductFamily'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: line_item_unit_of_measure
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/UnitOfMeasure
+    expression: XMLGET(item.value, 'UnitOfMeasure'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: line_item_quantity
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/Quantity
+    expression: TRY_TO_NUMBER(XMLGET(item.value, 'Quantity'):"$"::VARCHAR, 18, 0)
+    description: null
+    is_business_key: false
+  - name: line_item_unit_price
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/UnitPrice
+    expression: TRY_TO_DECIMAL(XMLGET(item.value, 'UnitPrice'):"$"::VARCHAR, 18, 4)
+    description: null
+    is_business_key: false
+  - name: line_item_line_discount_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/LineDiscountAmount
+    expression: TRY_TO_DECIMAL(XMLGET(item.value, 'LineDiscountAmount'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+  - name: line_item_line_tax_rate
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/LineTaxRate
+    expression: TRY_TO_DECIMAL(XMLGET(item.value, 'LineTaxRate'):"$"::VARCHAR, 18,
+      4)
+    description: null
+    is_business_key: false
+  - name: line_item_line_tax_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/LineTaxAmount
+    expression: TRY_TO_DECIMAL(XMLGET(item.value, 'LineTaxAmount'):"$"::VARCHAR, 18,
+      4)
+    description: null
+    is_business_key: false
+  - name: line_item_extended_net_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/ExtendedNetAmount
+    expression: TRY_TO_DECIMAL(XMLGET(item.value, 'ExtendedNetAmount'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+  - name: line_item_is_taxable
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/IsTaxable
+    expression: TRY_TO_BOOLEAN(XMLGET(item.value, 'IsTaxable'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: line_item_is_drop_ship
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/IsDropShip
+    expression: TRY_TO_BOOLEAN(XMLGET(item.value, 'IsDropShip'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: line_item_requested_ship_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/RequestedShipDate
+    expression: TRY_TO_DATE(XMLGET(item.value, 'RequestedShipDate'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: line_item_unit_weight_kg
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/PhysicalSpecs/UnitWeightKg
+    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(item.value, 'PhysicalSpecs'), 'UnitWeightKg'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+  - name: line_item_dimensions_cm
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/PhysicalSpecs/DimensionsCm
+    expression: XMLGET(XMLGET(item.value, 'PhysicalSpecs'), 'DimensionsCm'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: line_item_country_of_origin
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/PhysicalSpecs/CountryOfOrigin
+    expression: XMLGET(XMLGET(item.value, 'PhysicalSpecs'), 'CountryOfOrigin'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: line_item_harmonized_tariff_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/PhysicalSpecs/HarmonizedTariffCode
+    expression: XMLGET(XMLGET(item.value, 'PhysicalSpecs'), 'HarmonizedTariffCode'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: line_item_allocated_warehouse_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/InventoryAllocation/AllocatedWarehouseId
+    expression: XMLGET(XMLGET(item.value, 'InventoryAllocation'), 'AllocatedWarehouseId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: line_item_bin_location
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/InventoryAllocation/BinLocation
+    expression: XMLGET(XMLGET(item.value, 'InventoryAllocation'), 'BinLocation'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: line_item_lot_number
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/InventoryAllocation/LotNumber
+    expression: XMLGET(XMLGET(item.value, 'InventoryAllocation'), 'LotNumber'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: line_item_allocation_status
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/InventoryAllocation/AllocationStatus
+    expression: XMLGET(XMLGET(item.value, 'InventoryAllocation'), 'AllocationStatus'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: line_item_allocation_timestamp
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/InventoryAllocation/AllocationTimestamp
+    expression: TRY_TO_TIMESTAMP_NTZ(XMLGET(XMLGET(item.value, 'InventoryAllocation'),
+      'AllocationTimestamp'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: line_item_warranty_plan_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/Warranty/WarrantyPlanCode
+    expression: XMLGET(XMLGET(item.value, 'Warranty'), 'WarrantyPlanCode'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: line_item_warranty_duration_months
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/Warranty/WarrantyDurationMonths
+    expression: TRY_TO_NUMBER(XMLGET(XMLGET(item.value, 'Warranty'), 'WarrantyDurationMonths'):"$"::VARCHAR,
+      18, 0)
+    description: null
+    is_business_key: false
+  - name: line_item_includes_onsite_response
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/Warranty/IncludesOnsiteResponse
+    expression: TRY_TO_BOOLEAN(XMLGET(XMLGET(item.value, 'Warranty'), 'IncludesOnsiteResponse'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: is_export_controlled
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/IsExportControlled
+    expression: TRY_TO_BOOLEAN(XMLGET(XMLGET(raw_xml, 'ComplianceAndGovernance'),
+      'IsExportControlled'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: export_control_classification
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/ExportControlClassification
+    expression: XMLGET(XMLGET(raw_xml, 'ComplianceAndGovernance'), 'ExportControlClassification'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: sanctions_screening_passed
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/SanctionsScreeningPassed
+    expression: TRY_TO_BOOLEAN(XMLGET(XMLGET(raw_xml, 'ComplianceAndGovernance'),
+      'SanctionsScreeningPassed'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: screening_reference_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/ScreeningReferenceId
+    expression: XMLGET(XMLGET(raw_xml, 'ComplianceAndGovernance'), 'ScreeningReferenceId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: contains_pii
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/DataPrivacy/ContainsPii
+    expression: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(raw_xml, 'ComplianceAndGovernance'),
+      'DataPrivacy'), 'ContainsPii'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: pii_classification
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/DataPrivacy/PiiClassification
+    expression: XMLGET(XMLGET(XMLGET(raw_xml, 'ComplianceAndGovernance'), 'DataPrivacy'),
+      'PiiClassification'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: gdpr_applicable
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/DataPrivacy/GdprApplicable
+    expression: TRY_TO_BOOLEAN(XMLGET(XMLGET(XMLGET(raw_xml, 'ComplianceAndGovernance'),
+      'DataPrivacy'), 'GdprApplicable'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: retention_policy_years
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/DataPrivacy/RetentionPolicyYears
+    expression: TRY_TO_NUMBER(XMLGET(XMLGET(XMLGET(raw_xml, 'ComplianceAndGovernance'),
+      'DataPrivacy'), 'RetentionPolicyYears'):"$"::VARCHAR, 18, 0)
+    description: null
+    is_business_key: false
+  - name: audit_event_sequence
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/AuditTrail/AuditEvent/@sequence
+    expression: raw_xml:"@sequence"::NUMBER(18,0)
+    description: null
+    is_business_key: false
+  - name: audit_event_event_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/AuditTrail/AuditEvent/EventId
+    expression: XMLGET(item.value, 'EventId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: audit_event_event_type
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/AuditTrail/AuditEvent/EventType
+    expression: XMLGET(item.value, 'EventType'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: audit_event_event_timestamp
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: true
+    source_xpath: /Order/AuditTrail/AuditEvent/EventTimestamp
+    expression: TRY_TO_TIMESTAMP_NTZ(XMLGET(item.value, 'EventTimestamp'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: audit_event_actor_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/AuditTrail/AuditEvent/ActorId
+    expression: XMLGET(item.value, 'ActorId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: audit_event_event_notes
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/AuditTrail/AuditEvent/EventNotes
+    expression: XMLGET(item.value, 'EventNotes'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: _file_name
+    snowflake_type: VARCHAR(512)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+  - name: _file_sha256
+    snowflake_type: VARCHAR(64)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+  - name: _staged_ts
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+- table_name: staging_enterprise_orders_audit_event
+  layer: STAGE
+  table_type: DYNAMIC_TABLE
+  ingestion_or_refresh: DYNAMIC_TABLE_REFRESH
+  upstream_source: raw_enterprise_orders
+  target_lag: 5 minutes
+  warehouse: COMPUTE_WH
+  grain: One row per /Order/AuditTrail/AuditEvent element
+  primary_keys:
+  - order_id
+  - audit_event_sequence
+  flatten_path: /Order/AuditTrail/AuditEvent
+  columns:
+  - name: order_id
+    snowflake_type: VARCHAR
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Parent document business key
+    is_business_key: true
+  - name: audit_event_sequence
+    snowflake_type: NUMBER(18,0)
+    nullable: false
+    source_xpath: /Order/AuditTrail/AuditEvent/@sequence
+    expression: raw_xml:"@sequence"::NUMBER(18,0)
+    description: null
+    is_business_key: false
+  - name: audit_event_event_id
+    snowflake_type: VARCHAR
+    nullable: false
+    source_xpath: /Order/AuditTrail/AuditEvent/EventId
+    expression: XMLGET(item.value, 'EventId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: audit_event_event_type
+    snowflake_type: VARCHAR
+    nullable: false
+    source_xpath: /Order/AuditTrail/AuditEvent/EventType
+    expression: XMLGET(item.value, 'EventType'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: audit_event_event_timestamp
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: false
+    source_xpath: /Order/AuditTrail/AuditEvent/EventTimestamp
+    expression: TRY_TO_TIMESTAMP_NTZ(XMLGET(item.value, 'EventTimestamp'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: audit_event_actor_id
+    snowflake_type: VARCHAR
+    nullable: false
+    source_xpath: /Order/AuditTrail/AuditEvent/ActorId
+    expression: XMLGET(item.value, 'ActorId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: audit_event_event_notes
+    snowflake_type: VARCHAR
+    nullable: false
+    source_xpath: /Order/AuditTrail/AuditEvent/EventNotes
+    expression: XMLGET(item.value, 'EventNotes'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+- table_name: staging_enterprise_orders_installment
+  layer: STAGE
+  table_type: DYNAMIC_TABLE
+  ingestion_or_refresh: DYNAMIC_TABLE_REFRESH
+  upstream_source: raw_enterprise_orders
+  target_lag: 5 minutes
+  warehouse: COMPUTE_WH
+  grain: One row per /Order/PaymentDetails/InstallmentSchedule/Installment element
+  primary_keys:
+  - order_id
+  - installment_installment_number
+  flatten_path: /Order/PaymentDetails/InstallmentSchedule/Installment
+  columns:
+  - name: order_id
+    snowflake_type: VARCHAR
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Parent document business key
+    is_business_key: true
+  - name: installment_installment_number
+    snowflake_type: NUMBER(18,0)
+    nullable: false
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/@installmentNumber
+    expression: raw_xml:"@installmentNumber"::NUMBER(18,0)
+    description: null
+    is_business_key: false
+  - name: installment_id
+    snowflake_type: VARCHAR
+    nullable: false
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentId
+    expression: XMLGET(item.value, 'InstallmentId'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+  - name: installment_due_date
+    snowflake_type: DATE
+    nullable: false
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/DueDate
+    expression: TRY_TO_DATE(XMLGET(item.value, 'DueDate'):"$"::VARCHAR)
+    description: null
+    is_business_key: false
+  - name: installment_percentage
+    snowflake_type: NUMBER(18,4)
+    nullable: false
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentPercentage
+    expression: TRY_TO_DECIMAL(XMLGET(item.value, 'InstallmentPercentage'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+  - name: installment_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: false
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentAmount
+    expression: TRY_TO_DECIMAL(XMLGET(item.value, 'InstallmentAmount'):"$"::VARCHAR,
+      18, 4)
+    description: null
+    is_business_key: false
+  - name: installment_status
+    snowflake_type: VARCHAR
+    nullable: false
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentStatus
+    expression: XMLGET(item.value, 'InstallmentStatus'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+- table_name: curated_enterprise_orders
+  layer: GOLD
+  table_type: DYNAMIC_TABLE
+  ingestion_or_refresh: DYNAMIC_TABLE_REFRESH
+  upstream_source: staging_enterprise_orders
+  target_lag: 15 minutes
+  warehouse: COMPUTE_WH
+  grain: Curated Gold business entity keyed by (order_id, line_item_id) with version
+    history
+  primary_keys:
+  - order_id
+  - line_item_id
+  flatten_path: null
+  columns:
+  - name: order_type
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/@orderType
+    expression: order_type
+    description: null
+    is_business_key: false
+  - name: version
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/@version
+    expression: version
+    description: null
+    is_business_key: false
+  - name: currency_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/@currency
+    expression: currency_code
+    description: null
+    is_business_key: false
+  - name: channel
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/@channel
+    expression: channel
+    description: null
+    is_business_key: false
+  - name: region
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/@region
+    expression: region
+    description: null
+    is_business_key: false
+  - name: order_id
+    snowflake_type: NUMBER(18,0)
+    nullable: false
+    source_xpath: /Order/OrderId
+    expression: order_id
+    description: null
+    is_business_key: true
+  - name: external_purchase_order_number
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/ExternalPurchaseOrderNumber
+    expression: external_purchase_order_number
+    description: null
+    is_business_key: false
+  - name: order_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/OrderDate
+    expression: order_date
+    description: null
+    is_business_key: false
+  - name: order_timestamp
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: true
+    source_xpath: /Order/OrderTimestamp
+    expression: order_timestamp
+    description: null
+    is_business_key: false
+  - name: order_status
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/OrderStatus
+    expression: order_status
+    description: null
+    is_business_key: false
+  - name: is_expedited
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/IsExpedited
+    expression: is_expedited
+    description: null
+    is_business_key: false
+  - name: is_backorder_allowed
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/IsBackorderAllowed
+    expression: is_backorder_allowed
+    description: null
+    is_business_key: false
+  - name: priority_score
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/PriorityScore
+    expression: priority_score
+    description: null
+    is_business_key: false
+  - name: total_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/TotalAmount
+    expression: total_amount
+    description: null
+    is_business_key: false
+  - name: discount_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/DiscountAmount
+    expression: discount_amount
+    description: null
+    is_business_key: false
+  - name: tax_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/TaxAmount
+    expression: tax_amount
+    description: null
+    is_business_key: false
+  - name: freight_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/FreightAmount
+    expression: freight_amount
+    description: null
+    is_business_key: false
+  - name: net_payable_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/NetPayableAmount
+    expression: net_payable_amount
+    description: null
+    is_business_key: false
+  - name: shipping_notes
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/ShippingNotes
+    expression: shipping_notes
+    description: null
+    is_business_key: false
+  - name: source_system
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Header/SourceSystem
+    expression: source_system
+    description: null
+    is_business_key: false
+  - name: sales_org_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Header/SalesOrgCode
+    expression: sales_org_code
+    description: null
+    is_business_key: false
+  - name: distribution_channel
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/Header/DistributionChannel
+    expression: distribution_channel
+    description: null
+    is_business_key: false
+  - name: division_code
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/Header/DivisionCode
+    expression: division_code
+    description: null
+    is_business_key: false
+  - name: master_agreement_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Header/ContractReference/MasterAgreementId
+    expression: master_agreement_id
+    description: null
+    is_business_key: false
+  - name: contract_effective_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/Header/ContractReference/ContractEffectiveDate
+    expression: contract_effective_date
+    description: null
+    is_business_key: false
+  - name: contract_expiration_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/Header/ContractReference/ContractExpirationDate
+    expression: contract_expiration_date
+    description: null
+    is_business_key: false
+  - name: discount_tier_percentage
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Header/ContractReference/DiscountTierPercentage
+    expression: discount_tier_percentage
+    description: null
+    is_business_key: false
+  - name: is_auto_renew
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/Header/ContractReference/IsAutoRenew
+    expression: is_auto_renew
+    description: null
+    is_business_key: false
+  - name: rep_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Header/SalesRepresentative/RepId
+    expression: rep_id
+    description: null
+    is_business_key: false
+  - name: rep_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Header/SalesRepresentative/RepName
+    expression: rep_name
+    description: null
+    is_business_key: false
+  - name: rep_email
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Header/SalesRepresentative/RepEmail
+    expression: rep_email
+    description: null
+    is_business_key: false
+  - name: territory_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Header/SalesRepresentative/TerritoryCode
+    expression: territory_code
+    description: null
+    is_business_key: false
+  - name: commission_rate
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Header/SalesRepresentative/CommissionRate
+    expression: commission_rate
+    description: null
+    is_business_key: false
+  - name: customer_customer_tier
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/@customerTier
+    expression: customer_customer_tier
+    description: null
+    is_business_key: false
+  - name: customer_tax_exempt
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/Customer/@taxExempt
+    expression: customer_tax_exempt
+    description: null
+    is_business_key: false
+  - name: customer_kyc_verified
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/Customer/@kycVerified
+    expression: customer_kyc_verified
+    description: null
+    is_business_key: false
+  - name: customer_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/CustomerId
+    expression: customer_id
+    description: null
+    is_business_key: false
+  - name: account_number
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/AccountNumber
+    expression: account_number
+    description: null
+    is_business_key: false
+  - name: company_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/CompanyName
+    expression: company_name
+    description: null
+    is_business_key: false
+  - name: duns_number
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/Customer/DunsNumber
+    expression: duns_number
+    description: null
+    is_business_key: false
+  - name: tax_registration_number
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/TaxRegistrationNumber
+    expression: tax_registration_number
+    description: null
+    is_business_key: false
+  - name: account_created_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/Customer/AccountCreatedDate
+    expression: account_created_date
+    description: null
+    is_business_key: false
+  - name: credit_limit
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Customer/CreditProfile/CreditLimit
+    expression: credit_limit
+    description: null
+    is_business_key: false
+  - name: current_balance
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Customer/CreditProfile/CurrentBalance
+    expression: current_balance
+    description: null
+    is_business_key: false
+  - name: available_credit
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Customer/CreditProfile/AvailableCredit
+    expression: available_credit
+    description: null
+    is_business_key: false
+  - name: risk_rating
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/CreditProfile/RiskRating
+    expression: risk_rating
+    description: null
+    is_business_key: false
+  - name: payment_terms_days
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/Customer/CreditProfile/PaymentTermsDays
+    expression: payment_terms_days
+    description: null
+    is_business_key: false
+  - name: is_credit_hold
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/Customer/CreditProfile/IsCreditHold
+    expression: is_credit_hold
+    description: null
+    is_business_key: false
+  - name: primary_contact_contact_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/PrimaryContact/ContactId
+    expression: primary_contact_contact_id
+    description: null
+    is_business_key: false
+  - name: primary_contact_full_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/PrimaryContact/FullName
+    expression: primary_contact_full_name
+    description: null
+    is_business_key: false
+  - name: primary_contact_job_title
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/PrimaryContact/JobTitle
+    expression: primary_contact_job_title
+    description: null
+    is_business_key: false
+  - name: primary_contact_email
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/PrimaryContact/Email
+    expression: primary_contact_email
+    description: null
+    is_business_key: false
+  - name: primary_contact_phone
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/PrimaryContact/Phone
+    expression: primary_contact_phone
+    description: null
+    is_business_key: false
+  - name: accounts_payable_contact_contact_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/AccountsPayableContact/ContactId
+    expression: accounts_payable_contact_contact_id
+    description: null
+    is_business_key: false
+  - name: accounts_payable_contact_full_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/AccountsPayableContact/FullName
+    expression: accounts_payable_contact_full_name
+    description: null
+    is_business_key: false
+  - name: accounts_payable_contact_job_title
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/AccountsPayableContact/JobTitle
+    expression: accounts_payable_contact_job_title
+    description: null
+    is_business_key: false
+  - name: accounts_payable_contact_email
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/AccountsPayableContact/Email
+    expression: accounts_payable_contact_email
+    description: null
+    is_business_key: false
+  - name: accounts_payable_contact_phone
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Contacts/AccountsPayableContact/Phone
+    expression: accounts_payable_contact_phone
+    description: null
+    is_business_key: false
+  - name: billing_address_address_type
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/@addressType
+    expression: billing_address_address_type
+    description: null
+    is_business_key: false
+  - name: billing_address_address_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/AddressId
+    expression: billing_address_address_id
+    description: null
+    is_business_key: false
+  - name: billing_address_attention_line
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/AttentionLine
+    expression: billing_address_attention_line
+    description: null
+    is_business_key: false
+  - name: billing_address_street_line1
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/StreetLine1
+    expression: billing_address_street_line1
+    description: null
+    is_business_key: false
+  - name: billing_address_street_line2
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/StreetLine2
+    expression: billing_address_street_line2
+    description: null
+    is_business_key: false
+  - name: billing_address_city
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/City
+    expression: billing_address_city
+    description: null
+    is_business_key: false
+  - name: billing_address_state_province
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/StateProvince
+    expression: billing_address_state_province
+    description: null
+    is_business_key: false
+  - name: billing_address_postal_code
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/PostalCode
+    expression: billing_address_postal_code
+    description: null
+    is_business_key: false
+  - name: billing_address_country_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/CountryCode
+    expression: billing_address_country_code
+    description: null
+    is_business_key: false
+  - name: geo_coordinates_latitude
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/GeoCoordinates/Latitude
+    expression: geo_coordinates_latitude
+    description: null
+    is_business_key: false
+  - name: geo_coordinates_longitude
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/BillingAddress/GeoCoordinates/Longitude
+    expression: geo_coordinates_longitude
+    description: null
+    is_business_key: false
+  - name: shipping_address_address_type
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/@addressType
+    expression: shipping_address_address_type
+    description: null
+    is_business_key: false
+  - name: shipping_address_address_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/AddressId
+    expression: shipping_address_address_id
+    description: null
+    is_business_key: false
+  - name: facility_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/FacilityName
+    expression: facility_name
+    description: null
+    is_business_key: false
+  - name: shipping_address_attention_line
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/AttentionLine
+    expression: shipping_address_attention_line
+    description: null
+    is_business_key: false
+  - name: shipping_address_street_line1
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/StreetLine1
+    expression: shipping_address_street_line1
+    description: null
+    is_business_key: false
+  - name: shipping_address_street_line2
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/StreetLine2
+    expression: shipping_address_street_line2
+    description: null
+    is_business_key: false
+  - name: shipping_address_city
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/City
+    expression: shipping_address_city
+    description: null
+    is_business_key: false
+  - name: shipping_address_state_province
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/StateProvince
+    expression: shipping_address_state_province
+    description: null
+    is_business_key: false
+  - name: shipping_address_postal_code
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/PostalCode
+    expression: shipping_address_postal_code
+    description: null
+    is_business_key: false
+  - name: shipping_address_country_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/CountryCode
+    expression: shipping_address_country_code
+    description: null
+    is_business_key: false
+  - name: is_residential
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/IsResidential
+    expression: is_residential
+    description: null
+    is_business_key: false
+  - name: requires_liftgate
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/RequiresLiftgate
+    expression: requires_liftgate
+    description: null
+    is_business_key: false
+  - name: requires_inside_delivery
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/RequiresInsideDelivery
+    expression: requires_inside_delivery
+    description: null
+    is_business_key: false
+  - name: geo_coordinates_latitude_2
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/GeoCoordinates/Latitude
+    expression: geo_coordinates_latitude_2
+    description: null
+    is_business_key: false
+  - name: geo_coordinates_longitude_2
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/Customer/Addresses/ShippingAddress/GeoCoordinates/Longitude
+    expression: geo_coordinates_longitude_2
+    description: null
+    is_business_key: false
+  - name: requested_delivery_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/RequestedDeliveryDate
+    expression: requested_delivery_date
+    description: null
+    is_business_key: false
+  - name: promised_ship_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/PromisedShipDate
+    expression: promised_ship_date
+    description: null
+    is_business_key: false
+  - name: incoterms
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/Incoterms
+    expression: incoterms
+    description: null
+    is_business_key: false
+  - name: warehouse_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/OriginWarehouse/WarehouseId
+    expression: warehouse_id
+    description: null
+    is_business_key: false
+  - name: warehouse_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/OriginWarehouse/WarehouseName
+    expression: warehouse_name
+    description: null
+    is_business_key: false
+  - name: time_zone
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/OriginWarehouse/TimeZone
+    expression: time_zone
+    description: null
+    is_business_key: false
+  - name: carrier_routing_carrier_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/@carrierCode
+    expression: carrier_routing_carrier_code
+    description: null
+    is_business_key: false
+  - name: carrier_routing_service_level
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/@serviceLevel
+    expression: carrier_routing_service_level
+    description: null
+    is_business_key: false
+  - name: carrier_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/CarrierName
+    expression: carrier_name
+    description: null
+    is_business_key: false
+  - name: scac_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/ScacCode
+    expression: scac_code
+    description: null
+    is_business_key: false
+  - name: bol_number
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/BolNumber
+    expression: bol_number
+    description: null
+    is_business_key: false
+  - name: pro_number
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/ProNumber
+    expression: pro_number
+    description: null
+    is_business_key: false
+  - name: estimated_transit_days
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/EstimatedTransitDays
+    expression: estimated_transit_days
+    description: null
+    is_business_key: false
+  - name: total_pallet_count
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/TotalPalletCount
+    expression: total_pallet_count
+    description: null
+    is_business_key: false
+  - name: total_gross_weight_kg
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/TotalGrossWeightKg
+    expression: total_gross_weight_kg
+    description: null
+    is_business_key: false
+  - name: is_temperature_controlled
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/IsTemperatureControlled
+    expression: is_temperature_controlled
+    description: null
+    is_business_key: false
+  - name: insurance_coverage_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/FulfillmentPlan/CarrierRouting/InsuranceCoverageAmount
+    expression: insurance_coverage_amount
+    description: null
+    is_business_key: false
+  - name: payment_details_payment_method
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/PaymentDetails/@paymentMethod
+    expression: payment_details_payment_method
+    description: null
+    is_business_key: false
+  - name: payment_status
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/PaymentDetails/PaymentStatus
+    expression: payment_status
+    description: null
+    is_business_key: false
+  - name: authorization_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/PaymentDetails/AuthorizationCode
+    expression: authorization_code
+    description: null
+    is_business_key: false
+  - name: authorized_timestamp
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: true
+    source_xpath: /Order/PaymentDetails/AuthorizedTimestamp
+    expression: authorized_timestamp
+    description: null
+    is_business_key: false
+  - name: billing_currency
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/PaymentDetails/BillingCurrency
+    expression: billing_currency
+    description: null
+    is_business_key: false
+  - name: exchange_rate_to_usd
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/PaymentDetails/ExchangeRateToUsd
+    expression: exchange_rate_to_usd
+    description: null
+    is_business_key: false
+  - name: installment_installment_number
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/@installmentNumber
+    expression: installment_installment_number
+    description: null
+    is_business_key: false
+  - name: installment_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentId
+    expression: installment_id
+    description: null
+    is_business_key: false
+  - name: installment_due_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/DueDate
+    expression: installment_due_date
+    description: null
+    is_business_key: false
+  - name: installment_percentage
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentPercentage
+    expression: installment_percentage
+    description: null
+    is_business_key: false
+  - name: installment_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentAmount
+    expression: installment_amount
+    description: null
+    is_business_key: false
+  - name: installment_status
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment/InstallmentStatus
+    expression: installment_status
+    description: null
+    is_business_key: false
+  - name: line_item_line_number
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/@lineNumber
+    expression: line_item_line_number
+    description: null
+    is_business_key: false
+  - name: line_item_item_category
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/@itemCategory
+    expression: line_item_item_category
+    description: null
+    is_business_key: false
+  - name: line_item_hazmat
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/@hazmat
+    expression: line_item_hazmat
+    description: null
+    is_business_key: false
+  - name: line_item_id
+    snowflake_type: VARCHAR
+    nullable: false
+    source_xpath: /Order/LineItems/LineItem/LineItemId
+    expression: line_item_id
+    description: null
+    is_business_key: true
+  - name: line_item_product_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/ProductCode
+    expression: line_item_product_code
+    description: null
+    is_business_key: false
+  - name: line_item_manufacturer_part_number
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/ManufacturerPartNumber
+    expression: line_item_manufacturer_part_number
+    description: null
+    is_business_key: false
+  - name: line_item_product_name
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/ProductName
+    expression: line_item_product_name
+    description: null
+    is_business_key: false
+  - name: line_item_product_family
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/ProductFamily
+    expression: line_item_product_family
+    description: null
+    is_business_key: false
+  - name: line_item_unit_of_measure
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/UnitOfMeasure
+    expression: line_item_unit_of_measure
+    description: null
+    is_business_key: false
+  - name: line_item_quantity
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/Quantity
+    expression: line_item_quantity
+    description: null
+    is_business_key: false
+  - name: line_item_unit_price
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/UnitPrice
+    expression: line_item_unit_price
+    description: null
+    is_business_key: false
+  - name: line_item_line_discount_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/LineDiscountAmount
+    expression: line_item_line_discount_amount
+    description: null
+    is_business_key: false
+  - name: line_item_line_tax_rate
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/LineTaxRate
+    expression: line_item_line_tax_rate
+    description: null
+    is_business_key: false
+  - name: line_item_line_tax_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/LineTaxAmount
+    expression: line_item_line_tax_amount
+    description: null
+    is_business_key: false
+  - name: line_item_extended_net_amount
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/ExtendedNetAmount
+    expression: line_item_extended_net_amount
+    description: null
+    is_business_key: false
+  - name: line_item_is_taxable
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/IsTaxable
+    expression: line_item_is_taxable
+    description: null
+    is_business_key: false
+  - name: line_item_is_drop_ship
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/IsDropShip
+    expression: line_item_is_drop_ship
+    description: null
+    is_business_key: false
+  - name: line_item_requested_ship_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/RequestedShipDate
+    expression: line_item_requested_ship_date
+    description: null
+    is_business_key: false
+  - name: line_item_unit_weight_kg
+    snowflake_type: NUMBER(18,4)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/PhysicalSpecs/UnitWeightKg
+    expression: line_item_unit_weight_kg
+    description: null
+    is_business_key: false
+  - name: line_item_dimensions_cm
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/PhysicalSpecs/DimensionsCm
+    expression: line_item_dimensions_cm
+    description: null
+    is_business_key: false
+  - name: line_item_country_of_origin
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/PhysicalSpecs/CountryOfOrigin
+    expression: line_item_country_of_origin
+    description: null
+    is_business_key: false
+  - name: line_item_harmonized_tariff_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/PhysicalSpecs/HarmonizedTariffCode
+    expression: line_item_harmonized_tariff_code
+    description: null
+    is_business_key: false
+  - name: line_item_allocated_warehouse_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/InventoryAllocation/AllocatedWarehouseId
+    expression: line_item_allocated_warehouse_id
+    description: null
+    is_business_key: false
+  - name: line_item_bin_location
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/InventoryAllocation/BinLocation
+    expression: line_item_bin_location
+    description: null
+    is_business_key: false
+  - name: line_item_lot_number
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/InventoryAllocation/LotNumber
+    expression: line_item_lot_number
+    description: null
+    is_business_key: false
+  - name: line_item_allocation_status
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/InventoryAllocation/AllocationStatus
+    expression: line_item_allocation_status
+    description: null
+    is_business_key: false
+  - name: line_item_allocation_timestamp
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/InventoryAllocation/AllocationTimestamp
+    expression: line_item_allocation_timestamp
+    description: null
+    is_business_key: false
+  - name: line_item_warranty_plan_code
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/Warranty/WarrantyPlanCode
+    expression: line_item_warranty_plan_code
+    description: null
+    is_business_key: false
+  - name: line_item_warranty_duration_months
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/Warranty/WarrantyDurationMonths
+    expression: line_item_warranty_duration_months
+    description: null
+    is_business_key: false
+  - name: line_item_includes_onsite_response
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/LineItems/LineItem/Warranty/IncludesOnsiteResponse
+    expression: line_item_includes_onsite_response
+    description: null
+    is_business_key: false
+  - name: is_export_controlled
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/IsExportControlled
+    expression: is_export_controlled
+    description: null
+    is_business_key: false
+  - name: export_control_classification
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/ExportControlClassification
+    expression: export_control_classification
+    description: null
+    is_business_key: false
+  - name: sanctions_screening_passed
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/SanctionsScreeningPassed
+    expression: sanctions_screening_passed
+    description: null
+    is_business_key: false
+  - name: screening_reference_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/ScreeningReferenceId
+    expression: screening_reference_id
+    description: null
+    is_business_key: false
+  - name: contains_pii
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/DataPrivacy/ContainsPii
+    expression: contains_pii
+    description: null
+    is_business_key: false
+  - name: pii_classification
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/DataPrivacy/PiiClassification
+    expression: pii_classification
+    description: null
+    is_business_key: false
+  - name: gdpr_applicable
+    snowflake_type: BOOLEAN
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/DataPrivacy/GdprApplicable
+    expression: gdpr_applicable
+    description: null
+    is_business_key: false
+  - name: retention_policy_years
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/ComplianceAndGovernance/DataPrivacy/RetentionPolicyYears
+    expression: retention_policy_years
+    description: null
+    is_business_key: false
+  - name: audit_event_sequence
+    snowflake_type: NUMBER(18,0)
+    nullable: true
+    source_xpath: /Order/AuditTrail/AuditEvent/@sequence
+    expression: audit_event_sequence
+    description: null
+    is_business_key: false
+  - name: audit_event_event_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/AuditTrail/AuditEvent/EventId
+    expression: audit_event_event_id
+    description: null
+    is_business_key: false
+  - name: audit_event_event_type
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/AuditTrail/AuditEvent/EventType
+    expression: audit_event_event_type
+    description: null
+    is_business_key: false
+  - name: audit_event_event_timestamp
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: true
+    source_xpath: /Order/AuditTrail/AuditEvent/EventTimestamp
+    expression: audit_event_event_timestamp
+    description: null
+    is_business_key: false
+  - name: audit_event_actor_id
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/AuditTrail/AuditEvent/ActorId
+    expression: audit_event_actor_id
+    description: null
+    is_business_key: false
+  - name: audit_event_event_notes
+    snowflake_type: VARCHAR
+    nullable: true
+    source_xpath: /Order/AuditTrail/AuditEvent/EventNotes
+    expression: audit_event_event_notes
+    description: null
+    is_business_key: false
+  - name: _row_hash
+    snowflake_type: VARCHAR(64)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+  - name: is_valid_start
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+  - name: is_valid_end
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: true
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+  - name: is_current
+    snowflake_type: BOOLEAN
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+  - name: system_start_time
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+  - name: system_end_time
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: true
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+  - name: _source_file
+    snowflake_type: VARCHAR(512)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+relationships:
+- parent_entity: raw_enterprise_orders
+  child_entity: staging_enterprise_orders
+  relationship_type: 1:N
+  join_keys:
+  - _file_name
+  - _file_sha256
+  source_xpath: /Order/LineItems/LineItem
+- parent_entity: staging_enterprise_orders
+  child_entity: staging_enterprise_orders_audit_event
+  relationship_type: 1:N
+  join_keys:
+  - order_id
+  source_xpath: /Order/AuditTrail/AuditEvent
+- parent_entity: staging_enterprise_orders
+  child_entity: staging_enterprise_orders_installment
+  relationship_type: 1:N
+  join_keys:
+  - order_id
+  source_xpath: /Order/PaymentDetails/InstallmentSchedule/Installment
+- parent_entity: staging_enterprise_orders
+  child_entity: curated_enterprise_orders
+  relationship_type: '1:1'
+  join_keys:
+  - order_id
+  - line_item_id
+  source_xpath: /Order
+approval_status: APPROVED

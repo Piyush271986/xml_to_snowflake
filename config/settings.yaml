@@ -4,8 +4,21 @@ pipeline:
     - _file_name
     - _file_sha256
 
+llm:
+  provider: anthropic
+  enabled: true                   # Uses Claude when ANTHROPIC_API_KEY is set; otherwise rule-based fallback
+  model: claude-haiku-5-5         # Default: Claude Haiku. Override with env XML_PIPELINE_LLM_MODEL
+  api_key_env: ANTHROPIC_API_KEY
+  max_tokens: 16000
+  temperature: 0.0
+  timeout_seconds: 120
+  max_retries: 3
+  send_sample_values: true        # Sends up to 3 sample values per field to Anthropic. Set false for sensitive data
+  fail_if_unavailable: false      # true = Step 1 errors out instead of falling back to rule-based modeling
+
 snowflake:
-  mode: local_simulation  # Set to 'snowflake' when live credentials are provided
+  mode: externalbrowser   # Options: 'externalbrowser' (SSO via browser) or 'local_simulation'
+  authenticator: externalbrowser
   account: "<your-snowflake-account>"
   user: "<your-user>"
   role: "DATA_ENGINEER_ROLE"
@@ -18,7 +31,8 @@ snowflake:
   adls_stage: "@RAW.ADLS_XML_STAGE"
 
 datahub:
-  mode: local_file_emitter  # Set to 'rest' when DataHub GMS server is reachable
+  mode: rest                # Emits live MCPs to DataHub GMS when reachable (gracefully falls back to local file)
   gms_server: "http://localhost:8080"
+  ui_url: "http://localhost:9002"
   platform: "snowflake"
   env: "PROD"

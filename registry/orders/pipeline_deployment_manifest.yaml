@@ -1,0 +1,18 @@
+dataset: orders
+version: 0.1.0
+generated_by: step2_ddl_generator_agent
+adls_to_raw_mechanism: SNOWPIPE
+raw_to_stage_mechanism: DYNAMIC_TABLE
+stage_to_gold_mechanism: DYNAMIC_TABLE
+sql_artifacts:
+  raw_layer_sql: C:\Databricks_project\xml_to_snowflake\registry\orders\sql\01_raw_snowpipe.sql
+  stage_layer_sql: C:\Databricks_project\xml_to_snowflake\registry\orders\sql\02_staging_dynamic_table.sql
+  gold_layer_sql: C:\Databricks_project\xml_to_snowflake\registry\orders\sql\03_gold_dynamic_table.sql
+  ops_tables_sql: C:\Databricks_project\xml_to_snowflake\registry\orders\sql\04_ops_quarantine_dq.sql
+  master_ddl_sql: C:\Databricks_project\xml_to_snowflake\registry\orders\ddl.sql
+execution_order:
+- sql/01_raw_snowpipe.sql
+- sql/02_staging_dynamic_table.sql
+- sql/03_gold_dynamic_table.sql
+- sql/04_ops_quarantine_dq.sql
+created_at: '2026-11-11T14:07:58.228720+00:00'
