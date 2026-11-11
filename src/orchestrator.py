@@ -26,6 +26,7 @@ from src.agents.c1_drift_agent import detect_schema_drift
 from src.agents.c2_proposal_agent import handle_drift_findings
 from src.agents.ddl_generator_agent import run_ddl_generator_agent
 from src.agents.hierarchical_evolution import detect_new_child_entities
+from src.alert_dispatcher import build_drift_alert, build_reconciliation_alert, dispatch_alert
 from src.archival_manager import archive_ingested_file
 from src.dq_report_generator import generate_compliance_certificate
 from src.hierarchical_dq import audit_xml_hierarchical_integrity
@@ -215,6 +216,18 @@ def process_runtime_file_with_drift_control(
             archive_meta = archive_ingested_file(xml_file, archive_root, dataset)
         except Exception:
             pass
+
+    # Dispatch alerts if anomalies or breaking drift occurred
+    if proposal and proposal.status in ("BREAKING_HELD_FOR_APPROVAL", "ACTION_REQUIRED"):
+        dispatch_alert(
+            build_drift_alert(dataset, proposal.status, len(findings), xml_file.name),
+            registry_root=registry_root,
+        )
+    if recon_audit and not recon_audit.get("reconciliation_matched", True):
+        dispatch_alert(
+            build_reconciliation_alert(dataset, recon_audit),
+            registry_root=registry_root,
+        )
 
     # Automatically detect if incoming XML introduces new repeating child entities
     child_entity_proposals = []

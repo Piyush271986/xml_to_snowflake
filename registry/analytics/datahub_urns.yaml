@@ -1,11 +1,11 @@
 dataset: analytics
 status: PROVISIONED
-registered_at: '2026-11-11T15:39:31.675325+00:00'
+registered_at: '2026-11-11T15:42:53.927953+00:00'
 datahub_live:
   live_emitted: true
   gms_server: http://localhost:8080
   emitted_urns_count: 15
-  emitted_at: '2026-11-11T15:39:31.675245+00:00'
+  emitted_at: '2026-11-11T15:42:53.927857+00:00'
   ui_url: http://localhost:9002
 owners:
   data_steward: data-steward@enterprise.io

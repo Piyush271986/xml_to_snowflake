@@ -15,4 +15,4 @@ execution_order:
 - sql/02_staging_dynamic_table.sql
 - sql/03_gold_dynamic_table.sql
 - sql/04_ops_quarantine_dq.sql
-created_at: '2026-11-11T15:39:25.939668+00:00'
+created_at: '2026-11-11T15:42:47.520242+00:00'
