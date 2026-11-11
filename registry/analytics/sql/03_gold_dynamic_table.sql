@@ -1,6 +1,6 @@
 -- =============================================================================
--- LAYER 3 (CURATED): ONE DYNAMIC TABLE PER XML ENTITY FROM STAGE (analytics v0.3.0) [Schema: CURATED]
--- Entities: assets, asset, country_classification, cusip2, cusip_alias
+-- LAYER 3 (CURATED): ONE DYNAMIC TABLE PER XML ENTITY FROM STAGE (analytics v0.4.0) [Schema: CURATED]
+-- Entities: assets, asset, country_classification, cusip2, cusip_alias, rating
 -- =============================================================================
 
 CREATE SCHEMA IF NOT EXISTS CURATED;
@@ -142,3 +142,22 @@ SELECT
         _staged_ts AS system_start_time,
         _file_name AS _source_file
 FROM STAGING.staging_analytics_cusip_alias;
+
+-- Entity `rating` (/ASSETS/ASSET/BND_CORP/RATING_set/RATING_record)
+CREATE OR REPLACE DYNAMIC TABLE CURATED.curated_analytics_rating
+    TARGET_LAG = '15 minutes'
+    WAREHOUSE = COMPUTE_WH
+    REFRESH_MODE = AUTO
+    INITIALIZE = ON_CREATE
+    COMMENT = 'CURATED.curated_analytics_rating: child of CURATED.curated_analytics_asset via asset_fk -> CURATED.curated_analytics_asset.asset_pk (logical FK)'
+AS
+SELECT
+        rating_pk,
+        asset_fk,
+        rating_agency,
+        rating_rating,
+        rating_rating_date,
+        SHA2(CONCAT_WS('|', COALESCE(TO_VARCHAR(rating_agency), ''), COALESCE(TO_VARCHAR(rating_rating), ''), COALESCE(TO_VARCHAR(rating_rating_date), '')), 256) AS _row_hash,
+        _staged_ts AS system_start_time,
+        _file_name AS _source_file
+FROM STAGING.staging_analytics_rating;

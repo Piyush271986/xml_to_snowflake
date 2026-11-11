@@ -31,6 +31,7 @@ from src.llm.anthropic_client import load_llm_config
 from src.models import (
     ContractSpec,
     DatasetMapping,
+    FieldMapping,
     QualityRulesSpec,
 )
 from src.orchestrator import (
@@ -657,6 +658,88 @@ async def api_replay_quarantine(request: Request) -> JSONResponse:
     return JSONResponse({"ok": True, "state": _get_dataset_state(dataset)})
 
 
+async def api_approve_child_entity(request: Request) -> JSONResponse:
+    """Approve and integrate a newly detected repeating child entity into the dataset mapping, data model, and DDLs."""
+    body = await request.json()
+    dataset = body["dataset"]
+    proposal = body["proposal"]
+    ds_reg = REGISTRY_ROOT / dataset
+    mapping_path = ds_reg / "mapping.yaml"
+
+    if not mapping_path.exists():
+        return JSONResponse({"ok": False, "error": f"Dataset {dataset} not found"}, status_code=404)
+
+    mapping_data = _load_yaml(mapping_path)
+    mapping = DatasetMapping.model_validate(mapping_data)
+
+    container_tag = proposal["container_tag"]
+    record_tag = proposal["record_tag"]
+    entity_name = proposal["entity_name"].replace(f"{dataset}_", "")
+
+    # Base path for child record elements
+    root_tag = mapping.root_element.strip("/").split("/")[0]
+    base_xpath = f"/{root_tag}/ASSET/BND_CORP/{container_tag}/{record_tag}"
+
+    # Append new fields
+    existing_xpaths = {f.xpath for f in mapping.fields}
+    added_fields = []
+    for col in proposal.get("columns", []):
+        leaf_tag = col.get("tag", col["name"].upper())
+        leaf_xpath = f"{base_xpath}/{leaf_tag}"
+        if leaf_xpath not in existing_xpaths:
+            col_type = col.get("type", "VARCHAR")
+            new_f = FieldMapping(
+                xpath=leaf_xpath,
+                column=f"{entity_name}_{col['name']}",
+                snowflake_type=col_type,
+                xml_expr=f"XMLGET(item.value, '{leaf_tag}'):\"$\"::{col_type}",
+                required=False,
+                is_array=True,
+                flatten_path=base_xpath,
+                is_attribute=False,
+                confidence=1.0,
+                sample_values=[],
+                origin="c3_steward_override",
+                added_in_version=mapping.version,
+            )
+            mapping.fields.append(new_f)
+            added_fields.append(col["name"])
+
+    # Bump version
+    parts = mapping.version.split(".")
+    if len(parts) == 3 and parts[1].isdigit():
+        mapping.version = f"{parts[0]}.{int(parts[1]) + 1}.0"
+
+    # Save updated mapping.yaml
+    mapping_path.write_text(yaml.safe_dump(mapping.model_dump(), sort_keys=False), encoding="utf-8")
+
+    # Reconstruct 3-layer schemas and data model
+    raw_s, stage_s, gold_s, data_m = _build_three_layer_data_model(mapping)
+    (ds_reg / "raw_schema.yaml").write_text(yaml.safe_dump(raw_s.model_dump(), sort_keys=False), encoding="utf-8")
+    (ds_reg / "staging_schema.yaml").write_text(yaml.safe_dump(stage_s.model_dump(), sort_keys=False), encoding="utf-8")
+    (ds_reg / "gold_schema.yaml").write_text(yaml.safe_dump(gold_s.model_dump(), sort_keys=False), encoding="utf-8")
+    (ds_reg / "data_model.yaml").write_text(yaml.safe_dump(data_m.model_dump(), sort_keys=False), encoding="utf-8")
+
+    # Recompile all DDLs
+    run_ddl_generator_agent(dataset, REGISTRY_ROOT)
+
+    # Re-export semantic artifacts
+    em = build_entity_model(mapping)
+    export_dbt_project(em, ds_reg / "dbt")
+    export_openapi_spec(em, ds_reg / "openapi.json")
+    export_json_schema(em, ds_reg / "openapi.json_schema.json")
+
+    return JSONResponse(
+        {
+            "ok": True,
+            "entity_name": entity_name,
+            "version": mapping.version,
+            "added_fields": added_fields,
+            "state": _get_dataset_state(dataset),
+        }
+    )
+
+
 async def api_export_dbt(request: Request) -> JSONResponse:
     dataset = request.query_params.get("dataset", "analytics")
     ds_reg = REGISTRY_ROOT / dataset
@@ -771,6 +854,7 @@ routes = [
     Route("/api/go-live", api_approve_go_live, methods=["POST"]),
     Route("/api/ingest", api_ingest_xml, methods=["POST"]),
     Route("/api/replay-quarantine", api_replay_quarantine, methods=["POST"]),
+    Route("/api/approve-child-entity", api_approve_child_entity, methods=["POST"]),
     Route("/api/export/dbt", api_export_dbt, methods=["GET", "POST"]),
     Route("/api/export/openapi", api_export_openapi, methods=["GET"]),
     Route("/api/export/json-schema", api_export_json_schema, methods=["GET"]),

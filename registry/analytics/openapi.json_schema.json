@@ -297,6 +297,39 @@
         "purpose"
       ],
       "additionalProperties": false
+    },
+    "rating": {
+      "type": "object",
+      "title": "Rating",
+      "description": "CHILD entity mapped from XML tag <RATING_record>",
+      "properties": {
+        "rating_pk": {
+          "type": "string",
+          "description": "Surrogate primary key for entity rating"
+        },
+        "asset_fk": {
+          "type": "string",
+          "description": "Foreign key referencing asset.asset_pk"
+        },
+        "rating_agency": {
+          "type": "string",
+          "description": "XPath: /ASSETS/ASSET/BND_CORP/RATING_set/RATING_record/AGENCY"
+        },
+        "rating_rating": {
+          "type": "string",
+          "description": "XPath: /ASSETS/ASSET/BND_CORP/RATING_set/RATING_record/RATING"
+        },
+        "rating_rating_date": {
+          "type": "string",
+          "format": "date",
+          "description": "XPath: /ASSETS/ASSET/BND_CORP/RATING_set/RATING_record/RATING_DATE"
+        }
+      },
+      "required": [
+        "rating_pk",
+        "asset_fk"
+      ],
+      "additionalProperties": false
     }
   }
 }

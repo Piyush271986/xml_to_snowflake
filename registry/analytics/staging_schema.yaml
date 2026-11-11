@@ -1,5 +1,5 @@
 dataset: analytics
-version: 0.3.0
+version: 0.4.0
 layer: STAGE
 table_type: DYNAMIC_TABLE
 tables:
@@ -703,6 +703,104 @@ tables:
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/CUSIP_ALIAS_record/PURPOSE
     expression: XMLGET(a2.value, 'PURPOSE'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _file_name
+    snowflake_type: VARCHAR(512)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _file_sha256
+    snowflake_type: VARCHAR(64)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: _staged_ts
+    snowflake_type: TIMESTAMP_NTZ
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+- table_name: staging_analytics_rating
+  entity: rating
+  parent_table: staging_analytics_asset
+  foreign_keys:
+  - column: asset_fk
+    references_table: staging_analytics_asset
+    references_column: asset_pk
+  layer: STAGE
+  table_type: DYNAMIC_TABLE
+  ingestion_or_refresh: DYNAMIC_TABLE_REFRESH
+  upstream_source: raw_analytics
+  target_lag: 5 minutes
+  warehouse: COMPUTE_WH
+  grain: One row per /ASSETS/ASSET/BND_CORP/RATING_set/RATING_record element
+  primary_keys:
+  - rating_pk
+  flatten_path: /ASSETS/ASSET/BND_CORP/RATING_set/RATING_record
+  columns:
+  - name: rating_pk
+    snowflake_type: VARCHAR(32)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Surrogate primary key of rating (MD5 of file identity + element position)
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: asset_fk
+    snowflake_type: VARCHAR(32)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: Foreign key to asset.asset_pk
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: rating_agency
+    snowflake_type: VARCHAR(64)
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/RATING_set/RATING_record/AGENCY
+    expression: XMLGET(a2.value, 'AGENCY'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: rating_rating
+    snowflake_type: VARCHAR(16)
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/RATING_set/RATING_record/RATING
+    expression: XMLGET(a2.value, 'RATING'):"$"::VARCHAR
+    description: null
+    is_business_key: false
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
+  - name: rating_rating_date
+    snowflake_type: DATE
+    nullable: true
+    source_xpath: /ASSETS/ASSET/BND_CORP/RATING_set/RATING_record/RATING_DATE
+    expression: TRY_TO_DATE(XMLGET(a2.value, 'RATING_DATE'):"$"::VARCHAR)
     description: null
     is_business_key: false
     semantic_entity: null

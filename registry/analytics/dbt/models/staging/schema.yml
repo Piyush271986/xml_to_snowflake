@@ -9,6 +9,7 @@ sources:
   - name: staging_analytics_country_classification
   - name: staging_analytics_cusip2
   - name: staging_analytics_cusip_alias
+  - name: staging_analytics_rating
 models:
 - name: stg_assets
   description: Staging model for document entity `assets`
@@ -232,3 +233,24 @@ models:
     description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/CUSIP_ALIAS_record/PURPOSE'
     tests:
     - not_null
+- name: stg_rating
+  description: Staging model for child entity `rating`
+  columns:
+  - name: rating_pk
+    description: Surrogate primary key for rating
+    tests:
+    - unique
+    - not_null
+  - name: asset_fk
+    description: Foreign key referencing stg_asset.asset_pk
+    tests:
+    - not_null
+    - relationships:
+        to: ref('stg_asset')
+        field: asset_pk
+  - name: rating_agency
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/RATING_set/RATING_record/AGENCY'
+  - name: rating_rating
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/RATING_set/RATING_record/RATING'
+  - name: rating_rating_date
+    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/RATING_set/RATING_record/RATING_DATE'

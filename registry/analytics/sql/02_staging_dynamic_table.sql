@@ -1,6 +1,6 @@
 -- =============================================================================
--- LAYER 2 (STAGE): ONE DYNAMIC TABLE PER XML ENTITY FROM RAW (analytics v0.3.0) [Schema: STAGING]
--- Entities: assets, asset, country_classification, cusip2, cusip_alias
+-- LAYER 2 (STAGE): ONE DYNAMIC TABLE PER XML ENTITY FROM RAW (analytics v0.4.0) [Schema: STAGING]
+-- Entities: assets, asset, country_classification, cusip2, cusip_alias, rating
 -- =============================================================================
 
 CREATE SCHEMA IF NOT EXISTS STAGING;
@@ -137,3 +137,26 @@ FROM RAW.raw_analytics r,
     LATERAL FLATTEN(INPUT => IFF(IS_ARRAY(GET(XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CUSIP_ALIAS_set'), '$')), GET(XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CUSIP_ALIAS_set'), '$'), ARRAY_CONSTRUCT(GET(XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CUSIP_ALIAS_set'), '$')))) a2
 WHERE GET(a1.value, '@')::VARCHAR = 'ASSET'
   AND GET(a2.value, '@')::VARCHAR = 'CUSIP_ALIAS_record';
+
+-- Entity `rating` (/ASSETS/ASSET/BND_CORP/RATING_set/RATING_record)
+CREATE OR REPLACE DYNAMIC TABLE STAGING.staging_analytics_rating
+    TARGET_LAG = '5 minutes'
+    WAREHOUSE = COMPUTE_WH
+    REFRESH_MODE = AUTO
+    INITIALIZE = ON_CREATE
+    COMMENT = 'STAGING.staging_analytics_rating: child of STAGING.staging_analytics_asset via asset_fk -> STAGING.staging_analytics_asset.asset_pk (logical FK)'
+AS
+SELECT
+    MD5(CONCAT_WS('|', r._file_name, r._file_sha256, a1.index::VARCHAR, a2.index::VARCHAR)) AS rating_pk,
+    MD5(CONCAT_WS('|', r._file_name, r._file_sha256, a1.index::VARCHAR)) AS asset_fk,
+    XMLGET(a2.value, 'AGENCY'):"$"::VARCHAR AS rating_agency,
+    XMLGET(a2.value, 'RATING'):"$"::VARCHAR AS rating_rating,
+    TRY_TO_DATE(XMLGET(a2.value, 'RATING_DATE'):"$"::VARCHAR) AS rating_rating_date,
+    r._file_name AS _file_name,
+    r._file_sha256 AS _file_sha256,
+    r._load_ts AS _staged_ts
+FROM RAW.raw_analytics r,
+    LATERAL FLATTEN(INPUT => IFF(IS_ARRAY(GET(r.raw_xml, '$')), GET(r.raw_xml, '$'), ARRAY_CONSTRUCT(GET(r.raw_xml, '$')))) a1,
+    LATERAL FLATTEN(INPUT => IFF(IS_ARRAY(GET(XMLGET(XMLGET(a1.value, 'BND_CORP'), 'RATING_set'), '$')), GET(XMLGET(XMLGET(a1.value, 'BND_CORP'), 'RATING_set'), '$'), ARRAY_CONSTRUCT(GET(XMLGET(XMLGET(a1.value, 'BND_CORP'), 'RATING_set'), '$')))) a2
+WHERE GET(a1.value, '@')::VARCHAR = 'ASSET'
+  AND GET(a2.value, '@')::VARCHAR = 'RATING_record';

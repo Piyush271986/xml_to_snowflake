@@ -1653,8 +1653,28 @@
           isErr
         );
         if (r.child_entity_proposals && r.child_entity_proposals.length > 0) {
-          const names = r.child_entity_proposals.map(p => `<${p.container_tag}> (${p.columns.length} columns)`).join(', ');
-          alert(`✨ Automatic Hierarchy Detection:\nDiscovered ${r.child_entity_proposals.length} new repeating child entity set(s):\n${names}\n\nSnowflake Dynamic Table DDL compiled automatically. Check Tab ② C3 Approval Gate to review.`);
+          const names = r.child_entity_proposals.map(p => `<${p.container_tag}> (${p.columns.length} cols)`).join(', ');
+          const ok = confirm(`✨ Automatic Hierarchy Detection:\nDiscovered ${r.child_entity_proposals.length} new repeating child entity set(s):\n${names}\n\nWould you like to approve and auto-generate Snowflake Dynamic Tables and update the Data Model now?`);
+          if (ok) {
+            for (const prop of r.child_entity_proposals) {
+              try {
+                const aRes = await fetch('/api/approve-child-entity', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ dataset: currentState.dataset, proposal: prop }),
+                });
+                const aData = await aRes.json();
+                if (aData.ok) {
+                  alert(`✅ Approved and registered new entity '${aData.entity_name}'! Version bumped to v${aData.version}. Dynamic Tables & ER diagram updated.`);
+                  await fetchState(currentState.dataset);
+                } else {
+                  alert(`❌ Approval failed: ${aData.error}`);
+                }
+              } catch (e) {
+                alert(`Error approving child entity: ${e.message}`);
+              }
+            }
+          }
         }
       }
     }

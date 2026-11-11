@@ -1,5 +1,5 @@
 dataset: analytics
-version: 0.3.0
+version: 0.4.0
 generated_by: step2_ddl_generator_agent
 adls_to_raw_mechanism: SNOWPIPE
 raw_to_stage_mechanism: DYNAMIC_TABLE
@@ -15,4 +15,4 @@ execution_order:
 - sql/02_staging_dynamic_table.sql
 - sql/03_gold_dynamic_table.sql
 - sql/04_ops_quarantine_dq.sql
-created_at: '2026-11-11T15:16:33.760824+00:00'
+created_at: '2026-11-11T15:27:36.719676+00:00'
