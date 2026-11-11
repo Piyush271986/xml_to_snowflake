@@ -1495,7 +1495,7 @@ relationships:
   layer: null
   fk_column: null
   parent_pk_column: null
-approval_status: APPROVED
+approval_status: PENDING_HUMAN_APPROVAL
 modeling_engine: rule_based
 llm_model: null
 llm_note: Claude not used (ANTHROPIC_API_KEY not set or llm.enabled=false); rule-based

@@ -1,7 +1,7 @@
 dataset: analytics
-source_system: source_analytics
-adls_landing_path: abfss://landing@adls.dfs.core.windows.net/xml/analytics/
-onboarding_sample_dir: samples\analytics
+source_system: erp_analytics
+adls_landing_path: abfss://landing@enterpriseadls.dfs.core.windows.net/xml/analytics/
+onboarding_sample_dir: C:\Databricks_project\xml_to_snowflake\samples\analytics
 data_steward: data-steward@enterprise.io
 engineering_owner: data-eng@enterprise.io
 platform_oncall: platform-oncall@enterprise.io
@@ -10,4 +10,4 @@ valid_sample_files:
 - analytics.xml
 quarantined_sample_files: []
 status: PROVISIONED
-created_at: '2026-11-11T15:32:22.327922+00:00'
+created_at: '2026-11-11T16:06:58.998969+00:00'

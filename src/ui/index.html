@@ -787,6 +787,15 @@
         if (!data || !data.ok) return;
 
         // Health Score Pill
+        const badgeEl = document.getElementById('trends-health-badge');
+        if (badgeEl) {
+          badgeEl.textContent = `Health: ${data.health_score} / ${data.health_status || 'EXCELLENT'}`;
+          badgeEl.className = `px-3 py-1 text-xs font-bold rounded-full border ${
+            data.health_score >= 90 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' :
+            data.health_score >= 70 ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
+            'bg-rose-500/20 text-rose-300 border-rose-500/30'
+          }`;
+        }
         const scoreEl = document.getElementById('trend-health-score');
         const statusEl = document.getElementById('trend-health-status');
         if (scoreEl) scoreEl.textContent = `${data.health_score} / 100`;
