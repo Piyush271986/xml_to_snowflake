@@ -35,7 +35,7 @@ COMPANIES = [
 def generate_synthetic_xml(
     output_path: Path,
     record_count: int = 500,
-    drift_mode: Literal["none", "additive", "breaking", "corrupt_size"] = "none",
+    drift_mode: Literal["none", "additive", "breaking", "corrupt_size", "rating_child_set"] = "none",
 ) -> dict[str, str | int]:
     """Generates an XML feed matching the production hierarchy with optional drift injection."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -112,6 +112,21 @@ def generate_synthetic_xml(
             additive_tags = (
                 f"            <ESG_SCORE>{esg_score}</ESG_SCORE>\n"
                 f"            <GREEN_BOND_FLAG>{green_flag}</GREEN_BOND_FLAG>\n"
+            )
+        elif drift_mode == "rating_child_set":
+            rating_moodys = random.choice(["Aaa", "Aa1", "Aa2", "A1", "Baa1"])
+            rating_sp = random.choice(["AAA", "AA+", "AA", "A+", "BBB+"])
+            additive_tags = (
+                f"            <RATING_set SIZE=\"2\">\n"
+                f"                <RATING_record>\n"
+                f"                    <AGENCY>MOODYS</AGENCY>\n"
+                f"                    <RATING>{rating_moodys}</RATING>\n"
+                f"                </RATING_record>\n"
+                f"                <RATING_record>\n"
+                f"                    <AGENCY>SP</AGENCY>\n"
+                f"                    <RATING>{rating_sp}</RATING>\n"
+                f"                </RATING_record>\n"
+                f"            </RATING_set>\n"
             )
 
         asset_block = f"""    <ASSET>

@@ -1,0 +1,11 @@
+{
+  "dataset": "analytics",
+  "original_file": "analytics.xml",
+  "original_size_bytes": 6022696,
+  "compressed_file": "analytics_20261111_160859.xml.gz",
+  "compressed_path": "C:\\Databricks_project\\xml_to_snowflake\\archive\\analytics\\2026\\11\\analytics_20261111_160859.xml.gz",
+  "compressed_size_bytes": 326630,
+  "compression_savings_pct": 94.6,
+  "file_sha256": "da26c7bba7af2a9bed7a2593e278d78875e9788baa1be90e22b2e4d66ca42fd1",
+  "archived_at": "2026-11-11T16:08:59.951175+00:00"
+}
