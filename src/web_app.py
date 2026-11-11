@@ -27,6 +27,7 @@ from src.agents.ddl_generator_agent import run_ddl_generator_agent
 from src.alert_dispatcher import AlertNotification, dispatch_alert
 from src.dbt_exporter import export_dbt_project
 from src.dq_report_generator import generate_compliance_certificate
+from src.dq_trends_analyzer import analyze_quality_trends
 from src.entity_model import build_entity_model, render_er_diagram
 from src.hierarchical_dq import audit_xml_hierarchical_integrity
 from src.llm.anthropic_client import load_llm_config
@@ -743,6 +744,13 @@ async def api_approve_child_entity(request: Request) -> JSONResponse:
     )
 
 
+async def api_get_dq_trends(request: Request) -> JSONResponse:
+    """Historical DQ trends, SLA metrics, and pipeline health scores."""
+    dataset = request.query_params.get("dataset", "analytics")
+    data = analyze_quality_trends(dataset=dataset, registry_root=REGISTRY_ROOT)
+    return JSONResponse({"ok": True, **data})
+
+
 async def api_get_metrics(request: Request) -> PlainTextResponse:
     """Prometheus / OpenTelemetry metrics endpoint for live pipeline health and DQ tracking."""
     dataset = request.query_params.get("dataset", "analytics")
@@ -902,6 +910,7 @@ routes = [
     Route("/api/approve-child-entity", api_approve_child_entity, methods=["POST"]),
     Route("/api/alerts", api_get_alerts, methods=["GET"]),
     Route("/api/alerts/test", api_send_test_alert, methods=["POST"]),
+    Route("/api/dq/trends", api_get_dq_trends, methods=["GET"]),
     Route("/metrics", api_get_metrics, methods=["GET"]),
     Route("/api/metrics", api_get_metrics, methods=["GET"]),
     Route("/api/export/dbt", api_export_dbt, methods=["GET", "POST"]),
