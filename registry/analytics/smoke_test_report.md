@@ -1,6 +1,6 @@
 # A5 Smoke Test Report — `analytics` (✅ PASSED)
 
-- **Executed At:** `2026-11-11T15:16:40.940232+00:00`
+- **Executed At:** `2026-11-11T15:35:53.851353+00:00`
 - **Sample XMLs Tested:** 1
 - **Files Passed (G1 + G2 + G3):** 1
 - **D2 Raw Rows (`raw_analytics`):** 1

@@ -2,10 +2,10 @@
   "dataset": "analytics",
   "original_file": "analytics_additive_drift.xml",
   "original_size_bytes": 6637270,
-  "compressed_file": "analytics_additive_drift_20261111_152202.xml.gz",
-  "compressed_path": "C:\\Databricks_project\\xml_to_snowflake\\archive\\analytics\\2026\\11\\analytics_additive_drift_20261111_152202.xml.gz",
+  "compressed_file": "analytics_additive_drift_20261111_153620.xml.gz",
+  "compressed_path": "C:\\Databricks_project\\xml_to_snowflake\\archive\\analytics\\2026\\11\\analytics_additive_drift_20261111_153620.xml.gz",
   "compressed_size_bytes": 333598,
   "compression_savings_pct": 95.0,
   "file_sha256": "6c77472286d48e69b9c43f29b9e400b16f7516cfb37b6531908ba22a78e13ad0",
-  "archived_at": "2026-11-11T15:22:02.617169+00:00"
+  "archived_at": "2026-11-11T15:36:20.278128+00:00"
 }

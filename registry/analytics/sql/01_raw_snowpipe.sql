@@ -1,5 +1,5 @@
 -- =============================================================================
--- LAYER 1 (RAW): NORMAL TABLE + ADLS SNOWPIPE (analytics v0.4.0) [Schema: RAW]
+-- LAYER 1 (RAW): NORMAL TABLE + ADLS SNOWPIPE (analytics v0.3.0) [Schema: RAW]
 -- =============================================================================
 
 CREATE SCHEMA IF NOT EXISTS RAW;

@@ -1,5 +1,5 @@
 dataset: analytics
-version: 0.1.0
+version: 0.2.0
 root_element: /ASSETS
 required_xpaths:
 - /ASSETS/@ASOF_DATE
@@ -83,6 +83,8 @@ type_assertions:
   /ASSETS/ASSET/BND_CORP/FLAG_REG_S: VARCHAR
   /ASSETS/ASSET/BND_CORP/ISSUE_PRICE: NUMBER(18,4)
   /ASSETS/ASSET/BND_CORP/MATURITY_DT: VARCHAR
+  /ASSETS/ASSET/BND_CORP/ESG_RATING: VARCHAR
+  /ASSETS/ASSET/BND_CORP/RATING_AGENCY: VARCHAR
 expected_rows_per_file_min: 2191
 expected_rows_per_file_max: 10955
 allow_unknown_elements: true

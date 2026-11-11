@@ -1,10 +1,10 @@
 -- =============================================================================
--- AUTO-GENERATED SNOWFLAKE DDL BY STEP 2 DDL GENERATOR AGENT: analytics (v0.1.0)
+-- AUTO-GENERATED SNOWFLAKE DDL BY STEP 2 DDL GENERATOR AGENT: analytics (v0.2.0)
 -- Architecture: ADLS -> Snowpipe (RAW) -> STAGE Dynamic Table (STAGING) -> GOLD Dynamic Table (CURATED)
 -- =============================================================================
 
 -- =============================================================================
--- LAYER 1 (RAW): NORMAL TABLE + ADLS SNOWPIPE (analytics v0.1.0) [Schema: RAW]
+-- LAYER 1 (RAW): NORMAL TABLE + ADLS SNOWPIPE (analytics v0.2.0) [Schema: RAW]
 -- =============================================================================
 
 CREATE SCHEMA IF NOT EXISTS RAW;
@@ -37,25 +37,43 @@ FILE_FORMAT = (TYPE = 'XML' STRIP_OUTER_ELEMENT = FALSE);
 ALTER PIPE IF EXISTS RAW.pipe_analytics SET PIPE_EXECUTION_PAUSED = TRUE;
 
 -- =============================================================================
--- LAYER 2 (STAGE): ONE DYNAMIC TABLE PER XML ENTITY FROM RAW (analytics v0.1.0) [Schema: STAGING]
--- Entities: asset, country_classification, cusip2, cusip_alias
+-- LAYER 2 (STAGE): ONE DYNAMIC TABLE PER XML ENTITY FROM RAW (analytics v0.2.0) [Schema: STAGING]
+-- Entities: assets, asset, country_classification, cusip2, cusip_alias
 -- =============================================================================
 
 CREATE SCHEMA IF NOT EXISTS STAGING;
 
--- Entity `asset` (/ASSETS/ASSET)
+-- Entity `assets` (/ASSETS)
 CREATE OR REPLACE DYNAMIC TABLE STAGING.staging_analytics
     TARGET_LAG = '5 minutes'
     WAREHOUSE = COMPUTE_WH
     REFRESH_MODE = AUTO
     INITIALIZE = ON_CREATE
-    COMMENT = 'STAGING.staging_analytics: root entity asset (PK asset_pk)'
+    COMMENT = 'STAGING.staging_analytics: root entity assets (PK assets_pk)'
 AS
 SELECT
-    MD5(CONCAT_WS('|', r._file_name, r._file_sha256, a1.index::VARCHAR)) AS asset_pk,
+    MD5(CONCAT_WS('|', r._file_name, r._file_sha256)) AS assets_pk,
     r.raw_xml:"@ASOF_DATE"::VARCHAR AS asof_date,
     r.raw_xml:"@CREATE_DATE"::VARCHAR AS create_date,
     TRY_TO_NUMBER(r.raw_xml:"@RECORDS"::VARCHAR, 18, 0) AS records,
+    XMLGET(XMLGET(XMLGET(r.raw_xml, 'ASSET'), 'BND_CORP'), 'ESG_RATING'):"$"::VARCHAR AS esg_rating,
+    XMLGET(XMLGET(XMLGET(r.raw_xml, 'ASSET'), 'BND_CORP'), 'RATING_AGENCY'):"$"::VARCHAR AS rating_agency,
+    r._file_name AS _file_name,
+    r._file_sha256 AS _file_sha256,
+    r._load_ts AS _staged_ts
+FROM RAW.raw_analytics r;
+
+-- Entity `asset` (/ASSETS/ASSET)
+CREATE OR REPLACE DYNAMIC TABLE STAGING.staging_analytics_asset
+    TARGET_LAG = '5 minutes'
+    WAREHOUSE = COMPUTE_WH
+    REFRESH_MODE = AUTO
+    INITIALIZE = ON_CREATE
+    COMMENT = 'STAGING.staging_analytics_asset: child of STAGING.staging_analytics via assets_fk -> STAGING.staging_analytics.assets_pk (logical FK)'
+AS
+SELECT
+    MD5(CONCAT_WS('|', r._file_name, r._file_sha256, a1.index::VARCHAR)) AS asset_pk,
+    MD5(CONCAT_WS('|', r._file_name, r._file_sha256)) AS assets_fk,
     XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CLASS'):"$"::VARCHAR AS class_val,
     XMLGET(XMLGET(a1.value, 'BND_CORP'), 'ACCRUAL_DT'):"$"::VARCHAR AS accrual_dt,
     TRY_TO_NUMBER(XMLGET(XMLGET(a1.value, 'BND_CORP'), 'AMT_ISU'):"$"::VARCHAR, 18, 0) AS amt_isu,
@@ -95,7 +113,7 @@ CREATE OR REPLACE DYNAMIC TABLE STAGING.staging_analytics_country_classification
     WAREHOUSE = COMPUTE_WH
     REFRESH_MODE = AUTO
     INITIALIZE = ON_CREATE
-    COMMENT = 'STAGING.staging_analytics_country_classification: child of STAGING.staging_analytics via asset_fk -> STAGING.staging_analytics.asset_pk (logical FK)'
+    COMMENT = 'STAGING.staging_analytics_country_classification: child of STAGING.staging_analytics_asset via asset_fk -> STAGING.staging_analytics_asset.asset_pk (logical FK)'
 AS
 SELECT
     MD5(CONCAT_WS('|', r._file_name, r._file_sha256, a1.index::VARCHAR, a2.index::VARCHAR)) AS country_classification_pk,
@@ -118,7 +136,7 @@ CREATE OR REPLACE DYNAMIC TABLE STAGING.staging_analytics_cusip2
     WAREHOUSE = COMPUTE_WH
     REFRESH_MODE = AUTO
     INITIALIZE = ON_CREATE
-    COMMENT = 'STAGING.staging_analytics_cusip2: child of STAGING.staging_analytics via asset_fk -> STAGING.staging_analytics.asset_pk (logical FK)'
+    COMMENT = 'STAGING.staging_analytics_cusip2: child of STAGING.staging_analytics_asset via asset_fk -> STAGING.staging_analytics_asset.asset_pk (logical FK)'
 AS
 SELECT
     MD5(CONCAT_WS('|', r._file_name, r._file_sha256, a1.index::VARCHAR, a2.index::VARCHAR)) AS cusip2_pk,
@@ -140,7 +158,7 @@ CREATE OR REPLACE DYNAMIC TABLE STAGING.staging_analytics_cusip_alias
     WAREHOUSE = COMPUTE_WH
     REFRESH_MODE = AUTO
     INITIALIZE = ON_CREATE
-    COMMENT = 'STAGING.staging_analytics_cusip_alias: child of STAGING.staging_analytics via asset_fk -> STAGING.staging_analytics.asset_pk (logical FK)'
+    COMMENT = 'STAGING.staging_analytics_cusip_alias: child of STAGING.staging_analytics_asset via asset_fk -> STAGING.staging_analytics_asset.asset_pk (logical FK)'
 AS
 SELECT
     MD5(CONCAT_WS('|', r._file_name, r._file_sha256, a1.index::VARCHAR, a2.index::VARCHAR)) AS cusip_alias_pk,
@@ -158,26 +176,62 @@ WHERE GET(a1.value, '@')::VARCHAR = 'ASSET'
   AND GET(a2.value, '@')::VARCHAR = 'CUSIP_ALIAS_record';
 
 -- =============================================================================
--- LAYER 3 (CURATED): ONE DYNAMIC TABLE PER XML ENTITY FROM STAGE (analytics v0.1.0) [Schema: CURATED]
--- Entities: asset, country_classification, cusip2, cusip_alias
+-- LAYER 3 (CURATED): ONE DYNAMIC TABLE PER XML ENTITY FROM STAGE (analytics v0.2.0) [Schema: CURATED]
+-- Entities: assets, asset, country_classification, cusip2, cusip_alias
 -- =============================================================================
 
 CREATE SCHEMA IF NOT EXISTS CURATED;
 
--- Entity `asset` (/ASSETS/ASSET)
+-- Entity `assets` (/ASSETS)
 CREATE OR REPLACE DYNAMIC TABLE CURATED.curated_analytics
     TARGET_LAG = '15 minutes'
     WAREHOUSE = COMPUTE_WH
     REFRESH_MODE = AUTO
     INITIALIZE = ON_CREATE
-    COMMENT = 'CURATED.curated_analytics: root entity asset (PK asset_pk)'
+    COMMENT = 'CURATED.curated_analytics: root entity assets (PK assets_pk)'
 AS
 WITH versioned AS (
     SELECT
-        asset_pk,
+        assets_pk,
         asof_date,
         create_date,
         records,
+        esg_rating,
+        rating_agency,
+        SHA2(CONCAT_WS('|', COALESCE(TO_VARCHAR(asof_date), ''), COALESCE(TO_VARCHAR(create_date), ''), COALESCE(TO_VARCHAR(records), ''), COALESCE(TO_VARCHAR(esg_rating), ''), COALESCE(TO_VARCHAR(rating_agency), '')), 256) AS _row_hash,
+        _staged_ts AS is_valid_start,
+        LEAD(_staged_ts) OVER (
+            PARTITION BY assets_pk
+            ORDER BY _staged_ts ASC
+        ) AS is_valid_end,
+        CASE
+            WHEN LEAD(_staged_ts) OVER (
+                PARTITION BY assets_pk
+                ORDER BY _staged_ts ASC
+            ) IS NULL THEN TRUE
+            ELSE FALSE
+        END AS is_current,
+        _staged_ts AS system_start_time,
+        LEAD(_staged_ts) OVER (
+            PARTITION BY assets_pk
+            ORDER BY _staged_ts ASC
+        ) AS system_end_time,
+        _file_name AS _source_file
+    FROM STAGING.staging_analytics
+)
+SELECT * FROM versioned;
+
+-- Entity `asset` (/ASSETS/ASSET)
+CREATE OR REPLACE DYNAMIC TABLE CURATED.curated_analytics_asset
+    TARGET_LAG = '15 minutes'
+    WAREHOUSE = COMPUTE_WH
+    REFRESH_MODE = AUTO
+    INITIALIZE = ON_CREATE
+    COMMENT = 'CURATED.curated_analytics_asset: child of CURATED.curated_analytics via assets_fk -> CURATED.curated_analytics.assets_pk (logical FK)'
+AS
+SELECT
+        asset_pk,
+        assets_fk,
         class_val,
         accrual_dt,
         amt_isu,
@@ -204,28 +258,10 @@ WITH versioned AS (
         flag_reg_s,
         issue_price,
         maturity_dt,
-        SHA2(CONCAT_WS('|', COALESCE(TO_VARCHAR(asof_date), ''), COALESCE(TO_VARCHAR(create_date), ''), COALESCE(TO_VARCHAR(records), ''), COALESCE(TO_VARCHAR(class_val), ''), COALESCE(TO_VARCHAR(accrual_dt), ''), COALESCE(TO_VARCHAR(amt_isu), ''), COALESCE(TO_VARCHAR(announce_dt), ''), COALESCE(TO_VARCHAR(calc_type), ''), COALESCE(TO_VARCHAR(call_mandatory), ''), COALESCE(TO_VARCHAR(call_type), ''), COALESCE(TO_VARCHAR(cd_instmt_type), ''), COALESCE(TO_VARCHAR(change_dt), ''), COALESCE(TO_VARCHAR(compound_flag), ''), COALESCE(TO_VARCHAR(country), ''), COALESCE(TO_VARCHAR(coupon_fix), ''), COALESCE(TO_VARCHAR(coup_freq), ''), COALESCE(TO_VARCHAR(cpn_type), ''), COALESCE(TO_VARCHAR(currency), ''), COALESCE(TO_VARCHAR(cusip_type), ''), COALESCE(TO_VARCHAR(date_conv), ''), COALESCE(TO_VARCHAR(desc_instmt), ''), COALESCE(TO_VARCHAR(end_adj_flag), ''), COALESCE(TO_VARCHAR(first_pay_dt), ''), COALESCE(TO_VARCHAR(first_settle_dt), ''), COALESCE(TO_VARCHAR(flag_144_a), ''), COALESCE(TO_VARCHAR(flag_reg_s), ''), COALESCE(TO_VARCHAR(issue_price), ''), COALESCE(TO_VARCHAR(maturity_dt), '')), 256) AS _row_hash,
-        _staged_ts AS is_valid_start,
-        LEAD(_staged_ts) OVER (
-            PARTITION BY cusip
-            ORDER BY _staged_ts ASC
-        ) AS is_valid_end,
-        CASE
-            WHEN LEAD(_staged_ts) OVER (
-                PARTITION BY cusip
-                ORDER BY _staged_ts ASC
-            ) IS NULL THEN TRUE
-            ELSE FALSE
-        END AS is_current,
+        SHA2(CONCAT_WS('|', COALESCE(TO_VARCHAR(class_val), ''), COALESCE(TO_VARCHAR(accrual_dt), ''), COALESCE(TO_VARCHAR(amt_isu), ''), COALESCE(TO_VARCHAR(announce_dt), ''), COALESCE(TO_VARCHAR(calc_type), ''), COALESCE(TO_VARCHAR(call_mandatory), ''), COALESCE(TO_VARCHAR(call_type), ''), COALESCE(TO_VARCHAR(cd_instmt_type), ''), COALESCE(TO_VARCHAR(change_dt), ''), COALESCE(TO_VARCHAR(compound_flag), ''), COALESCE(TO_VARCHAR(country), ''), COALESCE(TO_VARCHAR(coupon_fix), ''), COALESCE(TO_VARCHAR(coup_freq), ''), COALESCE(TO_VARCHAR(cpn_type), ''), COALESCE(TO_VARCHAR(currency), ''), COALESCE(TO_VARCHAR(cusip), ''), COALESCE(TO_VARCHAR(cusip_type), ''), COALESCE(TO_VARCHAR(date_conv), ''), COALESCE(TO_VARCHAR(desc_instmt), ''), COALESCE(TO_VARCHAR(end_adj_flag), ''), COALESCE(TO_VARCHAR(first_pay_dt), ''), COALESCE(TO_VARCHAR(first_settle_dt), ''), COALESCE(TO_VARCHAR(flag_144_a), ''), COALESCE(TO_VARCHAR(flag_reg_s), ''), COALESCE(TO_VARCHAR(issue_price), ''), COALESCE(TO_VARCHAR(maturity_dt), '')), 256) AS _row_hash,
         _staged_ts AS system_start_time,
-        LEAD(_staged_ts) OVER (
-            PARTITION BY cusip
-            ORDER BY _staged_ts ASC
-        ) AS system_end_time,
         _file_name AS _source_file
-    FROM STAGING.staging_analytics
-)
-SELECT * FROM versioned;
+FROM STAGING.staging_analytics_asset;
 
 -- Entity `country_classification` (/ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/COUNTRY_CLASSIFICATION_record)
 CREATE OR REPLACE DYNAMIC TABLE CURATED.curated_analytics_country_classification
@@ -233,7 +269,7 @@ CREATE OR REPLACE DYNAMIC TABLE CURATED.curated_analytics_country_classification
     WAREHOUSE = COMPUTE_WH
     REFRESH_MODE = AUTO
     INITIALIZE = ON_CREATE
-    COMMENT = 'CURATED.curated_analytics_country_classification: child of CURATED.curated_analytics via asset_fk -> CURATED.curated_analytics.asset_pk (logical FK)'
+    COMMENT = 'CURATED.curated_analytics_country_classification: child of CURATED.curated_analytics_asset via asset_fk -> CURATED.curated_analytics_asset.asset_pk (logical FK)'
 AS
 SELECT
         country_classification_pk,
@@ -252,7 +288,7 @@ CREATE OR REPLACE DYNAMIC TABLE CURATED.curated_analytics_cusip2
     WAREHOUSE = COMPUTE_WH
     REFRESH_MODE = AUTO
     INITIALIZE = ON_CREATE
-    COMMENT = 'CURATED.curated_analytics_cusip2: child of CURATED.curated_analytics via asset_fk -> CURATED.curated_analytics.asset_pk (logical FK)'
+    COMMENT = 'CURATED.curated_analytics_cusip2: child of CURATED.curated_analytics_asset via asset_fk -> CURATED.curated_analytics_asset.asset_pk (logical FK)'
 AS
 SELECT
         cusip2_pk,
@@ -270,7 +306,7 @@ CREATE OR REPLACE DYNAMIC TABLE CURATED.curated_analytics_cusip_alias
     WAREHOUSE = COMPUTE_WH
     REFRESH_MODE = AUTO
     INITIALIZE = ON_CREATE
-    COMMENT = 'CURATED.curated_analytics_cusip_alias: child of CURATED.curated_analytics via asset_fk -> CURATED.curated_analytics.asset_pk (logical FK)'
+    COMMENT = 'CURATED.curated_analytics_cusip_alias: child of CURATED.curated_analytics_asset via asset_fk -> CURATED.curated_analytics_asset.asset_pk (logical FK)'
 AS
 SELECT
         cusip_alias_pk,

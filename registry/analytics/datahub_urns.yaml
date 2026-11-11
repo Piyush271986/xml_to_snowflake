@@ -1,11 +1,11 @@
 dataset: analytics
 status: PROVISIONED
-registered_at: '2026-11-11T15:31:57.340255+00:00'
+registered_at: '2026-11-11T15:36:16.485706+00:00'
 datahub_live:
   live_emitted: true
   gms_server: http://localhost:8080
   emitted_urns_count: 15
-  emitted_at: '2026-11-11T15:31:57.340090+00:00'
+  emitted_at: '2026-11-11T15:36:16.485506+00:00'
   ui_url: http://localhost:9002
 owners:
   data_steward: data-steward@enterprise.io
@@ -89,11 +89,6 @@ column_lineage:
   entity: assets
   staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#rating_agency
   curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#rating_agency
-  snowflake_type: VARCHAR
-- xpath: /ASSETS/ASSET/BND_CORP/SENIORITY_TYPE
-  entity: assets
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#seniority_type
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#seniority_type
   snowflake_type: VARCHAR
 - xpath: /ASSETS/ASSET/BND_CORP/CLASS
   entity: asset

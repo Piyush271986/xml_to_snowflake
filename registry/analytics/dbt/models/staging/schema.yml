@@ -35,8 +35,6 @@ models:
     description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/ESG_RATING'
   - name: rating_agency
     description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/RATING_AGENCY'
-  - name: seniority_type
-    description: 'Extracted from XML XPath: /ASSETS/ASSET/BND_CORP/SENIORITY_TYPE'
 - name: stg_asset
   description: Staging model for record entity `asset`
   columns:

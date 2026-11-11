@@ -34,10 +34,6 @@
         "rating_agency": {
           "type": "string",
           "description": "XPath: /ASSETS/ASSET/BND_CORP/RATING_AGENCY"
-        },
-        "seniority_type": {
-          "type": "string",
-          "description": "XPath: /ASSETS/ASSET/BND_CORP/SENIORITY_TYPE"
         }
       },
       "required": [

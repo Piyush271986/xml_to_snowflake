@@ -9,5 +9,5 @@ freshness_sla_hours: 24
 valid_sample_files:
 - analytics.xml
 quarantined_sample_files: []
-status: BOOTSTRAPPED
+status: PROVISIONED
 created_at: '2026-11-11T15:32:22.327922+00:00'

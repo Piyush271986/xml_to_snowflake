@@ -1,5 +1,5 @@
 -- =============================================================================
--- LAYER 2 (STAGE): ONE DYNAMIC TABLE PER XML ENTITY FROM RAW (analytics v0.4.0) [Schema: STAGING]
+-- LAYER 2 (STAGE): ONE DYNAMIC TABLE PER XML ENTITY FROM RAW (analytics v0.3.0) [Schema: STAGING]
 -- Entities: assets, asset, country_classification, cusip2, cusip_alias, rating
 -- =============================================================================
 
@@ -20,7 +20,6 @@ SELECT
     TRY_TO_NUMBER(r.raw_xml:"@RECORDS"::VARCHAR, 18, 0) AS records,
     XMLGET(XMLGET(XMLGET(r.raw_xml, 'ASSET'), 'BND_CORP'), 'ESG_RATING'):"$"::VARCHAR AS esg_rating,
     XMLGET(XMLGET(XMLGET(r.raw_xml, 'ASSET'), 'BND_CORP'), 'RATING_AGENCY'):"$"::VARCHAR AS rating_agency,
-    XMLGET(XMLGET(XMLGET(r.raw_xml, 'ASSET'), 'BND_CORP'), 'SENIORITY_TYPE'):"$"::VARCHAR AS seniority_type,
     r._file_name AS _file_name,
     r._file_sha256 AS _file_sha256,
     r._load_ts AS _staged_ts

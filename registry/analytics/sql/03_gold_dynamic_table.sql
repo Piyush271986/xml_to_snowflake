@@ -1,5 +1,5 @@
 -- =============================================================================
--- LAYER 3 (CURATED): ONE DYNAMIC TABLE PER XML ENTITY FROM STAGE (analytics v0.4.0) [Schema: CURATED]
+-- LAYER 3 (CURATED): ONE DYNAMIC TABLE PER XML ENTITY FROM STAGE (analytics v0.3.0) [Schema: CURATED]
 -- Entities: assets, asset, country_classification, cusip2, cusip_alias, rating
 -- =============================================================================
 
@@ -21,8 +21,7 @@ WITH versioned AS (
         records,
         esg_rating,
         rating_agency,
-        seniority_type,
-        SHA2(CONCAT_WS('|', COALESCE(TO_VARCHAR(asof_date), ''), COALESCE(TO_VARCHAR(create_date), ''), COALESCE(TO_VARCHAR(records), ''), COALESCE(TO_VARCHAR(esg_rating), ''), COALESCE(TO_VARCHAR(rating_agency), ''), COALESCE(TO_VARCHAR(seniority_type), '')), 256) AS _row_hash,
+        SHA2(CONCAT_WS('|', COALESCE(TO_VARCHAR(asof_date), ''), COALESCE(TO_VARCHAR(create_date), ''), COALESCE(TO_VARCHAR(records), ''), COALESCE(TO_VARCHAR(esg_rating), ''), COALESCE(TO_VARCHAR(rating_agency), '')), 256) AS _row_hash,
         _staged_ts AS is_valid_start,
         LEAD(_staged_ts) OVER (
             PARTITION BY assets_pk

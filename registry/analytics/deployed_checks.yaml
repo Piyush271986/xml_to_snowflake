@@ -1,5 +1,5 @@
 dataset: analytics
-deployed_at: '2026-11-11T15:16:39.698126+00:00'
+deployed_at: '2026-11-11T15:35:13.110256+00:00'
 gates:
   G1_Files:
     sits_between: D1 (ADLS) -> D2 (Raw)
@@ -51,7 +51,7 @@ gates:
     - /ASSETS/ASSET/BND_CORP/FLAG_REG_S
     - /ASSETS/ASSET/BND_CORP/ISSUE_PRICE
     - /ASSETS/ASSET/BND_CORP/MATURITY_DT
-    type_assertions_count: 43
+    type_assertions_count: 42
     row_count_bounds:
     - 2191
     - 10955
