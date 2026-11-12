@@ -63,11 +63,6 @@ class TestChildEntityApproval(unittest.TestCase):
         updated_ddl = (self.ds_dir / "ddl.sql").read_text(encoding="utf-8")
         self.assertIn("staging_analytics_rating", updated_ddl.lower())
 
-        # Verify dbt staging models include stg_rating
-        dbt_stg_rating = self.ds_dir / "dbt" / "models" / "staging" / "stg_rating.sql"
-        self.assertTrue(dbt_stg_rating.exists())
-        self.assertIn("FROM {{ source('snowflake_dw', 'staging_analytics_rating') }}", dbt_stg_rating.read_text())
-
 
 if __name__ == "__main__":
     unittest.main()

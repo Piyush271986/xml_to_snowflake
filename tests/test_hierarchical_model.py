@@ -5,7 +5,6 @@ import yaml
 
 from src.models import DatasetMapping
 from src.entity_model import build_entity_model, render_er_diagram
-from src.dbt_exporter import export_dbt_project
 from src.lookml_exporter import export_lookml_project
 from src.schema_exporter import export_openapi_spec, export_json_schema
 from src.hierarchical_dq import audit_xml_hierarchical_integrity
@@ -54,18 +53,6 @@ class TestHierarchicalModel(unittest.TestCase):
         self.assertIn("erDiagram", diagram)
         self.assertIn("curated_analytics ||--o{ curated_analytics_asset", diagram)
         self.assertIn("curated_analytics_asset ||--o{ curated_analytics_cusip2", diagram)
-
-    def test_dbt_project_export(self):
-        """Verifies dbt export generates valid models and schema."""
-        test_out = self.registry_dir / "_test_dbt"
-        try:
-            res = export_dbt_project(self.entity_model, test_out)
-            self.assertEqual(res["models_count"], 5)
-            self.assertTrue((test_out / "models" / "staging" / "schema.yml").exists())
-        finally:
-            import shutil
-            if test_out.exists():
-                shutil.rmtree(test_out)
 
     def test_openapi_spec_export(self):
         """Verifies OpenAPI export produces valid 3.1 specification."""

@@ -1,4 +1,4 @@
-﻿"""FastAPI / Starlette Web Backend for the XML-to-Snowflake Onboarding & Control Plane UI."""
+"""FastAPI / Starlette Web Backend for the XML-to-Snowflake Onboarding & Control Plane UI."""
 from __future__ import annotations
 
 from contextlib import closing
@@ -25,7 +25,6 @@ from src.agents.a5_smoke_test import run_a5_smoke_test
 from src.agents.c0_bootstrap import _build_three_layer_data_model, run_c0_bootstrap
 from src.agents.ddl_generator_agent import run_ddl_generator_agent
 from src.alert_dispatcher import AlertNotification, dispatch_alert
-from src.dbt_exporter import export_dbt_project
 from src.dq_report_generator import generate_compliance_certificate
 from src.dq_trends_analyzer import analyze_quality_trends
 from src.entity_model import build_entity_model, render_er_diagram
@@ -729,7 +728,6 @@ async def api_approve_child_entity(request: Request) -> JSONResponse:
 
     # Re-export semantic artifacts
     em = build_entity_model(mapping)
-    export_dbt_project(em, ds_reg / "dbt")
     export_openapi_spec(em, ds_reg / "openapi.json")
     export_json_schema(em, ds_reg / "openapi.json_schema.json")
 
@@ -791,18 +789,6 @@ async def api_send_test_alert(request: Request) -> JSONResponse:
     )
     res = dispatch_alert(notif, dry_run=True, registry_root=REGISTRY_ROOT)
     return JSONResponse({"ok": True, "dataset": dataset, "result": res})
-
-
-async def api_export_dbt(request: Request) -> JSONResponse:
-    dataset = request.query_params.get("dataset", "analytics")
-    ds_reg = REGISTRY_ROOT / dataset
-    mapping_data = _load_yaml(ds_reg / "mapping.yaml")
-    if not mapping_data:
-        return JSONResponse({"ok": False, "error": f"No mapping found for dataset {dataset}"}, status_code=404)
-    em = build_entity_model(DatasetMapping.model_validate(mapping_data))
-    dbt_out = ds_reg / "dbt"
-    res = export_dbt_project(em, dbt_out)
-    return JSONResponse({"ok": True, "dataset": dataset, **res})
 
 
 async def api_export_openapi(request: Request) -> JSONResponse:
@@ -913,7 +899,6 @@ routes = [
     Route("/api/dq/trends", api_get_dq_trends, methods=["GET"]),
     Route("/metrics", api_get_metrics, methods=["GET"]),
     Route("/api/metrics", api_get_metrics, methods=["GET"]),
-    Route("/api/export/dbt", api_export_dbt, methods=["GET", "POST"]),
     Route("/api/export/openapi", api_export_openapi, methods=["GET"]),
     Route("/api/export/json-schema", api_export_json_schema, methods=["GET"]),
     Route("/api/export/dq-certificate", api_export_dq_certificate, methods=["GET"]),

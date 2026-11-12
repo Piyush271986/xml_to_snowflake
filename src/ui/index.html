@@ -304,7 +304,6 @@
             <button onclick="selectErLayer('staging')" data-er="staging" class="er-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-emerald-600 text-white">STAGING</button>
             <button onclick="selectErLayer('curated')" data-er="curated" class="er-tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-slate-800 text-slate-300">CURATED</button>
             <span class="text-slate-700">|</span>
-            <button onclick="exportDbtModels()" class="px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30">📦 dbt Models</button>
             <button onclick="viewOpenApiSpec()" class="px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/30">📋 OpenAPI 3.1</button>
             <button onclick="viewJsonSchema()" class="px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-500/30">📜 JSON Schema</button>
             <button onclick="viewDqCertificate()" class="px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40">🎓 DQ Certificate</button>
@@ -1171,21 +1170,6 @@
         }`;
       });
       renderErDiagram(currentState);
-    }
-
-    async function exportDbtModels() {
-      const ds = currentState?.dataset || 'analytics';
-      try {
-        const res = await fetch(`/api/export/dbt?dataset=${ds}`, { method: 'POST' });
-        const data = await res.json();
-        if (data.ok) {
-          alert(`âœ… Exported dbt Project Successfully!\nModels Generated: ${data.models.join(', ')}\nPath: ${data.schema_path}`);
-        } else {
-          alert(`â Œ Failed to export dbt models: ${data.error}`);
-        }
-      } catch (e) {
-        alert(`Error: ${e.message}`);
-      }
     }
 
     function viewOpenApiSpec() {

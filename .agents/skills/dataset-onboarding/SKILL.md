@@ -20,6 +20,7 @@ This skill guides the agent through onboarding a new XML dataset into Snowflake 
    - **Layer 1 (RAW)**: Normal Table loaded via Snowpipe (`@RAW.ADLS_XML_STAGE/<dataset>/`), storing immutable payload as `VARIANT` (`raw_xml`).
    - **Layer 2 (STAGING)**: Snowflake Dynamic Tables (`TARGET_LAG = '5 minutes'`). **Explodes every repeating XML child element into its own separate table** (e.g. `<ASSET>` &rarr; `staging_<ds>`, `<CUSIP2_record>` &rarr; `staging_<ds>_cusip2`).
    - **Layer 3 (CURATED / GOLD)**: Snowflake Dynamic Tables (`TARGET_LAG = '15 minutes'`). Root entity tracks SCD Type 2 history; child entities mirror parent keys with foreign keys.
+   - *Note*: Transformation and relational normalization are performed **purely via Snowflake Dynamic Tables** (no intermediate dbt models required).
 2. **Surrogate PK/FK Linking**:
    - Every entity receives a deterministic surrogate primary key: `<entity>_pk = MD5(CONCAT_WS('|', _file_name, _file_sha256, indices...))`.
    - Child tables include `<parent>_fk` referencing `<parent>_pk`.
@@ -159,9 +160,8 @@ res = approve_c3_go_live(
     dataset=dataset,
     registry_root=reg_root,
     deploy_to_snowflake=True,
-    signoff_notes='User approved after verifying hierarchical model and A5 smoke test.',
 )
-print('Live Deployment Completed:', res.get('snowflake_live_deployment', {}).get('status'))
+print('Live Deployment Completed:', res.get('snowflake_live_deployment', {}).get('deployed'))
 "
 ```
 
@@ -169,10 +169,11 @@ print('Live Deployment Completed:', res.get('snowflake_live_deployment', {}).get
 
 ## 🔍 Troubleshooting & Special Cases
 
+- **Pure Snowflake Dynamic Tables**:
+  - Transformation and relational normalizations execute directly in Snowflake via Dynamic Tables. No external dbt run or CLI builds are needed.
 - **Web UI Control**:
   - To launch or inspect via Web UI: `python -m src.web_app` at `http://127.0.0.1:8765`.
 - **Duplicate Keys**:
   - If `<parent>_pk` or business keys have duplicates in test XMLs, check G3 quality rules in `registry/<dataset>/quality_rules.yaml`.
 - **Schema Drift**:
   - If new XML tags arrive at runtime, the C1 Drift Agent detects them and proposes additive changes automatically.
-
