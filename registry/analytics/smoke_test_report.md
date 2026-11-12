@@ -1,9 +1,9 @@
 # A5 Smoke Test Report — `analytics` (✅ PASSED)
 
-- **Executed At:** `2026-11-11T15:58:46.724611+00:00`
+- **Executed At:** `2026-11-12T14:56:44.220634+00:00`
 - **Sample XMLs Tested:** 1
 - **Files Passed (G1 + G2 + G3):** 1
-- **D2 Raw Rows (`raw_analytics`):** 1
+- **D2 Raw Rows (`raw_analytics`):** 2191
 - **D3 Staging Rows (`staging_analytics`):** 2191
 - **D4 Curated Active SCD2 Rows (`curated_analytics`):** 2191
 - **O3 Quarantine Count (`quarantine_analytics`):** 0 *(must be 0)*

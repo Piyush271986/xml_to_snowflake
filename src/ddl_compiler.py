@@ -13,15 +13,16 @@ def _xmlget_chain(base: str, parts: list[str]) -> str:
     return expr
 
 
-def _flatten_plan(entity: Entity, root_path: str) -> tuple[list[str], list[str]]:
-    """LATERAL FLATTEN joins (aliases a1..ak) and WHERE predicates reaching `entity` from `r.raw_xml`."""
+def _flatten_plan(entity: Entity, record_path: str) -> tuple[list[str], list[str]]:
+    """LATERAL FLATTEN joins (aliases a1..ak) and WHERE predicates reaching `entity` from record-level `r.raw_xml`."""
     joins: list[str] = []
     wheres: list[str] = []
     base = "r.raw_xml"
-    parent_parts = [p for p in root_path.strip("/").split("/") if p]
+    parent_parts = [p for p in record_path.strip("/").split("/") if p]
     level = 0
     for ent in entity.chain():
-        if not ent.is_flattened:
+        # Primary record entity (ent.parent is None) is already split 1-row-per-record in RAW
+        if ent.parent is None:
             continue
         level += 1
         parts = [p for p in ent.path.strip("/").split("/") if p]
@@ -37,21 +38,29 @@ def _flatten_plan(entity: Entity, root_path: str) -> tuple[list[str], list[str]]
 
 
 def _levels(entity: Entity) -> int:
-    return sum(1 for e in entity.chain() if e.is_flattened)
+    return sum(1 for e in entity.chain() if e.parent is not None)
 
 
 def _pk_expr(levels: int) -> str:
-    """Deterministic surrogate key: file identity plus the element position at every repeating level."""
+    """Deterministic surrogate key: file identity + record index + child element positions."""
     idx = "".join(f", a{i}.index::VARCHAR" for i in range(1, levels + 1))
-    return f"MD5(CONCAT_WS('|', r._file_name, r._file_sha256{idx}))"
+    return f"MD5(CONCAT_WS('|', r._file_name, r._file_sha256, r._record_index::VARCHAR{idx}))"
 
 
-def _column_expr(entity: Entity, col: EntityColumn) -> str:
-    if col.from_document or not entity.is_flattened:
+def _column_expr(entity: Entity, col: EntityColumn, record_path: str = "") -> str:
+    if entity.parent is None:
         base = "r.raw_xml"
+        if col.from_document:
+            elem_parts = col.element_parts
+        else:
+            rec_parts = [p for p in record_path.strip("/").split("/") if p] if record_path else []
+            ent_parts = [p for p in entity.path.strip("/").split("/") if p]
+            wrapper_len = max(0, len(rec_parts) - len(ent_parts))
+            elem_parts = col.element_parts[wrapper_len:]
     else:
         base = f"a{_levels(entity)}.value"
-    node = _xmlget_chain(base, col.element_parts)
+        elem_parts = col.element_parts
+    node = _xmlget_chain(base, elem_parts)
     raw = f'{node}:"@{col.attribute}"::VARCHAR' if col.attribute else f'{node}:"$"::VARCHAR'
     return cast_varchar_expr(raw, col.field.snowflake_type)
 
@@ -66,12 +75,17 @@ def compile_raw_snowpipe_sql(
     adls_stage: str = "@RAW.ADLS_XML_STAGE",
     schema_raw: str = "RAW",
 ) -> str:
-    """Layer 1 DDL: ADLS -> RAW Normal Table + Snowpipe (deployed under RAW schema)."""
+    """Layer 1 DDL: ADLS -> RAW Normal Table + Snowpipe (deployed under RAW schema, 1 row per XML record)."""
     ds = mapping.dataset
+    model = build_entity_model(mapping)
+    rec_path = model.record_path or mapping.record_element or mapping.root_element
+    top_tags = ", ".join(mapping.top_level_fields) if mapping.top_level_fields else "none"
     raw_tbl = f"{schema_raw}.{mapping.targets.raw_table}" if schema_raw else mapping.targets.raw_table
     pipe_fqn = f"{schema_raw}.pipe_{ds}" if schema_raw else f"pipe_{ds}"
     return f"""-- =============================================================================
 -- LAYER 1 (RAW): NORMAL TABLE + ADLS SNOWPIPE ({ds} v{mapping.version}) [Schema: {schema_raw}]
+-- Record XPath: {rec_path} (loaded record-by-record into separate VARIANT rows)
+-- Preserved Top-Level Tags: {top_tags}
 -- =============================================================================
 
 CREATE SCHEMA IF NOT EXISTS {schema_raw};
@@ -79,16 +93,17 @@ CREATE SCHEMA IF NOT EXISTS {schema_raw};
 CREATE TABLE IF NOT EXISTS {raw_tbl} (
     _file_name          VARCHAR(512)    NOT NULL,
     _file_sha256        VARCHAR(64)     NOT NULL,
+    _record_index       NUMBER(18,0)    NOT NULL DEFAULT 0,
     _source_system      VARCHAR(128)    NOT NULL,
-    _load_ts            TIMESTAMP_NTZ   DEFAULT CURRENT_TIMESTAMP(),
+    _ingestion_ts            TIMESTAMP_NTZ   DEFAULT CURRENT_TIMESTAMP(),
     raw_xml             VARIANT         NOT NULL,
-    CONSTRAINT uq_{mapping.targets.raw_table}_file_hash UNIQUE (_file_name, _file_sha256)
+    CONSTRAINT uq_{mapping.targets.raw_table}_file_hash UNIQUE (_file_name, _file_sha256, _record_index)
 );
 
 -- Snowpipe: ADLS to RAW Normal Table (Created PAUSED during onboarding; enabled at Stage 9 Go-Live)
 CREATE PIPE IF NOT EXISTS {pipe_fqn}
     AUTO_INGEST = TRUE
-    COMMENT = 'Snowpipe for {ds} XML ingestion from ADLS into {raw_tbl}'
+    COMMENT = 'Snowpipe for {ds} XML ingestion from ADLS into {raw_tbl} (record path: {rec_path})'
 AS
 COPY INTO {raw_tbl} (_file_name, _file_sha256, _source_system, raw_xml)
 FROM (
@@ -99,7 +114,7 @@ FROM (
         $1
     FROM {adls_stage}/{ds}/
 )
-FILE_FORMAT = (TYPE = 'XML' STRIP_OUTER_ELEMENT = FALSE);
+FILE_FORMAT = (TYPE = 'XML' STRIP_OUTER_ELEMENT = TRUE);
 
 ALTER PIPE IF EXISTS {pipe_fqn} SET PIPE_EXECUTION_PAUSED = TRUE;
 """
@@ -115,12 +130,14 @@ def compile_staging_dynamic_table_sql(
     """Layer 2 DDL: RAW -> one Stage Dynamic Table per XML entity (parent + each child), under the STAGING schema."""
     ds = mapping.dataset
     model = build_entity_model(mapping)
+    rec_path = model.record_path or model.root_path
     raw_tbl = f"{schema_raw}.{mapping.targets.raw_table}" if schema_raw else mapping.targets.raw_table
     prefix = f"{schema_staging}." if schema_staging else ""
 
     blocks: list[str] = [
         f"""-- =============================================================================
 -- LAYER 2 (STAGE): ONE DYNAMIC TABLE PER XML ENTITY FROM RAW ({ds} v{mapping.version}) [Schema: {schema_staging}]
+-- Record XPath in RAW: {rec_path}
 -- Entities: {', '.join(e.name for e in model.entities)}
 -- =============================================================================
 
@@ -130,18 +147,18 @@ CREATE SCHEMA IF NOT EXISTS {schema_staging};
     for ent in model.entities:
         stg_tbl = f"{prefix}{ent.stage_table}"
         parent_tbl = f"{prefix}{ent.parent.stage_table}" if ent.parent else None
-        joins, wheres = _flatten_plan(ent, model.root_path)
+        joins, wheres = _flatten_plan(ent, rec_path)
         levels = _levels(ent)
 
         select_exprs = [f"    {_pk_expr(levels)} AS {ent.pk_column}"]
         if ent.parent is not None:
             select_exprs.append(f"    {_pk_expr(levels - 1)} AS {ent.fk_column}")
-        select_exprs.extend(f"    {_column_expr(ent, c)} AS {c.name}" for c in ent.columns)
+        select_exprs.extend(f"    {_column_expr(ent, c, rec_path)} AS {c.name}" for c in ent.columns)
         select_exprs.extend(
             [
                 "    r._file_name AS _file_name",
                 "    r._file_sha256 AS _file_sha256",
-                "    r._load_ts AS _staged_ts",
+                "    r._ingestion_ts AS _ingestion_ts",
             ]
         )
         from_sql = f"FROM {raw_tbl} r"
@@ -153,7 +170,7 @@ CREATE SCHEMA IF NOT EXISTS {schema_staging};
 CREATE OR REPLACE DYNAMIC TABLE {stg_tbl}
     TARGET_LAG = '{target_lag}'
     WAREHOUSE = {warehouse}
-    REFRESH_MODE = AUTO
+    REFRESH_MODE = INCREMENTAL
     INITIALIZE = ON_CREATE
     COMMENT = '{_fk_comment(ent, stg_tbl, parent_tbl)}'
 AS
@@ -193,42 +210,52 @@ CREATE SCHEMA IF NOT EXISTS {schema_curated};
         parent_tbl = f"{cur_prefix}{ent.parent.curated_table}" if ent.parent else None
         key_cols = [ent.pk_column] + ([ent.fk_column] if ent.fk_column else [])
         data_cols = [c.name for c in ent.columns]
-        non_key = [c for c in data_cols if c not in ent.business_keys]
+        ts_cols = {c.name for c in ent.columns if str(c.field.snowflake_type).upper().startswith("TIMESTAMP")}
+        # row hash: non-key business attributes only (no timestamp columns, no batch-envelope/top-level tags, no load metadata)
+        doc_cols = {c.name for c in ent.columns if getattr(c, 'from_document', False)}
+        non_key = [c for c in data_cols if c not in ent.business_keys and c not in ts_cols and c not in doc_cols]
         hash_cols = ", ".join(f"COALESCE(TO_VARCHAR({c}), '')" for c in non_key) or "'1'"
         select_cols = ",\n        ".join(key_cols + data_cols)
 
         if ent.parent is None:
             partition = ", ".join(ent.business_keys) if ent.business_keys else ent.pk_column
-            body = f"""WITH versioned AS (
+            order = "_ingestion_ts ASC, _file_name ASC"
+            body = f"""WITH hashed AS (
     SELECT
         {select_cols},
         SHA2(CONCAT_WS('|', {hash_cols}), 256) AS _row_hash,
-        _staged_ts AS is_valid_start,
-        LEAD(_staged_ts) OVER (
-            PARTITION BY {partition}
-            ORDER BY _staged_ts ASC
-        ) AS is_valid_end,
-        CASE
-            WHEN LEAD(_staged_ts) OVER (
-                PARTITION BY {partition}
-                ORDER BY _staged_ts ASC
-            ) IS NULL THEN TRUE
-            ELSE FALSE
-        END AS is_current,
-        _staged_ts AS system_start_time,
-        LEAD(_staged_ts) OVER (
-            PARTITION BY {partition}
-            ORDER BY _staged_ts ASC
-        ) AS system_end_time,
-        _file_name AS _source_file
+        _ingestion_ts,
+        _file_name
     FROM {stg_tbl}
+),
+changes AS (
+    -- keep only rows whose non-timestamp content differs from the previous version
+    SELECT *
+    FROM hashed
+    QUALIFY _row_hash IS DISTINCT FROM LAG(_row_hash) OVER (
+        PARTITION BY {partition}
+        ORDER BY {order}
+    )
 )
-SELECT * FROM versioned"""
+SELECT
+    {select_cols},
+    _row_hash,
+    _ingestion_ts AS valid_start_time,
+    LEAD(_ingestion_ts) OVER (
+        PARTITION BY {partition}
+        ORDER BY {order}
+    ) AS valid_end_time,
+    (LEAD(_ingestion_ts) OVER (
+        PARTITION BY {partition}
+        ORDER BY {order}
+    ) IS NULL) AS is_current,
+    _file_name AS _source_file
+FROM changes"""
         else:
             body = f"""SELECT
         {select_cols},
         SHA2(CONCAT_WS('|', {hash_cols}), 256) AS _row_hash,
-        _staged_ts AS system_start_time,
+        _ingestion_ts,
         _file_name AS _source_file
 FROM {stg_tbl}"""
         blocks.append(

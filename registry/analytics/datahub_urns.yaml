@@ -1,11 +1,11 @@
 dataset: analytics
-status: PROVISIONED
-registered_at: '2026-11-11T16:32:04.032529+00:00'
+status: PUBLISHED
+registered_at: '2026-11-12T14:56:42.913414+00:00'
 datahub_live:
   live_emitted: true
   gms_server: http://localhost:8080
-  emitted_urns_count: 15
-  emitted_at: '2026-11-11T16:32:04.032448+00:00'
+  emitted_urns_count: 13
+  emitted_at: '2026-11-12T14:56:42.913189+00:00'
   ui_url: http://localhost:9002
 owners:
   data_steward: data-steward@enterprise.io
@@ -15,13 +15,11 @@ sla_tags:
   freshness_sla_hours: 24
   cdc_mode: SCD_TYPE_2
 entities:
-  adls_landing: urn:li:dataset:(urn:li:dataPlatform:adls,abfss://landing@enterpriseadls.dfs.core.windows.net/xml/analytics,PROD)
+  adls_landing: urn:li:dataset:(urn:li:dataPlatform:adls,abfss://landing@adls.dfs.core.windows.net/xml/analytics,PROD)
   d2_raw: urn:li:dataset:(urn:li:dataPlatform:snowflake,RAW.raw_analytics,PROD)
   o3_quarantine: urn:li:dataset:(urn:li:dataPlatform:snowflake,OPS.quarantine_analytics,PROD)
-  staging_assets: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)
-  curated_assets: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)
-  staging_asset: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)
-  curated_asset: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)
+  staging_asset: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)
+  curated_asset: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)
   staging_country_classification: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_country_classification,PROD)
   curated_country_classification: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_country_classification,PROD)
   staging_cusip2: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_cusip2,PROD)
@@ -31,7 +29,7 @@ entities:
   d3_staging: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)
   d4_curated: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)
 upstream_lineage:
-- upstream: urn:li:dataset:(urn:li:dataPlatform:adls,abfss://landing@enterpriseadls.dfs.core.windows.net/xml/analytics,PROD)
+- upstream: urn:li:dataset:(urn:li:dataPlatform:adls,abfss://landing@adls.dfs.core.windows.net/xml/analytics,PROD)
   downstream: urn:li:dataset:(urn:li:dataPlatform:snowflake,RAW.raw_analytics,PROD)
   mechanism: Snowpipe (RAW.pipe_analytics) -> Normal Table
 - upstream: urn:li:dataset:(urn:li:dataPlatform:snowflake,RAW.raw_analytics,PROD)
@@ -40,12 +38,6 @@ upstream_lineage:
 - upstream: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)
   downstream: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)
   mechanism: Dynamic Table (CURATED.curated_analytics)
-- upstream: urn:li:dataset:(urn:li:dataPlatform:snowflake,RAW.raw_analytics,PROD)
-  downstream: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)
-  mechanism: Dynamic Table (STAGING.staging_analytics_asset)
-- upstream: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)
-  downstream: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)
-  mechanism: Dynamic Table (CURATED.curated_analytics_asset)
 - upstream: urn:li:dataset:(urn:li:dataPlatform:snowflake,RAW.raw_analytics,PROD)
   downstream: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_country_classification,PROD)
   mechanism: Dynamic Table (STAGING.staging_analytics_country_classification)
@@ -66,159 +58,149 @@ upstream_lineage:
   mechanism: Dynamic Table (CURATED.curated_analytics_cusip_alias)
 column_lineage:
 - xpath: /ASSETS/@ASOF_DATE
-  entity: assets
+  entity: asset
   staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#asof_date
   curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#asof_date
   snowflake_type: VARCHAR
 - xpath: /ASSETS/@CREATE_DATE
-  entity: assets
+  entity: asset
   staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#create_date
   curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#create_date
   snowflake_type: VARCHAR
 - xpath: /ASSETS/@RECORDS
-  entity: assets
+  entity: asset
   staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#records
   curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#records
   snowflake_type: NUMBER(18,0)
-- xpath: /ASSETS/ASSET/BND_CORP/ESG_RATING
-  entity: assets
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#esg_rating
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#esg_rating
-  snowflake_type: VARCHAR
-- xpath: /ASSETS/ASSET/BND_CORP/RATING_AGENCY
-  entity: assets
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#rating_agency
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#rating_agency
-  snowflake_type: VARCHAR
 - xpath: /ASSETS/ASSET/BND_CORP/CLASS
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#class_val
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#class_val
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#class_val
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#class_val
   snowflake_type: VARCHAR
 - xpath: /ASSETS/ASSET/BND_CORP/ACCRUAL_DT
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#accrual_dt
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#accrual_dt
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#accrual_dt
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#accrual_dt
   snowflake_type: VARCHAR
 - xpath: /ASSETS/ASSET/BND_CORP/AMT_ISU
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#amt_isu
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#amt_isu
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#amt_isu
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#amt_isu
   snowflake_type: NUMBER(18,0)
 - xpath: /ASSETS/ASSET/BND_CORP/ANNOUNCE_DT
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#announce_dt
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#announce_dt
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#announce_dt
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#announce_dt
   snowflake_type: VARCHAR
 - xpath: /ASSETS/ASSET/BND_CORP/CALC_TYPE
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#calc_type
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#calc_type
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#calc_type
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#calc_type
   snowflake_type: NUMBER(18,0)
 - xpath: /ASSETS/ASSET/BND_CORP/CALL_MANDATORY
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#call_mandatory
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#call_mandatory
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#call_mandatory
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#call_mandatory
   snowflake_type: VARCHAR
 - xpath: /ASSETS/ASSET/BND_CORP/CALL_TYPE
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#call_type
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#call_type
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#call_type
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#call_type
   snowflake_type: VARCHAR
 - xpath: /ASSETS/ASSET/BND_CORP/CD_INSTMT_TYPE
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#cd_instmt_type
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#cd_instmt_type
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#cd_instmt_type
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#cd_instmt_type
   snowflake_type: VARCHAR
 - xpath: /ASSETS/ASSET/BND_CORP/CHANGE_DT
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#change_dt
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#change_dt
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#change_dt
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#change_dt
   snowflake_type: VARCHAR
 - xpath: /ASSETS/ASSET/BND_CORP/COMPOUND_FLAG
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#compound_flag
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#compound_flag
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#compound_flag
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#compound_flag
   snowflake_type: NUMBER(18,0)
 - xpath: /ASSETS/ASSET/BND_CORP/COUNTRY
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#country
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#country
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#country
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#country
   snowflake_type: VARCHAR
 - xpath: /ASSETS/ASSET/BND_CORP/COUPON_FIX
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#coupon_fix
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#coupon_fix
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#coupon_fix
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#coupon_fix
   snowflake_type: NUMBER(18,4)
 - xpath: /ASSETS/ASSET/BND_CORP/COUP_FREQ
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#coup_freq
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#coup_freq
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#coup_freq
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#coup_freq
   snowflake_type: VARCHAR
 - xpath: /ASSETS/ASSET/BND_CORP/CPN_TYPE
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#cpn_type
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#cpn_type
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#cpn_type
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#cpn_type
   snowflake_type: VARCHAR
 - xpath: /ASSETS/ASSET/BND_CORP/CURRENCY
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#currency
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#currency
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#currency
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#currency
   snowflake_type: VARCHAR
 - xpath: /ASSETS/ASSET/BND_CORP/CUSIP
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#cusip
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#cusip
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#cusip
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#cusip
   snowflake_type: VARCHAR
 - xpath: /ASSETS/ASSET/BND_CORP/CUSIP_TYPE
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#cusip_type
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#cusip_type
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#cusip_type
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#cusip_type
   snowflake_type: VARCHAR
 - xpath: /ASSETS/ASSET/BND_CORP/DATE_CONV
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#date_conv
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#date_conv
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#date_conv
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#date_conv
   snowflake_type: VARCHAR
 - xpath: /ASSETS/ASSET/BND_CORP/DESC_INSTMT
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#desc_instmt
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#desc_instmt
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#desc_instmt
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#desc_instmt
   snowflake_type: VARCHAR
 - xpath: /ASSETS/ASSET/BND_CORP/END_ADJ_FLAG
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#end_adj_flag
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#end_adj_flag
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#end_adj_flag
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#end_adj_flag
   snowflake_type: VARCHAR
 - xpath: /ASSETS/ASSET/BND_CORP/FIRST_PAY_DT
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#first_pay_dt
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#first_pay_dt
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#first_pay_dt
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#first_pay_dt
   snowflake_type: VARCHAR
 - xpath: /ASSETS/ASSET/BND_CORP/FIRST_SETTLE_DT
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#first_settle_dt
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#first_settle_dt
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#first_settle_dt
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#first_settle_dt
   snowflake_type: VARCHAR
 - xpath: /ASSETS/ASSET/BND_CORP/FLAG_144A
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#flag_144_a
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#flag_144_a
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#flag_144_a
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#flag_144_a
   snowflake_type: VARCHAR
 - xpath: /ASSETS/ASSET/BND_CORP/FLAG_REG_S
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#flag_reg_s
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#flag_reg_s
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#flag_reg_s
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#flag_reg_s
   snowflake_type: VARCHAR
 - xpath: /ASSETS/ASSET/BND_CORP/ISSUE_PRICE
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#issue_price
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#issue_price
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#issue_price
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#issue_price
   snowflake_type: NUMBER(18,4)
 - xpath: /ASSETS/ASSET/BND_CORP/MATURITY_DT
   entity: asset
-  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_asset,PROD)#maturity_dt
-  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_asset,PROD)#maturity_dt
+  staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics,PROD)#maturity_dt
+  curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics,PROD)#maturity_dt
   snowflake_type: VARCHAR
 - xpath: /ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/COUNTRY_CLASSIFICATION_record/CNTRY
   entity: country_classification
@@ -260,4 +242,6 @@ column_lineage:
   staging_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,STAGING.staging_analytics_cusip_alias,PROD)#purpose
   curated_column: urn:li:dataset:(urn:li:dataPlatform:snowflake,CURATED.curated_analytics_cusip_alias,PROD)#purpose
   snowflake_type: VARCHAR
-attached_contract: C:\Databricks_project\xml_to_snowflake\registry\analytics\contract.yaml
+attached_contract: registry\analytics\contract.yaml
+git_tag: v1.0.0-live
+snowpipe_state: ACTIVE

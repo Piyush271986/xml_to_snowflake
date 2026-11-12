@@ -158,6 +158,129 @@ def cast_varchar_expr(raw_val: str, sf_type: str) -> str:
     return raw_val
 
 
+def detect_record_xpath(roots: list[ET.Element]) -> tuple[str, list[str]]:
+    """Intelligently identify the repeating record element XPath and any top-level envelope tags/attributes.
+
+    For batch/collection XMLs like `<ASSETS ASOF_DATE="..." CREATE_DATE="..." RECORDS="..."><ASSET><BND_CORP>...</BND_CORP></ASSET></ASSETS>`,
+    descends through envelope/wrapper elements that have no scalar record fields of their own and returns:
+      record_xpath = '/ASSETS/ASSET/BND_CORP'
+      top_level_fields = ['/ASSETS/@ASOF_DATE', '/ASSETS/@CREATE_DATE', '/ASSETS/@RECORDS']
+    For single-record XMLs like `<Order currency="USD"><OrderId>10001</OrderId>...</Order>`, returns:
+      record_xpath = '/Order'
+      top_level_fields = ['/Order/@currency']
+    """
+    if not roots:
+        return "/Root", []
+
+    current_nodes = list(roots)
+    current_path = f"/{roots[0].tag}"
+    top_level_fields: list[str] = []
+
+    while current_nodes:
+        curr_attrs: list[str] = []
+        for node in current_nodes:
+            for attr_key in node.attrib:
+                attr_xp = f"{current_path}/@{attr_key}"
+                if attr_xp not in curr_attrs:
+                    curr_attrs.append(attr_xp)
+
+        children = [c for node in current_nodes for c in list(node)]
+        if not children:
+            break
+
+        leaf_tags = Counter(c.tag for c in children if len(list(c)) == 0)
+        complex_tags = Counter(c.tag for c in children if len(list(c)) > 0)
+
+        descend_tag: str | None = None
+        if len(leaf_tags) == 0 and len(complex_tags) == 1:
+            descend_tag = next(iter(complex_tags))
+        elif len(leaf_tags) <= 3 and len(complex_tags) == 1:
+            cand_tag = next(iter(complex_tags))
+            parent_tag = current_nodes[0].tag
+            max_per_parent = max(sum(1 for c in list(n) if c.tag == cand_tag) for n in current_nodes)
+            is_singular_of_parent = parent_tag.lower().rstrip("s") == cand_tag.lower()
+            if max_per_parent > 1 or is_singular_of_parent:
+                descend_tag = cand_tag
+
+        if descend_tag is None:
+            break
+
+        for axp in curr_attrs:
+            if axp not in top_level_fields:
+                top_level_fields.append(axp)
+        for ltag in leaf_tags:
+            lxp = f"{current_path}/{ltag}"
+            if lxp not in top_level_fields:
+                top_level_fields.append(lxp)
+
+        current_nodes = [c for c in children if c.tag == descend_tag]
+        current_path = f"{current_path}/{descend_tag}"
+
+    if current_path == f"/{roots[0].tag}":
+        for node in roots:
+            for attr_key in node.attrib:
+                attr_xp = f"{current_path}/@{attr_key}"
+                if attr_xp not in top_level_fields:
+                    top_level_fields.append(attr_xp)
+
+    return current_path, top_level_fields
+
+
+def extract_xml_records(xml_text: str, record_element: str | None = None) -> list[str]:
+    """Split an XML document into individual record XML strings while preserving top-level attributes & scalar tags.
+
+    For `<ASSETS ASOF_DATE="5/11/2026" ...><ASSET><BND_CORP>...</BND_CORP></ASSET></ASSETS>` with
+    `record_element='/ASSETS/ASSET/BND_CORP'`, returns one `<BND_CORP ASOF_DATE="5/11/2026" ...>...</BND_CORP>`
+    XML string per record so each record is loaded into its own VARIANT row in RAW.
+    """
+    root = ET.fromstring(xml_text)
+    if not record_element:
+        record_element, _ = detect_record_xpath([root])
+
+    parts = [p for p in record_element.strip("/").split("/") if p]
+    if len(parts) <= 1 or parts[0] != root.tag:
+        return [xml_text.strip()]
+
+    records: list[str] = []
+
+    def _traverse(
+        node: ET.Element,
+        depth: int,
+        inherited_attribs: dict[str, str],
+        inherited_scalars: list[tuple[str, str]],
+    ) -> None:
+        if depth == len(parts) - 1:
+            for k, v in inherited_attribs.items():
+                if k not in node.attrib:
+                    node.set(k, v)
+            for stag, sval in reversed(inherited_scalars):
+                if node.find(stag) is None:
+                    scalar_el = ET.Element(stag)
+                    scalar_el.text = sval
+                    node.insert(0, scalar_el)
+            records.append(ET.tostring(node, encoding="unicode").strip())
+            return
+
+        next_tag = parts[depth + 1]
+        next_attribs = dict(inherited_attribs)
+        for k, v in node.attrib.items():
+            next_attribs[k] = v
+
+        next_scalars = list(inherited_scalars)
+        for child in list(node):
+            if child.tag != next_tag and len(list(child)) == 0:
+                val = (child.text or "").strip()
+                if val:
+                    next_scalars.append((child.tag, val))
+
+        for child in list(node):
+            if child.tag == next_tag:
+                _traverse(child, depth + 1, next_attribs, next_scalars)
+
+    _traverse(root, 0, {}, [])
+    return records if records else [xml_text.strip()]
+
+
 def infer_schema_from_xml_files(dataset: str, xml_files: list[Path]) -> DatasetMapping:
     """Parse sample XML files, union XPaths, infer types, optionality, cardinality, and confidence."""
     total_files = len(xml_files)
@@ -203,15 +326,18 @@ def infer_schema_from_xml_files(dataset: str, xml_files: list[Path]) -> DatasetM
         for child in children:
             walk(child, f"{current_path}/{child.tag}", file_name)
 
+    parsed_roots: list[ET.Element] = []
     for xml_path in sorted(xml_files):
         tree = ET.parse(xml_path)
         root = tree.getroot()
+        parsed_roots.append(root)
         if root_tag is None:
             root_tag = root.tag
         walk(root, f"/{root.tag}", xml_path.name)
 
     assert root_tag is not None
     root_element = f"/{root_tag}"
+    record_element, top_level_fields = detect_record_xpath(parsed_roots)
 
     # Identify primary flatten_path (prefer LineItem if multiple repeating arrays exist)
     primary_flatten_path: str | None = None
@@ -334,6 +460,8 @@ def infer_schema_from_xml_files(dataset: str, xml_files: list[Path]) -> DatasetM
         version="0.1.0",
         source="sample_inference",
         root_element=root_element,
+        record_element=record_element,
+        top_level_fields=top_level_fields,
         business_keys=business_keys,
         targets=TargetTables(
             raw_table=f"raw_{dataset}",

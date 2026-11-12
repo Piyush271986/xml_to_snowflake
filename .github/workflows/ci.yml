@@ -1,0 +1,65 @@
+name: CI - Code & Contract Validation
+
+on:
+  pull_request:
+    branches: [ main, master ]
+  push:
+    branches: [ main, master ]
+
+jobs:
+  validate-and-test:
+    name: Lint, Contract Validation & Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install ruff pytest
+
+      - name: Lint Code (Ruff)
+        run: |
+          ruff check src/ tests/ scripts/
+
+      - name: Validate Dataset Contracts & Idempotency
+        run: |
+          python -c "
+          from pathlib import Path
+          import yaml
+          from src.models import DatasetMapping
+          from src.entity_model import EntityModel
+
+          registry = Path('registry')
+          if not registry.exists():
+              print('No registry folder found; skipping contract checks.')
+              exit(0)
+
+          for ds_dir in registry.iterdir():
+              if ds_dir.is_dir():
+                  m_path = ds_dir / 'mapping.yaml'
+                  e_path = ds_dir / 'entity_model.yaml'
+                  if m_path.exists():
+                      DatasetMapping.model_validate(yaml.safe_load(m_path.read_text(encoding='utf-8')))
+                      print(f'[OK] Validated mapping contract: {ds_dir.name}')
+                  if e_path.exists():
+                      EntityModel.model_validate(yaml.safe_load(e_path.read_text(encoding='utf-8')))
+                      print(f'[OK] Validated entity model: {ds_dir.name}')
+          "
+
+      - name: Run Test Suite (40 Unit & E2E Tests)
+        run: |
+          python -m unittest discover tests
+

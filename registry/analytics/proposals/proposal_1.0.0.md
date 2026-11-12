@@ -1,7 +1,7 @@
 # C2 Schema Drift Proposal — `analytics` (`v1.0.0`)
 
 - **Status:** `PENDING_C3_APPROVAL`
-- **Created At:** `2026-11-11T16:32:06.760675+00:00`
+- **Created At:** `2026-11-12T13:22:58.823972+00:00`
 
 ## Drift Findings
 

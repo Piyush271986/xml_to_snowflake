@@ -73,16 +73,23 @@ def handle_drift_findings(
         ]
 
     root_tag = mapping.root_element.strip("/")
+    known_fps = sorted(
+        {f.flatten_path for f in mapping.fields if f.flatten_path},
+        key=len,
+        reverse=True,
+    )
     new_field_mappings: list[FieldMapping] = []
     for add in additive:
         sf_type = add.observed_type or "VARCHAR"
+        matched_fp = next((fp for fp in known_fps if add.xpath.startswith(fp + "/")), None)
+        is_arr = matched_fp is not None
         col_name = build_column_name(add.xpath, root_tag, flatten_path=None)
         xml_expr = build_snowflake_xml_expr(
             xpath=add.xpath,
             root_tag=root_tag,
             sf_type=sf_type,
-            is_array=False,
-            flatten_path=None,
+            is_array=is_arr,
+            flatten_path=matched_fp,
             is_attribute=add.xpath.split("/")[-1].startswith("@"),
         )
         new_field_mappings.append(
@@ -92,8 +99,8 @@ def handle_drift_findings(
                 snowflake_type=sf_type,
                 xml_expr=xml_expr,
                 required=False,
-                is_array=False,
-                flatten_path=None,
+                is_array=is_arr,
+                flatten_path=matched_fp,
                 is_attribute=add.xpath.split("/")[-1].startswith("@"),
                 confidence=0.1,
                 sample_values=[add.sample_value] if add.sample_value else [],

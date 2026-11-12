@@ -21,6 +21,7 @@ from src.models import (
     OnboardingManifest,
     QualityRulesSpec,
 )
+from src.xml_infer import extract_xml_records
 
 
 def ingest_xml_files_into_warehouse(
@@ -40,7 +41,9 @@ def ingest_xml_files_into_warehouse(
     db_path = ds_registry / "local_warehouse.db"
 
     field_cols = [f.column for f in mapping.fields]
-    non_key_cols = [c for c in field_cols if c not in mapping.business_keys]
+    ts_cols = {f.column for f in mapping.fields if str(f.snowflake_type).upper().startswith("TIMESTAMP")}
+    # row hash excludes business keys and any timestamp columns
+    non_key_cols = [c for c in field_cols if c not in mapping.business_keys and c not in ts_cols and c not in set(mapping.top_level_fields)]
 
     files_passed = 0
     files_quarantined = 0
@@ -106,18 +109,34 @@ def ingest_xml_files_into_warehouse(
                 )
                 continue
 
-            # File passed G1, G2, G3 -> Load D2 Raw, D3 Staging, and D4 Curated (SCD Type 2)
+            # File passed G1, G2, G3 -> Load D2 Raw (1 row per XML record), D3 Staging, and D4 Curated (SCD Type 2)
             files_passed += 1
             seen_hashes.add(file_sha256)
 
-            cur.execute(
-                f"""
-                INSERT INTO {mapping.targets.raw_table}
-                (_file_name, _file_sha256, _source_system, _load_ts, raw_xml)
-                VALUES (?, ?, ?, ?, ?)
-                """,
-                (xml_path.name, file_sha256, mapping.dataset, now, raw_text),
-            )
+            record_xmls = extract_xml_records(raw_text, mapping.record_element)
+            cur.execute(f"PRAGMA table_info({mapping.targets.raw_table})")
+            raw_cols = {row[1] for row in cur.fetchall()}
+            if "_record_index" in raw_cols:
+                cur.executemany(
+                    f"""
+                    INSERT INTO {mapping.targets.raw_table}
+                    (_file_name, _file_sha256, _record_index, _source_system, _ingestion_ts, raw_xml)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    [
+                        (xml_path.name, file_sha256, idx, mapping.dataset, now, rec_xml)
+                        for idx, rec_xml in enumerate(record_xmls)
+                    ],
+                )
+            else:
+                cur.execute(
+                    f"""
+                    INSERT INTO {mapping.targets.raw_table}
+                    (_file_name, _file_sha256, _source_system, _ingestion_ts, raw_xml)
+                    VALUES (?, ?, ?, ?, ?)
+                    """,
+                    (xml_path.name, file_sha256, mapping.dataset, now, record_xmls[0] if record_xmls else raw_text),
+                )
 
             col_names_sql = ", ".join(field_cols)
             placeholders_sql = ", ".join("?" for _ in field_cols)
@@ -128,7 +147,7 @@ def ingest_xml_files_into_warehouse(
                 cur.execute(
                     f"""
                     INSERT INTO {mapping.targets.staging_table}
-                    ({col_names_sql}, _file_name, _file_sha256, _staged_ts)
+                    ({col_names_sql}, _file_name, _file_sha256, _ingestion_ts)
                     VALUES ({placeholders_sql}, ?, ?, ?)
                     """,
                     (*vals, xml_path.name, file_sha256, now),
@@ -157,19 +176,19 @@ def ingest_xml_files_into_warehouse(
                     cur.execute(
                         f"""
                         UPDATE {mapping.targets.curated_table}
-                        SET is_valid_end = ?, is_current = 0, system_end_time = ?
+                        SET valid_end_time = ?, is_current = 0
                         WHERE {where_bk} AND is_current = 1
                         """,
-                        (now, now, *bk_vals),
+                        (now, *bk_vals),
                     )
 
                 cur.execute(
                     f"""
                     INSERT INTO {mapping.targets.curated_table}
-                    ({col_names_sql}, _row_hash, is_valid_start, is_valid_end, is_current, system_start_time, system_end_time, _source_file)
-                    VALUES ({placeholders_sql}, ?, ?, NULL, 1, ?, NULL, ?)
+                    ({col_names_sql}, _row_hash, valid_start_time, valid_end_time, is_current, _source_file)
+                    VALUES ({placeholders_sql}, ?, ?, NULL, 1, ?)
                     """,
-                    (*vals, row_hash, now, now, xml_path.name),
+                    (*vals, row_hash, now, xml_path.name),
                 )
 
         conn.commit()

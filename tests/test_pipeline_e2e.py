@@ -90,7 +90,7 @@ class TestXmlToSnowflakePipeline(unittest.TestCase):
         self.assertIn("CREATE OR REPLACE DYNAMIC TABLE STAGING.staging_orders", ddl_text)
         self.assertIn("CREATE OR REPLACE DYNAMIC TABLE CURATED.curated_orders", ddl_text)
         self.assertIn("LATERAL FLATTEN", ddl_text)
-        self.assertIn("is_valid_start", ddl_text)
+        self.assertIn("valid_start_time", ddl_text)
         self.assertIn("is_current", ddl_text)
 
         # Verify 3-layer YAML schemas & pipeline deployment artifacts exist

@@ -115,7 +115,7 @@ def _emit_to_live_datahub(
                 SchemaFieldClass(fieldPath="_file_name", type=SchemaFieldDataTypeClass(type=StringTypeClass()), nativeDataType="VARCHAR(512)", description="Source XML file name"),
                 SchemaFieldClass(fieldPath="_file_sha256", type=SchemaFieldDataTypeClass(type=StringTypeClass()), nativeDataType="VARCHAR(64)", description="SHA-256 hash"),
                 SchemaFieldClass(fieldPath="_source_system", type=SchemaFieldDataTypeClass(type=StringTypeClass()), nativeDataType="VARCHAR(128)", description="Upstream source system"),
-                SchemaFieldClass(fieldPath="_load_ts", type=SchemaFieldDataTypeClass(type=TimeTypeClass()), nativeDataType="TIMESTAMP_NTZ", description="Snowpipe load timestamp"),
+                SchemaFieldClass(fieldPath="_ingestion_ts", type=SchemaFieldDataTypeClass(type=TimeTypeClass()), nativeDataType="TIMESTAMP_NTZ", description="Snowpipe load timestamp"),
                 SchemaFieldClass(fieldPath="raw_xml", type=SchemaFieldDataTypeClass(type=StringTypeClass()), nativeDataType="VARIANT", description="Parsed XML VARIANT payload"),
             ],
         ),
@@ -197,8 +197,8 @@ def _emit_to_live_datahub(
         )
         if ent.parent is None:
             cur_fields.extend([
-                SchemaFieldClass(fieldPath="is_valid_start", type=SchemaFieldDataTypeClass(type=TimeTypeClass()), nativeDataType="TIMESTAMP_NTZ", description="Effective start timestamp"),
-                SchemaFieldClass(fieldPath="is_valid_end", type=SchemaFieldDataTypeClass(type=TimeTypeClass()), nativeDataType="TIMESTAMP_NTZ", description="Effective end timestamp"),
+                SchemaFieldClass(fieldPath="valid_start_time", type=SchemaFieldDataTypeClass(type=TimeTypeClass()), nativeDataType="TIMESTAMP_NTZ", description="Effective start timestamp"),
+                SchemaFieldClass(fieldPath="valid_end_time", type=SchemaFieldDataTypeClass(type=TimeTypeClass()), nativeDataType="TIMESTAMP_NTZ", description="Effective end timestamp"),
                 SchemaFieldClass(fieldPath="is_current", type=SchemaFieldDataTypeClass(type=BooleanTypeClass()), nativeDataType="BOOLEAN", description="Current active version flag"),
             ])
         entity_descriptions[cur_key] = (

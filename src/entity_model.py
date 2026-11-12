@@ -73,6 +73,7 @@ class EntityModel:
     dataset: str
     root_path: str
     entities: list[Entity]  # parent-first order
+    record_path: str = ""
 
     @property
     def primary(self) -> Entity:
@@ -115,7 +116,16 @@ def build_entity_model(mapping: DatasetMapping) -> EntityModel:
         return True
 
     fields = [f for f in mapping.fields if keep(f)]
-    doc_fields = [f for f in fields if not f.flatten_path]
+
+    def resolve_rep_path(f: FieldMapping) -> str | None:
+        if f.flatten_path and f.flatten_path in rep_paths:
+            return f.flatten_path
+        for rp in sorted(rep_paths, key=lambda p: len(_parts(p)), reverse=True):
+            if f.xpath.startswith(rp + "/"):
+                return rp
+        return None
+
+    doc_fields = [f for f in fields if resolve_rep_path(f) is None]
 
     def nearest_ancestor(path: str) -> str | None:
         p = _parts(path)
@@ -193,8 +203,9 @@ def build_entity_model(mapping: DatasetMapping) -> EntityModel:
 
     top_entity = by_path[top_level[0]] if fold_document else None
     for f in fields:
-        if f.flatten_path:
-            add_column(by_path[f.flatten_path], f, False)
+        rp = resolve_rep_path(f)
+        if rp:
+            add_column(by_path[rp], f, False)
         elif fold_document and top_entity is not None:
             add_column(top_entity, f, True)
         else:
@@ -212,7 +223,21 @@ def build_entity_model(mapping: DatasetMapping) -> EntityModel:
         for b in mapping.business_keys
         if b in colname_by_field and any(c.field.column == b and not c.from_document for c in primary_ent.columns)
     ]
-    return EntityModel(dataset=ds, root_path=root_path, entities=entities)
+
+    # Determine record_path (e.g. '/ASSETS/ASSET/BND_CORP' for batch XMLs, '/Order' for single-record XMLs)
+    if mapping.record_element:
+        record_path = mapping.record_element
+    elif primary_ent.kind == "RECORD":
+        non_doc = [c for c in primary_ent.columns if not c.from_document and len(c.element_parts) >= 2]
+        wrappers = {c.element_parts[0] for c in non_doc}
+        if len(wrappers) == 1 and len(non_doc) == sum(1 for c in primary_ent.columns if not c.from_document):
+            record_path = f"{primary_ent.path}/{next(iter(wrappers))}"
+        else:
+            record_path = primary_ent.path
+    else:
+        record_path = primary_ent.path
+
+    return EntityModel(dataset=ds, root_path=root_path, entities=entities, record_path=record_path)
 
 
 def _er_type(sf_type: str) -> str:

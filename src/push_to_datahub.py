@@ -104,8 +104,8 @@ def push_orders_to_datahub():
     
     # Add SCD2 audit columns
     for col, ctype in [
-        ("is_valid_start", "TIMESTAMP_NTZ"),
-        ("is_valid_end", "TIMESTAMP_NTZ"),
+        ("valid_start_time", "TIMESTAMP_NTZ"),
+        ("valid_end_time", "TIMESTAMP_NTZ"),
         ("is_current", "BOOLEAN"),
         ("_row_hash", "VARCHAR(64)"),
         ("_source_file", "VARCHAR(512)")

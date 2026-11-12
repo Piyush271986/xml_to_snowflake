@@ -18,8 +18,8 @@ This skill guides the agent through onboarding a new XML dataset into Snowflake 
 
 1. **3-Layer Medallion Architecture**:
    - **Layer 1 (RAW)**: Normal Table loaded via Snowpipe (`@RAW.ADLS_XML_STAGE/<dataset>/`), storing immutable payload as `VARIANT` (`raw_xml`).
-   - **Layer 2 (STAGING)**: Snowflake Dynamic Tables (`TARGET_LAG = '5 minutes'`). **Explodes every repeating XML child element into its own separate table** (e.g. `<ASSET>` &rarr; `staging_<ds>`, `<CUSIP2_record>` &rarr; `staging_<ds>_cusip2`).
-   - **Layer 3 (CURATED / GOLD)**: Snowflake Dynamic Tables (`TARGET_LAG = '15 minutes'`). Root entity tracks SCD Type 2 history; child entities mirror parent keys with foreign keys.
+   - **Layer 2 (STAGING)**: Incremental Snowflake Dynamic Tables (`TARGET_LAG = '5 minutes'`, `REFRESH_MODE = INCREMENTAL`, driven by the RAW `_ingestion_ts` watermark carried on every row). **Explodes every repeating XML child element into its own separate table** (e.g. `<ASSET>` &rarr; `staging_<ds>`, `<CUSIP2_record>` &rarr; `staging_<ds>_cusip2`).
+   - **Layer 3 (CURATED / GOLD)**: Snowflake Dynamic Tables (`TARGET_LAG = '15 minutes'`). Root entity tracks SCD Type 2 history: `valid_start_time` = `_ingestion_ts`, `valid_end_time` = next version's ingestion time (NULL if current), `is_current` flag; `_row_hash` excludes timestamp columns and top-level batch tags. Child entities mirror parent keys with foreign keys.
    - *Note*: Transformation and relational normalization are performed **purely via Snowflake Dynamic Tables** (no intermediate dbt models required).
 2. **Surrogate PK/FK Linking**:
    - Every entity receives a deterministic surrogate primary key: `<entity>_pk = MD5(CONCAT_WS('|', _file_name, _file_sha256, indices...))`.
@@ -171,6 +171,12 @@ print('Live Deployment Completed:', res.get('snowflake_live_deployment', {}).get
 
 - **Pure Snowflake Dynamic Tables**:
   - Transformation and relational normalizations execute directly in Snowflake via Dynamic Tables. No external dbt run or CLI builds are needed.
+- **GitOps & CI/CD Automated Deployment**:
+  - When working on new datasets, create a branch `dataset/<name>`.
+  - Push to GitHub to trigger automated validation in `.github/workflows/ci.yml`.
+  - The CI workflow validates `mapping.yaml` and `entity_model.yaml` Pydantic contracts and verifies that all 40 unit and integration tests pass.
+  - Pull Request review and approval acts as the team's distributed **C3 Approval Gate**.
+  - Merging to `main` triggers `.github/workflows/cd.yml` which deploys DDLs, Snowpipe, and Dynamic Tables to Snowflake automatically.
 - **Web UI Control**:
   - To launch or inspect via Web UI: `python -m src.web_app` at `http://127.0.0.1:8765`.
 - **Duplicate Keys**:

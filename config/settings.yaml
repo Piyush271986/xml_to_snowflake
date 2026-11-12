@@ -19,9 +19,9 @@ llm:
 snowflake:
   mode: externalbrowser   # Options: 'externalbrowser' (SSO via browser) or 'local_simulation'
   authenticator: externalbrowser
-  account: "<your-snowflake-account>"
-  user: "<your-user>"
-  role: "DATA_ENGINEER_ROLE"
+  account: "YLDULXM-DC69211"
+  user: "welcometopiyush"
+  role: "ACCOUNTADMIN"
   warehouse: "COMPUTE_WH"
   database: "ENTERPRISE_DW"
   schema_raw: "RAW"

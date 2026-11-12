@@ -1,5 +1,5 @@
 dataset: analytics
-version: 0.2.0
+version: 0.1.0
 deployed_by: step3_pipeline_deployment_agent
 snowflake_ddl_file: registry\analytics\ddl.sql
 deployment_manifest: registry\analytics\pipeline_deployment_manifest.yaml

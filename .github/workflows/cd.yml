@@ -1,0 +1,95 @@
+name: CD - Snowflake Pipeline Deployment
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: 'Target Snowflake Environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      dataset:
+        description: 'Specific dataset to deploy (or all)'
+        required: false
+        default: 'analytics'
+
+jobs:
+  deploy-staging:
+    name: Deploy to Snowflake Staging
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Deploy DDLs & Dynamic Tables (Staging)
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ secrets.SF_CI_USER }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SF_CI_PASSWORD }}
+          SNOWFLAKE_AUTHENTICATOR: "snowflake"
+          SNOWFLAKE_ROLE: ${{ secrets.SF_ROLE || 'DATA_ENGINEER_ROLE' }}
+          SNOWFLAKE_WAREHOUSE: ${{ secrets.SF_WAREHOUSE || 'COMPUTE_WH' }}
+          SNOWFLAKE_DATABASE: ${{ secrets.SF_DATABASE_STAGING || 'STAGING_DW' }}
+        run: |
+          python scripts/deploy_snowflake_cicd.py --dataset ${{ github.event.inputs.dataset || 'analytics' }} --skip-samples
+
+      - name: Audit Deployed Snowflake Objects
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ secrets.SF_CI_USER }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SF_CI_PASSWORD }}
+          SNOWFLAKE_AUTHENTICATOR: "snowflake"
+          SNOWFLAKE_DATABASE: ${{ secrets.SF_DATABASE_STAGING || 'STAGING_DW' }}
+        run: |
+          python scripts/audit_snowflake_objects.py
+
+  deploy-production:
+    name: Deploy to Snowflake Production
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.event.inputs.target_env == 'production' || github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Production Go-Live Deployment
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ secrets.SF_CI_USER }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SF_CI_PASSWORD }}
+          SNOWFLAKE_AUTHENTICATOR: "snowflake"
+          SNOWFLAKE_ROLE: ${{ secrets.SF_ROLE || 'DATA_ENGINEER_ROLE' }}
+          SNOWFLAKE_WAREHOUSE: ${{ secrets.SF_WAREHOUSE || 'PROD_WH' }}
+          SNOWFLAKE_DATABASE: ${{ secrets.SF_DATABASE_PROD || 'ENTERPRISE_DW' }}
+        run: |
+          python scripts/deploy_snowflake_cicd.py --dataset ${{ github.event.inputs.dataset || 'analytics' }} --enable-snowpipe
+

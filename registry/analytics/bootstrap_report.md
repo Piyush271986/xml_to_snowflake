@@ -13,6 +13,8 @@
 
 - **Samples Analyzed:** 1 valid XML files
 - **Root Element:** `/ASSETS`
+- **Record Element (1 Row per Record in RAW):** `/ASSETS/ASSET/BND_CORP`
+- **Preserved Top-Level Tags:** `/ASSETS/@ASOF_DATE, /ASSETS/@CREATE_DATE, /ASSETS/@RECORDS`
 - **Inferred Business Keys:** `asset_cusip`
 - **Total Inferred Fields:** 40 (37 array fields)
 - **Low-Confidence Fields (< 0.8):** 0

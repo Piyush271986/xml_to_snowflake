@@ -51,16 +51,17 @@ def run_a1_provision(dataset: str, registry_root: Path) -> dict[str, Any]:
 
     with closing(sqlite3.connect(db_path)) as conn:
         cur = conn.cursor()
-        # Layer 1 (RAW): Normal Table loaded by Snowpipe (idempotent on _file_name + _file_sha256)
+        # Layer 1 (RAW): Normal Table loaded record-by-record (idempotent on _file_name + _file_sha256 + _record_index)
         cur.execute(
             f"""
             CREATE TABLE IF NOT EXISTS {mapping.targets.raw_table} (
                 _file_name TEXT NOT NULL,
                 _file_sha256 TEXT NOT NULL,
+                _record_index INTEGER NOT NULL DEFAULT 0,
                 _source_system TEXT NOT NULL,
-                _load_ts TEXT NOT NULL,
+                _ingestion_ts TEXT NOT NULL,
                 raw_xml TEXT NOT NULL,
-                UNIQUE(_file_name, _file_sha256)
+                UNIQUE(_file_name, _file_sha256, _record_index)
             );
             """
         )
@@ -72,7 +73,7 @@ def run_a1_provision(dataset: str, registry_root: Path) -> dict[str, Any]:
                 {col_defs},
                 _file_name TEXT NOT NULL,
                 _file_sha256 TEXT NOT NULL,
-                _staged_ts TEXT NOT NULL
+                _ingestion_ts TEXT NOT NULL
             );
             """
         )
@@ -83,11 +84,9 @@ def run_a1_provision(dataset: str, registry_root: Path) -> dict[str, Any]:
             CREATE TABLE IF NOT EXISTS {mapping.targets.curated_table} (
                 {col_defs},
                 _row_hash TEXT NOT NULL,
-                is_valid_start TEXT NOT NULL,
-                is_valid_end TEXT,
+                valid_start_time TEXT NOT NULL,
+                valid_end_time TEXT,
                 is_current INTEGER NOT NULL DEFAULT 1,
-                system_start_time TEXT NOT NULL,
-                system_end_time TEXT,
                 _source_file TEXT NOT NULL
             );
             """

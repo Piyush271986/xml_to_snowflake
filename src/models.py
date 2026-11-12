@@ -122,6 +122,8 @@ class DataModelSpec(BaseModel):
     version: str = "0.1.0"
     modeling_strategy: str = "Medallion 3-Layer (RAW Normal Table -> STAGE Dynamic Table -> GOLD Dynamic Table)"
     root_element: str
+    record_element: str | None = None
+    top_level_fields: list[str] = Field(default_factory=list)
     business_keys: list[str]
     raw_layer_file: str = "raw_schema.yaml"
     staging_layer_file: str = "staging_schema.yaml"
@@ -177,6 +179,8 @@ class DatasetMapping(BaseModel):
     version: str = "0.1.0"
     source: str = "sample_inference"
     root_element: str
+    record_element: str | None = None
+    top_level_fields: list[str] = Field(default_factory=list)
     business_keys: list[str]
     targets: TargetTables
     fields: list[FieldMapping]

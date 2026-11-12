@@ -24,6 +24,7 @@ import yaml
 
 from src.entity_model import build_entity_model
 from src.models import DatasetMapping
+from src.xml_infer import extract_xml_records
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DEFAULT_SETTINGS_PATH = BASE_DIR / "config" / "settings.yaml"
@@ -478,16 +479,24 @@ def deploy_pipeline_to_snowflake_external_browser(
                     if stmt.upper().startswith("CREATE"):
                         _exec(cur, f"Stage 7: O5 Monitoring View [{schema_ops}] (#{idx})", stmt, tolerate_error=True)
 
-            # 4. Optional: Seed sample XML files into live Snowflake RAW table & refresh Dynamic Tables
+            # 4. Optional: Seed sample XML files into live Snowflake RAW table (1 row per record) & refresh Dynamic Tables
             seeded_files = 0
+            seeded_records = 0
             manifest_path = ds_registry / "onboarding_manifest.yaml"
             raw_fqn = f"{schema_raw}.{mapping.targets.raw_table}"
             pipe_fqn = f"{schema_raw}.pipe_{dataset}"
 
             if seed_sample_xmls and manifest_path.exists():
+                _exec(
+                    cur,
+                    f"Ensure _record_index on {raw_fqn}",
+                    f"ALTER TABLE IF EXISTS {raw_fqn} ADD COLUMN IF NOT EXISTS _record_index NUMBER(18,0) DEFAULT 0;",
+                    tolerate_error=True,
+                )
                 manifest_data = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
                 sample_dir = Path(manifest_data.get("onboarding_sample_dir", ""))
                 sample_files = manifest_data.get("valid_sample_files") or []
+                src_sys = manifest_data.get("source_system", dataset)
                 for sp in sample_files:
                     p = Path(sp)
                     if not p.is_absolute() and sample_dir:
@@ -496,23 +505,46 @@ def deploy_pipeline_to_snowflake_external_browser(
                         continue
                     xml_str = p.read_text(encoding="utf-8")
                     sha = hashlib.sha256(xml_str.encode("utf-8")).hexdigest()
+                    record_xmls = extract_xml_records(xml_str, mapping.record_element)
                     try:
-                        cur.execute(
-                            f"""
-                            INSERT INTO {raw_fqn} (_file_name, _file_sha256, _source_system, raw_xml)
-                            SELECT %s, %s, %s, PARSE_XML(%s)
-                            WHERE NOT EXISTS (
-                                SELECT 1 FROM {raw_fqn} WHERE _file_name = %s AND _file_sha256 = %s
+                        if len(record_xmls) == 1:
+                            cur.execute(
+                                f"""
+                                INSERT INTO {raw_fqn} (_file_name, _file_sha256, _record_index, _source_system, raw_xml)
+                                SELECT %s, %s, %s, %s, PARSE_XML(%s)
+                                WHERE NOT EXISTS (
+                                    SELECT 1 FROM {raw_fqn} WHERE _file_name = %s AND _file_sha256 = %s AND _record_index = %s
+                                )
+                                """,
+                                (p.name, sha, 0, src_sys, record_xmls[0], p.name, sha, 0),
                             )
-                            """,
-                            (p.name, sha, manifest_data.get("source_system", dataset), xml_str, p.name, sha),
-                        )
+                        else:
+                            cur.execute(
+                                f"DELETE FROM {raw_fqn} WHERE _file_name = %s;",
+                                (p.name,),
+                            )
+                            batch_size = 200
+                            for start_i in range(0, len(record_xmls), batch_size):
+                                chunk = record_xmls[start_i : start_i + batch_size]
+                                values_placeholders = ", ".join(["(%s, %s, %s, %s, %s)"] * len(chunk))
+                                params: list[Any] = []
+                                for offset, rec_xml in enumerate(chunk):
+                                    params.extend([p.name, sha, start_i + offset, src_sys, rec_xml])
+                                cur.execute(
+                                    f"""
+                                    INSERT INTO {raw_fqn} (_file_name, _file_sha256, _record_index, _source_system, raw_xml)
+                                    SELECT column1, column2, column3, column4, PARSE_XML(column5)
+                                    FROM VALUES {values_placeholders}
+                                    """,
+                                    tuple(params),
+                                )
                         seeded_files += 1
+                        seeded_records += len(record_xmls)
                     except Exception as exc:
                         execution_logs.append(
                             StatementExecutionLog(
                                 step=f"Seed Sample XML ({p.name})",
-                                sql_preview=f"INSERT INTO {raw_fqn} ... PARSE_XML('{p.name}')",
+                                sql_preview=f"INSERT INTO {raw_fqn} ... PARSE_XML('{p.name}') [{len(record_xmls)} records]",
                                 status="WARNING",
                                 message=str(exc),
                             )
@@ -521,11 +553,11 @@ def deploy_pipeline_to_snowflake_external_browser(
                 if seeded_files > 0:
                     execution_logs.append(
                         StatementExecutionLog(
-                            step="Seed Sample XMLs into RAW",
-                            sql_preview=f"INSERT INTO {raw_fqn} SELECT PARSE_XML(...) [{seeded_files} files]",
+                            step="Seed Sample XMLs into RAW (Record-by-Record)",
+                            sql_preview=f"INSERT INTO {raw_fqn} SELECT PARSE_XML(...) [{seeded_files} file(s), {seeded_records} record row(s)]",
                             status="SUCCESS",
-                            rowcount=seeded_files,
-                            message=f"Loaded {seeded_files} XML sample file(s) into Snowflake {raw_fqn}",
+                            rowcount=seeded_records,
+                            message=f"Loaded {seeded_records} individual XML record(s) from {seeded_files} file(s) into Snowflake {raw_fqn}",
                         )
                     )
                     for ent in build_entity_model(mapping).entities:

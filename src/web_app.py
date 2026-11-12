@@ -191,7 +191,7 @@ def _get_dataset_state(dataset: str) -> dict[str, Any]:
                 cur.execute(f"SELECT COUNT(*) AS c FROM {targets['quarantine_table']} WHERE replayed = 0")
                 warehouse_counts["quarantine_open_rows"] = cur.fetchone()["c"]
 
-                cur.execute(f"SELECT * FROM {targets['curated_table']} ORDER BY system_start_time DESC LIMIT 50")
+                cur.execute(f"SELECT * FROM {targets['curated_table']} ORDER BY valid_start_time DESC LIMIT 50")
                 curated_rows = [dict(r) for r in cur.fetchall()]
 
                 cur.execute(f"SELECT * FROM {targets['quarantine_table']} ORDER BY quarantined_at DESC LIMIT 50")

@@ -1,36 +1,36 @@
 # Graph Report - xml_to_snowflake  (2026-11-12)
 
 ## Corpus Check
-- 154 files · ~137,581 words
+- 159 files · ~139,782 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 51 file(s) not represented in the graph (top: .xml 33, .gz 10, .lkml 6)
+- Unclassified: 53 file(s) not represented in the graph (top: .xml 33, .gz 12, .lkml 6)
 
 ## Summary
-- 2358 nodes · 3410 edges · 105 communities (86 shown, 19 thin omitted)
-- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 93 edges (avg confidence: 0.92)
+- 2437 nodes · 3513 edges · 105 communities (85 shown, 20 thin omitted)
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 63 edges (avg confidence: 0.91)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `0472d9f2`
+- Built from commit: `9c2399f8`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - type_assertions
 - type_assertions
-- c0_bootstrap.py
-- c2_proposal_agent.py
+- TestClaudeDataStewardAgent
+- env
 - web_app.py
-- snowflake_client.py
+- web_app.py
 - json
 - snowflake_live_deployment
 - snowflake_live_deployment
-- models.py
+- c2_proposal_agent.py
 - entities
 - type_assertions
 - accepted_values
 - accepted_values
-- build_entity_model
+- models.py
 - analytics/snowflake_live_deployment.yaml
 - orders/snowflake_live_deployment.yaml
 - entities
@@ -48,7 +48,7 @@
 - accepted_values
 - accepted_values
 - entities
-- DatasetMapping
+- audit_xml_hierarchical_integrity
 - registry/datahub_urns.yaml
 - enterprise_orders/datahub_urns.yaml
 - tables
@@ -59,20 +59,20 @@
 - fields
 - tables
 - tables
-- run_full_onboarding_workflow
+- orchestrator.py
 - type_assertions
-- TestHierarchicalModel
+- pathlib
 - Orders Bootstrap Report
 - Dataset README — orders
-- TestMetricsCollector
+- metrics_collector.py
 - analytics/quality_rules.yaml
-- schema_diff.py
-- TestDataHubIntegration
+- TestXmlToSnowflakePipeline
+- validate-and-test
 - enterprise_orders/pipeline_deployment_manifest.yaml
 - analytics/pipeline_deployment_manifest.yaml
 - orders/pipeline_deployment_manifest.yaml
-- pathlib
-- benchmark_large_feed.py
+- TestHierarchicalModel
+- xml_infer.py
 - A5 Smoke Test Report — analytics
 - enterprise_orders/monitoring_config.yaml
 - enterprise_orders/onboarding_manifest.yaml
@@ -88,13 +88,9 @@
 - registry/quality_rules.yaml
 - analytics/provisioned_objects.yaml
 - orders/provisioned_objects.yaml
-- ddl_compiler.py
-- test_hierarchical_model.py
-- json
-- test_llm_steward.py
-- a2_catalog.py
+- DatasetMapping
+- analyze_quality_trends
 - enterprise_orders/contract.yaml
-- analytics/contract.yaml
 - orders/contract.yaml
 - Project Dependencies (requirements.txt)
 - XML to Snowflake Agent-Assisted Pipeline
@@ -104,40 +100,44 @@
 - analytics/datahub_stub.yaml
 - orders/datahub_stub.yaml
 - Snowflake Account Bootstrap README
-- TestChildEntityApproval
+- TestDataHubIntegration
 - API /api/llm-config
 - API /api/snowflake-config
 - API /api/export/changelog
 - API /api/export/dbt
 - API /api/export/openapi
 - UI Index HTML
-- infer_schema_from_xml_files
+- run_reconciliation_audit
 - 📋 Standard Onboarding Workflow
-- TestAlertAPI
+- c1_drift_agent.py
+- push_to_datahub.py
+- TestChildEntityApproval
+- test_alert_api.py
+- dataset-onboarding.md
 
 ## God Nodes (most connected - your core abstractions)
 1. `type_assertions` - 158 edges
 2. `type_assertions` - 158 edges
-3. `DatasetMapping` - 53 edges
-4. `type_assertions` - 43 edges
-5. `build_entity_model()` - 34 edges
+3. `DatasetMapping` - 50 edges
+4. `type_assertions` - 41 edges
+5. `build_entity_model()` - 36 edges
 6. `process_runtime_file_with_drift_control()` - 26 edges
 7. `run_data_steward_agent()` - 24 edges
 8. `run_ddl_generator_agent()` - 23 edges
-9. `run_full_onboarding_workflow()` - 23 edges
-10. `audit_xml_hierarchical_integrity()` - 23 edges
+9. `audit_xml_hierarchical_integrity()` - 23 edges
+10. `run_full_onboarding_workflow()` - 23 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `TestClaudeDataStewardAgent` --uses--> `DataModelSpec`  [INFERRED]
+  tests/test_llm_steward.py → src/models.py
+- `TestClaudeDataStewardAgent` --uses--> `LayerSchemaYaml`  [INFERRED]
+  tests/test_llm_steward.py → src/models.py
+- `TestClaudeDataStewardAgent` --uses--> `ClaudeClient`  [INFERRED]
+  tests/test_llm_steward.py → src/llm/anthropic_client.py
 - `run_benchmark()` --uses--> `DatasetMapping`  [INFERRED]
   scripts/benchmark_large_feed.py → src/models.py
-- `TestXmlToSnowflakePipeline` --uses--> `DatasetMapping`  [INFERRED]
-  tests/test_pipeline_e2e.py → src/models.py
-- `Step 1: Data Steward & Modeling Agent` --references--> `gold_schema.yaml (Gold Layer)`  [INFERRED]
-  src/ui/index.html → registry/orders/bootstrap_report.md
-- `Step 1: Data Steward & Modeling Agent` --references--> `raw_schema.yaml (RAW Layer)`  [INFERRED]
-  src/ui/index.html → registry/orders/bootstrap_report.md
-- `Step 1: Data Steward & Modeling Agent` --references--> `staging_schema.yaml (Stage Layer)`  [INFERRED]
-  src/ui/index.html → registry/orders/bootstrap_report.md
+- `TestHierarchicalModel` --uses--> `DatasetMapping`  [INFERRED]
+  tests/test_hierarchical_model.py → src/models.py
 
 ## Import Cycles
 - None detected.
@@ -153,7 +153,7 @@
 - **Runtime Ingest Operations Flow** — src_ui_index_ingestselectedfile, src_ui_index_quickscenario, src_ui_index_runingestcall, src_ui_index_replayquarantine [INFERRED 0.85]
 - **Schema Approval Pipeline Flow** — src_ui_index_collectschemaedits, src_ui_index_saveschemaoverrides, src_ui_index_approveyamlsonly, src_ui_index_approveandprovision [INFERRED 0.90]
 
-## Communities (105 total, 19 thin omitted)
+## Communities (105 total, 20 thin omitted)
 
 ### Community 0 - "type_assertions"
 Cohesion: 0.01
@@ -163,25 +163,25 @@ Nodes (158): type_assertions, /Order/AuditTrail/AuditEvent/ActorId, /Order/Audit
 Cohesion: 0.01
 Nodes (158): type_assertions, /Order/AuditTrail/AuditEvent/ActorId, /Order/AuditTrail/AuditEvent/EventId, /Order/AuditTrail/AuditEvent/EventNotes, /Order/AuditTrail/AuditEvent/EventTimestamp, /Order/AuditTrail/AuditEvent/EventType, /Order/AuditTrail/AuditEvent/@sequence, /Order/@channel (+150 more)
 
-### Community 2 - "c0_bootstrap.py"
-Cohesion: 0.05
-Nodes (31): _apply_llm_proposal(), _build_three_layer_data_model(), data_columns(), fks(), key_columns(), run_data_steward_agent(), _column_expr(), _fk_comment() (+23 more)
+### Community 2 - "TestClaudeDataStewardAgent"
+Cohesion: 0.29
+Nodes (3): _FakeAnthropic, _FakeMessages, TestClaudeDataStewardAgent
 
-### Community 3 - "c2_proposal_agent.py"
-Cohesion: 0.19
-Nodes (6): run_a1_provision(), _sf_type_to_sqlite(), _bump_version(), handle_drift_findings(), DriftProposal, build_snowflake_xml_expr()
+### Community 3 - "env"
+Cohesion: 0.05
+Nodes (43): default, description, required, environment, if, name, needs, runs-on (+35 more)
 
 ### Community 4 - "web_app.py"
-Cohesion: 0.09
-Nodes (26): run_ddl_generator_agent(), get_snowflake_status(), api_approve_child_entity(), api_approve_go_live(), api_approve_schema_and_provision(), api_approve_yamls_and_generate_ddl(), api_audit_hierarchy(), api_bootstrap() (+18 more)
+Cohesion: 0.05
+Nodes (35): audit_live_snowflake(), main(), connect_snowflake_external_browser(), deploy_pipeline_to_snowflake_external_browser(), _exec(), get_snowflake_status(), load_snowflake_config(), normalize_snowflake_account() (+27 more)
 
-### Community 5 - "snowflake_client.py"
-Cohesion: 0.11
-Nodes (11): audit_live_snowflake(), connect_snowflake_external_browser(), deploy_pipeline_to_snowflake_external_browser(), _exec(), load_snowflake_config(), normalize_snowflake_account(), SnowflakeConnectionConfig, _split_sql_statements() (+3 more)
+### Community 5 - "web_app.py"
+Cohesion: 0.09
+Nodes (6): _env_bool(), LLMConfig, load_llm_config(), main(), generate_samples(), api_approve_child_entity()
 
 ### Community 6 - "json"
-Cohesion: 0.14
-Nodes (11): AlertNotification, build_cardinality_alert(), build_drift_alert(), build_reconciliation_alert(), dispatch_alert(), format_pagerduty_payload(), format_slack_blocks(), format_teams_card() (+3 more)
+Cohesion: 0.11
+Nodes (14): AlertNotification, build_cardinality_alert(), build_drift_alert(), build_reconciliation_alert(), dispatch_alert(), format_pagerduty_payload(), format_slack_blocks(), format_teams_card() (+6 more)
 
 ### Community 7 - "snowflake_live_deployment"
 Cohesion: 0.04
@@ -191,17 +191,17 @@ Nodes (46): active_control_agent, dataset, executed_at, message, query_id, rowco
 Cohesion: 0.04
 Nodes (46): active_control_agent, dataset, executed_at, message, query_id, rowcount, sql_preview, status (+38 more)
 
-### Community 9 - "models.py"
-Cohesion: 0.12
-Nodes (11): deploy_a3_quality_gates(), evaluate_file_through_gates(), ingest_xml_files_into_warehouse(), run_a5_smoke_test(), ContractSpec, GateCheckResult, OnboardingManifest, PipelineDeploymentManifest (+3 more)
+### Community 9 - "c2_proposal_agent.py"
+Cohesion: 0.13
+Nodes (10): run_a1_provision(), _sf_type_to_sqlite(), _bump_version(), handle_drift_findings(), compile_additive_drift_sql(), FieldMapping, build_column_name(), build_snowflake_xml_expr() (+2 more)
 
 ### Community 10 - "entities"
 Cohesion: 0.05
 Nodes (43): attached_contract, column_lineage, curated_column, entity, snowflake_type, staging_column, xpath, datahub_live (+35 more)
 
 ### Community 11 - "type_assertions"
-Cohesion: 0.05
-Nodes (43): type_assertions, /ASSETS/@ASOF_DATE, /ASSETS/ASSET/BND_CORP/ACCRUAL_DT, /ASSETS/ASSET/BND_CORP/AMT_ISU, /ASSETS/ASSET/BND_CORP/ANNOUNCE_DT, /ASSETS/ASSET/BND_CORP/CALC_TYPE, /ASSETS/ASSET/BND_CORP/CALL_MANDATORY, /ASSETS/ASSET/BND_CORP/CALL_TYPE (+35 more)
+Cohesion: 0.04
+Nodes (48): allow_unknown_elements, dataset, expected_rows_per_file_max, expected_rows_per_file_min, required_xpaths, root_element, type_assertions, /ASSETS/@ASOF_DATE (+40 more)
 
 ### Community 12 - "accepted_values"
 Cohesion: 0.05
@@ -211,9 +211,9 @@ Nodes (41): audit_event_sequence, billing_address_address_type, carrier_routing_
 Cohesion: 0.05
 Nodes (41): audit_event_sequence, billing_address_address_type, carrier_routing_carrier_code, carrier_routing_service_level, channel, currency_code, customer_customer_tier, customer_kyc_verified (+33 more)
 
-### Community 14 - "build_entity_model"
-Cohesion: 0.28
-Nodes (9): build_entity_model(), add_column(), keep(), nearest_ancestor(), unique_name(), _entity_name(), _er_type(), _parts() (+1 more)
+### Community 14 - "models.py"
+Cohesion: 0.08
+Nodes (24): _apply_llm_proposal(), _build_three_layer_data_model(), data_columns(), fks(), run_data_steward_agent(), ClaudeClient, LLMError, _build_prompt() (+16 more)
 
 ### Community 15 - "analytics/snowflake_live_deployment.yaml"
 Cohesion: 0.05
@@ -225,7 +225,7 @@ Nodes (37): authenticator, dataset, deployed, deployed_at, execution_logs, execu
 
 ### Community 17 - "entities"
 Cohesion: 0.05
-Nodes (36): business_keys, description, expression, is_business_key, name, nullable, pii_category, semantic_entity (+28 more)
+Nodes (38): business_keys, description, expression, is_business_key, name, nullable, pii_category, semantic_entity (+30 more)
 
 ### Community 18 - "fetchState"
 Cohesion: 0.07
@@ -283,9 +283,9 @@ Nodes (28): accepted_values, audit_event_sequence, billing_address_address_type,
 Cohesion: 0.07
 Nodes (27): business_keys, description, expression, is_business_key, name, nullable, snowflake_type, source_xpath (+19 more)
 
-### Community 32 - "DatasetMapping"
-Cohesion: 0.08
-Nodes (12): detect_schema_drift(), detect_new_child_entities(), NewChildEntityProposal, DriftFinding, process_runtime_file_with_drift_control(), extract_xml_xpaths_and_values(), walk(), flatten_xml_to_rows() (+4 more)
+### Community 32 - "audit_xml_hierarchical_integrity"
+Cohesion: 0.22
+Nodes (3): generate_compliance_certificate(), audit_xml_hierarchical_integrity(), HierarchicalDQFinding
 
 ### Community 33 - "registry/datahub_urns.yaml"
 Cohesion: 0.07
@@ -312,8 +312,8 @@ Cohesion: 0.08
 Nodes (24): business_keys, dataset, fields, added_in_version, column, confidence, flatten_path, is_array (+16 more)
 
 ### Community 39 - "fields"
-Cohesion: 0.08
-Nodes (24): business_keys, dataset, fields, added_in_version, column, confidence, flatten_path, is_array (+16 more)
+Cohesion: 0.07
+Nodes (26): business_keys, dataset, fields, added_in_version, column, confidence, flatten_path, is_array (+18 more)
 
 ### Community 40 - "fields"
 Cohesion: 0.08
@@ -327,13 +327,17 @@ Nodes (23): description, expression, is_business_key, name, nullable, snowflake_
 Cohesion: 0.08
 Nodes (23): description, expression, is_business_key, name, nullable, snowflake_type, source_xpath, dataset (+15 more)
 
-### Community 43 - "run_full_onboarding_workflow"
-Cohesion: 0.10
-Nodes (5): run_a4_monitoring(), approve_c3_go_live(), approve_c3_schema_review(), run_full_onboarding_workflow(), TestXmlToSnowflakePipeline
+### Community 43 - "orchestrator.py"
+Cohesion: 0.07
+Nodes (15): run_a0_intake(), _emit_to_live_datahub(), _load_datahub_settings(), run_a2_catalog(), deploy_a3_quality_gates(), run_a4_monitoring(), ingest_xml_files_into_warehouse(), run_a5_smoke_test() (+7 more)
 
 ### Community 44 - "type_assertions"
 Cohesion: 0.10
 Nodes (20): allow_unknown_elements, dataset, expected_rows_per_file_max, expected_rows_per_file_min, required_xpaths, root_element, type_assertions, /Order/@currency (+12 more)
+
+### Community 45 - "pathlib"
+Cohesion: 0.08
+Nodes (18): run_benchmark(), detect_new_child_entities(), NewChildEntityProposal, build_entity_model(), keep(), nearest_ancestor(), resolve_rep_path(), unique_name() (+10 more)
 
 ### Community 46 - "Orders Bootstrap Report"
 Cohesion: 0.20
@@ -343,13 +347,17 @@ Nodes (18): Step 1: Data Steward & Modeling Agent, Step 2: DDL Generator Agent, 
 Cohesion: 0.13
 Nodes (17): Breaking Schema Drift (PENDING_C3_APPROVAL), DataHub URN: curated_orders PROD, DataHub URN: staging_orders PROD, curated_orders (Snowflake SCD2 Table), order_additive_drift.xml, order_breaking_drift.xml, order_malformed.xml, Dataset README — orders (+9 more)
 
+### Community 48 - "metrics_collector.py"
+Cohesion: 0.15
+Nodes (4): collect_pipeline_metrics(), format_prometheus_metrics(), api_get_metrics(), TestMetricsCollector
+
 ### Community 49 - "analytics/quality_rules.yaml"
 Cohesion: 0.12
 Nodes (16): accepted_values, asof_date, country_classification_set_size, create_date, cusip2_set_size, cusip_alias_set_size, records, dataset (+8 more)
 
-### Community 50 - "schema_diff.py"
-Cohesion: 0.23
-Nodes (4): ColumnDiff, compare_mappings(), EntityDiff, generate_changelog_markdown()
+### Community 51 - "validate-and-test"
+Cohesion: 0.10
+Nodes (20): jobs, validate-and-test, python-version, name, on, pull_request, push, branches (+12 more)
 
 ### Community 52 - "enterprise_orders/pipeline_deployment_manifest.yaml"
 Cohesion: 0.13
@@ -363,13 +371,13 @@ Nodes (14): adls_to_raw_mechanism, created_at, dataset, execution_order, generat
 Cohesion: 0.13
 Nodes (14): adls_to_raw_mechanism, created_at, dataset, execution_order, generated_by, raw_to_stage_mechanism, sql_artifacts, gold_layer_sql (+6 more)
 
-### Community 55 - "pathlib"
-Cohesion: 0.06
-Nodes (13): run_benchmark(), run_all_pipeline_checks(), generate_compliance_certificate(), emit_analytics_assertions(), audit_xml_hierarchical_integrity(), HierarchicalDQFinding, collect_pipeline_metrics(), format_prometheus_metrics() (+5 more)
+### Community 55 - "TestHierarchicalModel"
+Cohesion: 0.05
+Nodes (6): generate_record(), generate_synthetic_xml(), main(), export_lookml_project(), _map_sf_to_lookml_type(), TestHierarchicalModel
 
-### Community 56 - "benchmark_large_feed.py"
-Cohesion: 0.23
-Nodes (3): generate_record(), generate_synthetic_xml(), main()
+### Community 56 - "xml_infer.py"
+Cohesion: 0.09
+Nodes (10): evaluate_file_through_gates(), archive_ingested_file(), GateCheckResult, QuarantineRecord, detect_record_xpath(), extract_xml_records(), _traverse(), extract_xml_xpaths_and_values() (+2 more)
 
 ### Community 57 - "A5 Smoke Test Report — analytics"
 Cohesion: 0.28
@@ -431,27 +439,11 @@ Nodes (11): dataset, deployed_by, deployment_manifest, local_warehouse_db, pipel
 Cohesion: 0.17
 Nodes (11): dataset, deployed_by, deployment_manifest, local_warehouse_db, pipeline_topology, adls_to_raw, raw_to_stage, stage_to_gold (+3 more)
 
-### Community 72 - "ddl_compiler.py"
-Cohesion: 0.12
-Nodes (14): compile_additive_drift_sql(), compile_gold_dynamic_table_sql(), compile_ops_tables_sql(), compile_raw_snowpipe_sql(), compile_snowflake_ddl(), compile_staging_dynamic_table_sql(), _flatten_plan(), _levels() (+6 more)
-
-### Community 73 - "test_hierarchical_model.py"
-Cohesion: 0.12
-Nodes (7): EntityModel, render_er_diagram(), export_lookml_project(), _map_sf_to_lookml_type(), export_json_schema(), export_openapi_spec(), _map_sf_type_to_json_schema()
-
-### Community 74 - "json"
+### Community 72 - "DatasetMapping"
 Cohesion: 0.10
-Nodes (3): archive_ingested_file(), analyze_quality_trends(), TestDqTrends
-
-### Community 76 - "a2_catalog.py"
-Cohesion: 0.25
-Nodes (3): _emit_to_live_datahub(), _load_datahub_settings(), run_a2_catalog()
+Nodes (19): key_columns(), run_ddl_generator_agent(), _column_expr(), compile_gold_dynamic_table_sql(), compile_ops_tables_sql(), compile_raw_snowpipe_sql(), compile_snowflake_ddl(), compile_staging_dynamic_table_sql() (+11 more)
 
 ### Community 77 - "enterprise_orders/contract.yaml"
-Cohesion: 0.25
-Nodes (7): allow_unknown_elements, dataset, expected_rows_per_file_max, expected_rows_per_file_min, required_xpaths, root_element, version
-
-### Community 78 - "analytics/contract.yaml"
 Cohesion: 0.25
 Nodes (7): allow_unknown_elements, dataset, expected_rows_per_file_max, expected_rows_per_file_min, required_xpaths, root_element, version
 
@@ -491,33 +483,37 @@ Nodes (5): created_at, created_by, owners, status, urn
 Cohesion: 0.50
 Nodes (4): COMPUTE_WH Snowflake Warehouse (XSMALL), Snowflake RBAC Hierarchy, account_bootstrap.sql, Snowflake Account Bootstrap README
 
-### Community 99 - "infer_schema_from_xml_files"
-Cohesion: 0.29
-Nodes (4): TargetTables, build_column_name(), infer_schema_from_xml_files(), walk()
+### Community 99 - "run_reconciliation_audit"
+Cohesion: 0.21
+Nodes (4): run_all_pipeline_checks(), emit_analytics_assertions(), ReconciliationReport, run_reconciliation_audit()
 
 ### Community 100 - "📋 Standard Onboarding Workflow"
 Cohesion: 0.20
 Nodes (9): 🏗️ Architecture & Modeling Principles, 🛑 HUMAN APPROVAL GATE 1: C3 Data Model & Schema Review, 🛑 HUMAN APPROVAL GATE 2: C3 Go-Live & Snowflake Deployment, 📋 Standard Onboarding Workflow, Step 1: Intake & Hierarchical Schema Inference (A0 & Step 1 Agent), Step 2: DDL Compilation (Step 2 Agent), Step 3: Local Provisioning & Smoke Testing (A1–A5 Agents), 🔍 Troubleshooting & Special Cases (+1 more)
 
+### Community 104 - "c1_drift_agent.py"
+Cohesion: 0.12
+Nodes (6): detect_schema_drift(), DriftFinding, infer_single_value_type(), is_value_compatible_with_snowflake_type(), resolve_narrowest_snowflake_type(), TestDriftScenarios
+
 ## Knowledge Gaps
 - **64 isolated node(s):** `API Endpoint: /api/alerts`, `API Endpoint: /api/alerts/test`, `API Endpoint: /api/approve-child-entity`, `API Endpoint: /api/approve-yamls`, `API Endpoint: /api/bootstrap` (+59 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1776 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **19 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1820 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **20 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `type_assertions` connect `type_assertions` to `orders/contract.yaml`?**
-  _High betweenness centrality (0.006) - this node is a cross-community bridge._
-- **Are the 26 inferred relationships involving `DatasetMapping` (e.g. with `run_benchmark()` and `run_a1_provision()`) actually correct?**
-  _`DatasetMapping` has 26 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `DatasetMapping` connect `DatasetMapping` to `web_app.py`, `web_app.py`, `c1_drift_agent.py`, `c2_proposal_agent.py`, `orchestrator.py`, `pathlib`, `models.py`, `TestHierarchicalModel`, `xml_infer.py`?**
+  _High betweenness centrality (0.007) - this node is a cross-community bridge._
+- **Are the 14 inferred relationships involving `DatasetMapping` (e.g. with `run_benchmark()` and `evaluate_file_through_gates()`) actually correct?**
+  _`DatasetMapping` has 14 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `API Endpoint: /api/alerts`, `API Endpoint: /api/alerts/test`, `API Endpoint: /api/approve-child-entity` to the rest of the system?**
   _64 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `type_assertions` be split into smaller, more focused modules?**
   _Cohesion score 0.012658227848101266 - nodes in this community are weakly interconnected._
-- **Why does `DatasetMapping` connect `ddl_compiler.py` to `DatasetMapping`, `c0_bootstrap.py`, `c2_proposal_agent.py`, `web_app.py`, `snowflake_client.py`, `infer_schema_from_xml_files`, `models.py`, `json`, `test_hierarchical_model.py`, `a2_catalog.py`, `run_full_onboarding_workflow`, `build_entity_model`, `schema_diff.py`, `pathlib`?**
-  _High betweenness centrality (0.005) - this node is a cross-community bridge._
+- **Why does `type_assertions` connect `type_assertions` to `enterprise_orders/contract.yaml`?**
+  _High betweenness centrality (0.007) - this node is a cross-community bridge._
 - **Should `type_assertions` be split into smaller, more focused modules?**
   _Cohesion score 0.012658227848101266 - nodes in this community are weakly interconnected._
-- **Why does `type_assertions` connect `type_assertions` to `enterprise_orders/contract.yaml`?**
+- **Why does `build_entity_model()` connect `pathlib` to `web_app.py`, `web_app.py`, `DatasetMapping`, `c2_proposal_agent.py`, `orchestrator.py`, `models.py`, `TestHierarchicalModel`, `xml_infer.py`?**
   _High betweenness centrality (0.004) - this node is a cross-community bridge._

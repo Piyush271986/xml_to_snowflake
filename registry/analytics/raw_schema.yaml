@@ -1,5 +1,5 @@
 dataset: analytics
-version: 0.3.0
+version: 0.1.0
 layer: RAW
 table_type: NORMAL_TABLE
 tables:
@@ -13,11 +13,13 @@ tables:
   upstream_source: '@RAW.ADLS_XML_STAGE/analytics/'
   target_lag: null
   warehouse: COMPUTE_WH
-  grain: One row per ingested XML file from ADLS
+  grain: 'One row per /ASSETS/ASSET/BND_CORP XML record (top-level tags preserved:
+    /ASSETS/@ASOF_DATE, /ASSETS/@CREATE_DATE, /ASSETS/@RECORDS)'
   primary_keys:
   - _file_name
   - _file_sha256
-  flatten_path: null
+  - _record_index
+  flatten_path: /ASSETS/ASSET/BND_CORP
   columns:
   - name: _file_name
     snowflake_type: VARCHAR(512)
@@ -39,6 +41,16 @@ tables:
     semantic_entity: null
     pii_category: null
     suggested_name: null
+  - name: _record_index
+    snowflake_type: NUMBER(18,0)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: 0-based record index of /ASSETS/ASSET/BND_CORP within the XML file
+    is_business_key: true
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
   - name: _source_system
     snowflake_type: VARCHAR(128)
     nullable: false
@@ -49,7 +61,7 @@ tables:
     semantic_entity: null
     pii_category: null
     suggested_name: null
-  - name: _load_ts
+  - name: _ingestion_ts
     snowflake_type: TIMESTAMP_NTZ
     nullable: false
     source_xpath: null
@@ -62,9 +74,11 @@ tables:
   - name: raw_xml
     snowflake_type: VARIANT
     nullable: false
-    source_xpath: /ASSETS
+    source_xpath: /ASSETS/ASSET/BND_CORP
     expression: null
-    description: Immutable raw XML payload stored as Snowflake VARIANT
+    description: Individual /ASSETS/ASSET/BND_CORP XML record stored as Snowflake
+      VARIANT with preserved top-level tags (/ASSETS/@ASOF_DATE, /ASSETS/@CREATE_DATE,
+      /ASSETS/@RECORDS)
     is_business_key: false
     semantic_entity: null
     pii_category: null

@@ -4,16 +4,16 @@
   "title": "Analytics Data Contract",
   "type": "object",
   "description": "Hierarchical data contract for dataset analytics",
-  "$ref": "#/$defs/assets",
+  "$ref": "#/$defs/asset",
   "$defs": {
-    "assets": {
+    "asset": {
       "type": "object",
-      "title": "Assets",
-      "description": "DOCUMENT entity mapped from XML tag <ASSETS>",
+      "title": "Asset",
+      "description": "RECORD entity mapped from XML tag <ASSET>",
       "properties": {
-        "assets_pk": {
+        "asset_pk": {
           "type": "string",
-          "description": "Surrogate primary key for entity assets"
+          "description": "Surrogate primary key for entity asset"
         },
         "asof_date": {
           "type": "string",
@@ -26,36 +26,6 @@
         "records": {
           "type": "integer",
           "description": "XPath: /ASSETS/@RECORDS"
-        },
-        "esg_rating": {
-          "type": "string",
-          "description": "XPath: /ASSETS/ASSET/BND_CORP/ESG_RATING"
-        },
-        "rating_agency": {
-          "type": "string",
-          "description": "XPath: /ASSETS/ASSET/BND_CORP/RATING_AGENCY"
-        }
-      },
-      "required": [
-        "assets_pk",
-        "asof_date",
-        "create_date",
-        "records"
-      ],
-      "additionalProperties": false
-    },
-    "asset": {
-      "type": "object",
-      "title": "Asset",
-      "description": "RECORD entity mapped from XML tag <ASSET>",
-      "properties": {
-        "asset_pk": {
-          "type": "string",
-          "description": "Surrogate primary key for entity asset"
-        },
-        "assets_fk": {
-          "type": "string",
-          "description": "Foreign key referencing assets.assets_pk"
         },
         "class_val": {
           "type": "string",
@@ -164,7 +134,9 @@
       },
       "required": [
         "asset_pk",
-        "assets_fk",
+        "asof_date",
+        "create_date",
+        "records",
         "class_val",
         "accrual_dt",
         "amt_isu",

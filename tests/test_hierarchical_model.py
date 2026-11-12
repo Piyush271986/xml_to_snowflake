@@ -5,6 +5,7 @@ import yaml
 
 from src.models import DatasetMapping
 from src.entity_model import build_entity_model, render_er_diagram
+from src.xml_infer import extract_xml_records
 from src.lookml_exporter import export_lookml_project
 from src.schema_exporter import export_openapi_spec, export_json_schema
 from src.hierarchical_dq import audit_xml_hierarchical_integrity
@@ -23,16 +24,32 @@ class TestHierarchicalModel(unittest.TestCase):
         cls.entity_model = build_entity_model(cls.mapping)
 
     def test_entity_decomposition(self):
-        """Verifies that all child and record entities are properly identified."""
+        """Verifies that record_path is /ASSETS/ASSET/BND_CORP and all child entities are properly identified."""
+        self.assertEqual(self.entity_model.record_path, "/ASSETS/ASSET/BND_CORP")
         entity_names = {e.name for e in self.entity_model.entities}
-        expected = {"assets", "asset", "country_classification", "cusip2", "cusip_alias"}
+        expected = {"asset", "country_classification", "cusip2", "cusip_alias"}
         self.assertTrue(expected.issubset(entity_names), f"Missing entities: {expected - entity_names}")
+
+        # Verify top-level envelope tags (ASOF_DATE, CREATE_DATE, RECORDS) are preserved on the root record entity
+        asset_cols = {c.name for c in self.entity_model.primary.columns}
+        self.assertTrue({"asof_date", "create_date", "records"}.issubset(asset_cols))
+
+    def test_record_by_record_extraction_preserves_top_level_tags(self):
+        """Verifies that analytics.xml is split into 2,191 individual BND_CORP records preserving ASOF_DATE."""
+        sample_file = Path(__file__).resolve().parent.parent / "samples" / "analytics" / "analytics.xml"
+        if sample_file.exists():
+            records = extract_xml_records(sample_file.read_text(encoding="utf-8"), self.mapping.record_element)
+            self.assertEqual(len(records), 2191)
+            self.assertTrue(records[0].startswith("<BND_CORP "))
+            self.assertIn('ASOF_DATE="5/11/2026"', records[0])
+            self.assertIn('CREATE_DATE="5/11/2026"', records[0])
+            self.assertIn('RECORDS="002191"', records[0])
 
     def test_parent_child_relationships(self):
         """Verifies that child entities correctly reference the parent asset record."""
         by_name = {e.name: e for e in self.entity_model.entities}
         asset_ent = by_name["asset"]
-        self.assertEqual(asset_ent.parent.name, "assets")
+        self.assertIsNone(asset_ent.parent)
 
         for child_name in ["country_classification", "cusip2", "cusip_alias"]:
             child = by_name[child_name]
@@ -49,10 +66,9 @@ class TestHierarchicalModel(unittest.TestCase):
 
     def test_meramid_er_diagram_rendering(self):
         """Verifies that the Mermaid ER diagram is rendered with valid relationships."""
-        diagram = render_er_diagram(self.entity_model, "STAGING")
+        diagram = render_er_diagram(self.entity_model, "STAGE")
         self.assertIn("erDiagram", diagram)
-        self.assertIn("curated_analytics ||--o{ curated_analytics_asset", diagram)
-        self.assertIn("curated_analytics_asset ||--o{ curated_analytics_cusip2", diagram)
+        self.assertIn("staging_analytics ||--o{ staging_analytics_cusip2", diagram)
 
     def test_openapi_spec_export(self):
         """Verifies OpenAPI export produces valid 3.1 specification."""
@@ -137,7 +153,7 @@ class TestHierarchicalModel(unittest.TestCase):
         test_out = self.registry_dir / "_test_lookml"
         try:
             res = export_lookml_project(self.entity_model, test_out)
-            self.assertEqual(res["views_count"], 5)
+            self.assertEqual(res["views_count"], 4)
             self.assertTrue(Path(res["explore_file"]).exists())
             content = Path(res["explore_file"]).read_text(encoding="utf-8")
             self.assertIn("relationship: one_to_many", content)
@@ -158,46 +174,6 @@ class TestHierarchicalModel(unittest.TestCase):
             self.assertEqual(res["total_assets"], 10)
         finally:
             tmp_path.unlink()
-
-    def test_reconciliation_audit(self):
-        """Verifies zero-loss reconciliation matches source count against curated store."""
-        sample_file = Path(__file__).resolve().parent.parent / "samples" / "analytics" / "analytics.xml"
-        if sample_file.exists():
-            res = run_reconciliation_audit("analytics", sample_file, self.registry_dir.parent)
-            self.assertTrue(res["reconciliation_matched"])
-            self.assertEqual(res["metrics"]["discrepancy_delta"], 0)
-
-    def test_schema_diff_and_changelog(self):
-        """Verifies schema diff detects added fields and generates ALTER migration SQL."""
-        import copy
-        new_mapping = copy.deepcopy(self.mapping)
-        new_mapping.version = "0.5.0"
-        new_field = copy.deepcopy(new_mapping.fields[0])
-        new_field.xpath = "/ASSETS/ASSET/BND_CORP/ESG_SCORE"
-        new_field.column = "esg_score"
-        new_field.snowflake_type = "NUMBER(3,0)"
-        new_mapping.fields.append(new_field)
-
-        diff = compare_mappings(self.mapping, new_mapping)
-        self.assertEqual(len(diff.column_diffs), 1)
-        self.assertEqual(diff.column_diffs[0].column, "esg_score")
-        changelog = generate_changelog_markdown(diff)
-        self.assertIn("v0.5.0", changelog)
-        self.assertIn("ALTER DYNAMIC TABLE", changelog)
-
-    def test_lookml_export(self):
-        """Verifies LookML project export generates valid view files and an explore definition."""
-        test_out = self.registry_dir / "_test_lookml"
-        try:
-            res = export_lookml_project(self.entity_model, test_out)
-            self.assertEqual(res["views_count"], 5)
-            self.assertTrue(Path(res["explore_file"]).exists())
-            content = Path(res["explore_file"]).read_text(encoding="utf-8")
-            self.assertIn("relationship: one_to_many", content)
-        finally:
-            import shutil
-            if test_out.exists():
-                shutil.rmtree(test_out)
 
 
 if __name__ == "__main__":

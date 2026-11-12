@@ -33,10 +33,10 @@ CREATE SCHEMA IF NOT EXISTS OPS;
 
 CREATE OR REPLACE VIEW OPS.v_sla_dashboard_{dataset} AS
 SELECT
-    DATE_TRUNC('HOUR', r._load_ts)                          AS load_hour,
+    DATE_TRUNC('HOUR', r._ingestion_ts)                          AS load_hour,
     COUNT(DISTINCT r._file_name)                            AS files_ingested,
     COUNT(c._row_hash)                                      AS curated_active_rows,
-    AVG(DATEDIFF('SECOND', r._load_ts, c.system_start_time)) AS avg_e2e_latency_sec,
+    AVG(DATEDIFF('SECOND', r._ingestion_ts, c.valid_start_time)) AS avg_e2e_latency_sec,
     (SELECT COUNT(*) FROM OPS.{mapping.targets.quarantine_table} q WHERE q.replayed = FALSE) AS open_quarantine_count
 FROM RAW.{mapping.targets.raw_table} r
 LEFT JOIN CURATED.{mapping.targets.curated_table} c
@@ -46,7 +46,7 @@ GROUP BY 1;
 -- O2: Freshness Alert Check (fires if no new files within {manifest.freshness_sla_hours}h SLA)
 SELECT
     '{dataset}' AS dataset,
-    DATEDIFF('HOUR', MAX(_load_ts), CURRENT_TIMESTAMP()) AS hours_since_last_load,
+    DATEDIFF('HOUR', MAX(_ingestion_ts), CURRENT_TIMESTAMP()) AS hours_since_last_load,
     '{manifest.platform_oncall}' AS alert_owner
 FROM RAW.{mapping.targets.raw_table}
 HAVING hours_since_last_load > {manifest.freshness_sla_hours};

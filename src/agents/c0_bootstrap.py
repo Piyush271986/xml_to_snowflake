@@ -80,8 +80,11 @@ def _build_three_layer_data_model(
 ) -> tuple[LayerSchemaYaml, LayerSchemaYaml, LayerSchemaYaml, DataModelSpec]:
     """Construct the 3-layer YAML schemas (RAW Normal Table, STAGE Dynamic Table, GOLD Dynamic Table) and DataModelSpec."""
     ds = mapping.dataset
+    model = build_entity_model(mapping)
+    rec_path = model.record_path or mapping.record_element or mapping.root_element
+    top_tags_str = ", ".join(mapping.top_level_fields) if mapping.top_level_fields else "none"
 
-    # 1. RAW Layer Schema (Normal Table loaded via Snowpipe)
+    # 1. RAW Layer Schema (Normal Table loaded via Snowpipe / Record-by-Record Splitter)
     raw_table_spec = LayerTableSpec(
         table_name=mapping.targets.raw_table,
         layer="RAW",
@@ -90,9 +93,9 @@ def _build_three_layer_data_model(
         upstream_source=f"@RAW.ADLS_XML_STAGE/{ds}/",
         target_lag=None,
         warehouse="COMPUTE_WH",
-        grain="One row per ingested XML file from ADLS",
-        primary_keys=["_file_name", "_file_sha256"],
-        flatten_path=None,
+        grain=f"One row per {rec_path} XML record (top-level tags preserved: {top_tags_str})",
+        primary_keys=["_file_name", "_file_sha256", "_record_index"],
+        flatten_path=rec_path if rec_path != mapping.root_element else None,
         columns=[
             LayerColumnSpec(
                 name="_file_name",
@@ -109,13 +112,20 @@ def _build_three_layer_data_model(
                 is_business_key=True,
             ),
             LayerColumnSpec(
+                name="_record_index",
+                snowflake_type="NUMBER(18,0)",
+                nullable=False,
+                description=f"0-based record index of {rec_path} within the XML file",
+                is_business_key=True,
+            ),
+            LayerColumnSpec(
                 name="_source_system",
                 snowflake_type="VARCHAR(128)",
                 nullable=False,
                 description="Source ERP / upstream system identifier",
             ),
             LayerColumnSpec(
-                name="_load_ts",
+                name="_ingestion_ts",
                 snowflake_type="TIMESTAMP_NTZ",
                 nullable=False,
                 description="Snowpipe ingestion timestamp",
@@ -124,8 +134,8 @@ def _build_three_layer_data_model(
                 name="raw_xml",
                 snowflake_type="VARIANT",
                 nullable=False,
-                source_xpath=mapping.root_element,
-                description="Immutable raw XML payload stored as Snowflake VARIANT",
+                source_xpath=rec_path,
+                description=f"Individual {rec_path} XML record stored as Snowflake VARIANT with preserved top-level tags ({top_tags_str})",
             ),
         ],
     )
@@ -141,11 +151,10 @@ def _build_three_layer_data_model(
 
     # 2 + 3. STAGE and GOLD layers: ONE Dynamic Table per XML entity (parent + each child hierarchy),
     # children linked to their parent through a deterministic FK (`<parent>_fk` -> `<parent>_pk`)
-    model = build_entity_model(mapping)
     sys_stage = [
         LayerColumnSpec(name="_file_name", snowflake_type="VARCHAR(512)", nullable=False),
         LayerColumnSpec(name="_file_sha256", snowflake_type="VARCHAR(64)", nullable=False),
-        LayerColumnSpec(name="_staged_ts", snowflake_type="TIMESTAMP_NTZ", nullable=False),
+        LayerColumnSpec(name="_ingestion_ts", snowflake_type="TIMESTAMP_NTZ", nullable=False),
     ]
 
     def key_columns(ent: Entity) -> list[LayerColumnSpec]:
@@ -176,7 +185,7 @@ def _build_three_layer_data_model(
                 snowflake_type=c.field.snowflake_type,
                 nullable=not (c.field.required and c.name in ent.business_keys),
                 source_xpath=c.field.xpath,
-                expression=_column_expr(ent, c) if with_expression else c.name,
+                expression=_column_expr(ent, c, rec_path) if with_expression else c.name,
                 is_business_key=c.name in ent.business_keys,
             )
             for c in ent.columns
@@ -228,17 +237,15 @@ def _build_three_layer_data_model(
         gold_extra = (
             [
                 LayerColumnSpec(name="_row_hash", snowflake_type="VARCHAR(64)", nullable=False),
-                LayerColumnSpec(name="is_valid_start", snowflake_type="TIMESTAMP_NTZ", nullable=False),
-                LayerColumnSpec(name="is_valid_end", snowflake_type="TIMESTAMP_NTZ", nullable=True),
+                LayerColumnSpec(name="valid_start_time", snowflake_type="TIMESTAMP_NTZ", nullable=False),
+                LayerColumnSpec(name="valid_end_time", snowflake_type="TIMESTAMP_NTZ", nullable=True),
                 LayerColumnSpec(name="is_current", snowflake_type="BOOLEAN", nullable=False),
-                LayerColumnSpec(name="system_start_time", snowflake_type="TIMESTAMP_NTZ", nullable=False),
-                LayerColumnSpec(name="system_end_time", snowflake_type="TIMESTAMP_NTZ", nullable=True),
                 LayerColumnSpec(name="_source_file", snowflake_type="VARCHAR(512)", nullable=False),
             ]
             if ent.parent is None
             else [
                 LayerColumnSpec(name="_row_hash", snowflake_type="VARCHAR(64)", nullable=False),
-                LayerColumnSpec(name="system_start_time", snowflake_type="TIMESTAMP_NTZ", nullable=False),
+                LayerColumnSpec(name="_ingestion_ts", snowflake_type="TIMESTAMP_NTZ", nullable=False),
                 LayerColumnSpec(name="_source_file", snowflake_type="VARCHAR(512)", nullable=False),
             ]
         )
@@ -324,6 +331,8 @@ def _build_three_layer_data_model(
         dataset=ds,
         version=mapping.version,
         root_element=mapping.root_element,
+        record_element=rec_path,
+        top_level_fields=mapping.top_level_fields,
         business_keys=mapping.business_keys,
         entities=[raw_table_spec, *stage_tables, *gold_tables],
         relationships=relationships,
@@ -467,6 +476,8 @@ def run_data_steward_agent(
         "",
         f"- **Samples Analyzed:** {len(xml_files)} valid XML files",
         f"- **Root Element:** `{mapping.root_element}`",
+        f"- **Record Element (1 Row per Record in RAW):** `{mapping.record_element or mapping.root_element}`",
+        f"- **Preserved Top-Level Tags:** `{', '.join(mapping.top_level_fields) if mapping.top_level_fields else 'none'}`",
         f"- **Inferred Business Keys:** `{', '.join(mapping.business_keys)}`",
         f"- **Total Inferred Fields:** {len(mapping.fields)} ({sum(1 for f in mapping.fields if f.is_array)} array fields)",
         f"- **Low-Confidence Fields (< {confidence_threshold}):** {len(low_conf)}",

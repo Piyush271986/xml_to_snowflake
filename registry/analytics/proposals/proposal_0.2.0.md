@@ -1,7 +1,7 @@
 # C2 Schema Drift Proposal — `analytics` (`v0.2.0`)
 
 - **Status:** `AUTO_APPLIED`
-- **Created At:** `2026-11-11T14:03:18.402893+00:00`
+- **Created At:** `2026-11-12T13:22:54.326520+00:00`
 
 ## Drift Findings
 

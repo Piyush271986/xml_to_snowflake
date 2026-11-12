@@ -1,7 +1,12 @@
 dataset: analytics
-version: 0.2.0
+version: 0.1.0
 source: sample_inference
 root_element: /ASSETS
+record_element: /ASSETS/ASSET/BND_CORP
+top_level_fields:
+- /ASSETS/@ASOF_DATE
+- /ASSETS/@CREATE_DATE
+- /ASSETS/@RECORDS
 business_keys:
 - asset_cusip
 targets:
@@ -857,29 +862,3 @@ fields:
   - 10/26/2036
   origin: c0_bootstrap
   added_in_version: 0.1.0
-- xpath: /ASSETS/ASSET/BND_CORP/ESG_RATING
-  column: esg_rating
-  snowflake_type: VARCHAR
-  xml_expr: XMLGET(XMLGET(XMLGET(raw_xml, 'ASSET'), 'BND_CORP'), 'ESG_RATING'):"$"::VARCHAR
-  required: false
-  is_array: false
-  flatten_path: null
-  is_attribute: false
-  confidence: 0.1
-  sample_values:
-  - AAA
-  origin: c1_drift_additive
-  added_in_version: 0.2.0
-- xpath: /ASSETS/ASSET/BND_CORP/RATING_AGENCY
-  column: rating_agency
-  snowflake_type: VARCHAR
-  xml_expr: XMLGET(XMLGET(XMLGET(raw_xml, 'ASSET'), 'BND_CORP'), 'RATING_AGENCY'):"$"::VARCHAR
-  required: false
-  is_array: false
-  flatten_path: null
-  is_attribute: false
-  confidence: 0.1
-  sample_values:
-  - MSCI
-  origin: c1_drift_additive
-  added_in_version: 0.2.0

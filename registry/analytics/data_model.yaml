@@ -3,6 +3,11 @@ version: 0.1.0
 modeling_strategy: Medallion 3-Layer (RAW Normal Table -> STAGE Dynamic Table -> GOLD
   Dynamic Table)
 root_element: /ASSETS
+record_element: /ASSETS/ASSET/BND_CORP
+top_level_fields:
+- /ASSETS/@ASOF_DATE
+- /ASSETS/@CREATE_DATE
+- /ASSETS/@RECORDS
 business_keys:
 - asset_cusip
 raw_layer_file: raw_schema.yaml
@@ -19,11 +24,13 @@ entities:
   upstream_source: '@RAW.ADLS_XML_STAGE/analytics/'
   target_lag: null
   warehouse: COMPUTE_WH
-  grain: One row per ingested XML file from ADLS
+  grain: 'One row per /ASSETS/ASSET/BND_CORP XML record (top-level tags preserved:
+    /ASSETS/@ASOF_DATE, /ASSETS/@CREATE_DATE, /ASSETS/@RECORDS)'
   primary_keys:
   - _file_name
   - _file_sha256
-  flatten_path: null
+  - _record_index
+  flatten_path: /ASSETS/ASSET/BND_CORP
   columns:
   - name: _file_name
     snowflake_type: VARCHAR(512)
@@ -45,6 +52,16 @@ entities:
     semantic_entity: null
     pii_category: null
     suggested_name: null
+  - name: _record_index
+    snowflake_type: NUMBER(18,0)
+    nullable: false
+    source_xpath: null
+    expression: null
+    description: 0-based record index of /ASSETS/ASSET/BND_CORP within the XML file
+    is_business_key: true
+    semantic_entity: null
+    pii_category: null
+    suggested_name: null
   - name: _source_system
     snowflake_type: VARCHAR(128)
     nullable: false
@@ -55,7 +72,7 @@ entities:
     semantic_entity: null
     pii_category: null
     suggested_name: null
-  - name: _load_ts
+  - name: _ingestion_ts
     snowflake_type: TIMESTAMP_NTZ
     nullable: false
     source_xpath: null
@@ -68,9 +85,11 @@ entities:
   - name: raw_xml
     snowflake_type: VARIANT
     nullable: false
-    source_xpath: /ASSETS
+    source_xpath: /ASSETS/ASSET/BND_CORP
     expression: null
-    description: Immutable raw XML payload stored as Snowflake VARIANT
+    description: Individual /ASSETS/ASSET/BND_CORP XML record stored as Snowflake
+      VARIANT with preserved top-level tags (/ASSETS/@ASOF_DATE, /ASSETS/@CREATE_DATE,
+      /ASSETS/@RECORDS)
     is_business_key: false
     semantic_entity: null
     pii_category: null
@@ -134,7 +153,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/CLASS
-    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CLASS'):"$"::VARCHAR
+    expression: XMLGET(r.raw_xml, 'CLASS'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -144,7 +163,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/ACCRUAL_DT
-    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'ACCRUAL_DT'):"$"::VARCHAR
+    expression: XMLGET(r.raw_xml, 'ACCRUAL_DT'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -154,8 +173,7 @@ entities:
     snowflake_type: NUMBER(18,0)
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/AMT_ISU
-    expression: TRY_TO_NUMBER(XMLGET(XMLGET(a1.value, 'BND_CORP'), 'AMT_ISU'):"$"::VARCHAR,
-      18, 0)
+    expression: TRY_TO_NUMBER(XMLGET(r.raw_xml, 'AMT_ISU'):"$"::VARCHAR, 18, 0)
     description: null
     is_business_key: false
     semantic_entity: null
@@ -165,7 +183,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/ANNOUNCE_DT
-    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'ANNOUNCE_DT'):"$"::VARCHAR
+    expression: XMLGET(r.raw_xml, 'ANNOUNCE_DT'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -175,8 +193,7 @@ entities:
     snowflake_type: NUMBER(18,0)
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/CALC_TYPE
-    expression: TRY_TO_NUMBER(XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CALC_TYPE'):"$"::VARCHAR,
-      18, 0)
+    expression: TRY_TO_NUMBER(XMLGET(r.raw_xml, 'CALC_TYPE'):"$"::VARCHAR, 18, 0)
     description: null
     is_business_key: false
     semantic_entity: null
@@ -186,7 +203,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/CALL_MANDATORY
-    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CALL_MANDATORY'):"$"::VARCHAR
+    expression: XMLGET(r.raw_xml, 'CALL_MANDATORY'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -196,7 +213,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/CALL_TYPE
-    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CALL_TYPE'):"$"::VARCHAR
+    expression: XMLGET(r.raw_xml, 'CALL_TYPE'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -206,7 +223,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/CD_INSTMT_TYPE
-    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CD_INSTMT_TYPE'):"$"::VARCHAR
+    expression: XMLGET(r.raw_xml, 'CD_INSTMT_TYPE'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -216,7 +233,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/CHANGE_DT
-    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CHANGE_DT'):"$"::VARCHAR
+    expression: XMLGET(r.raw_xml, 'CHANGE_DT'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -226,8 +243,8 @@ entities:
     snowflake_type: NUMBER(18,0)
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/COMPOUND_FLAG
-    expression: TRY_TO_NUMBER(XMLGET(XMLGET(a1.value, 'BND_CORP'), 'COMPOUND_FLAG'):"$"::VARCHAR,
-      18, 0)
+    expression: TRY_TO_NUMBER(XMLGET(r.raw_xml, 'COMPOUND_FLAG'):"$"::VARCHAR, 18,
+      0)
     description: null
     is_business_key: false
     semantic_entity: null
@@ -237,7 +254,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/COUNTRY
-    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'COUNTRY'):"$"::VARCHAR
+    expression: XMLGET(r.raw_xml, 'COUNTRY'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -247,8 +264,7 @@ entities:
     snowflake_type: NUMBER(18,4)
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/COUPON_FIX
-    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(a1.value, 'BND_CORP'), 'COUPON_FIX'):"$"::VARCHAR,
-      18, 4)
+    expression: TRY_TO_DECIMAL(XMLGET(r.raw_xml, 'COUPON_FIX'):"$"::VARCHAR, 18, 4)
     description: null
     is_business_key: false
     semantic_entity: null
@@ -258,7 +274,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/COUP_FREQ
-    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'COUP_FREQ'):"$"::VARCHAR
+    expression: XMLGET(r.raw_xml, 'COUP_FREQ'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -268,7 +284,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/CPN_TYPE
-    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CPN_TYPE'):"$"::VARCHAR
+    expression: XMLGET(r.raw_xml, 'CPN_TYPE'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -278,7 +294,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/CURRENCY
-    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CURRENCY'):"$"::VARCHAR
+    expression: XMLGET(r.raw_xml, 'CURRENCY'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -288,7 +304,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: false
     source_xpath: /ASSETS/ASSET/BND_CORP/CUSIP
-    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CUSIP'):"$"::VARCHAR
+    expression: XMLGET(r.raw_xml, 'CUSIP'):"$"::VARCHAR
     description: null
     is_business_key: true
     semantic_entity: null
@@ -298,7 +314,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/CUSIP_TYPE
-    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'CUSIP_TYPE'):"$"::VARCHAR
+    expression: XMLGET(r.raw_xml, 'CUSIP_TYPE'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -308,7 +324,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/DATE_CONV
-    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'DATE_CONV'):"$"::VARCHAR
+    expression: XMLGET(r.raw_xml, 'DATE_CONV'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -318,7 +334,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/DESC_INSTMT
-    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'DESC_INSTMT'):"$"::VARCHAR
+    expression: XMLGET(r.raw_xml, 'DESC_INSTMT'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -328,7 +344,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/END_ADJ_FLAG
-    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'END_ADJ_FLAG'):"$"::VARCHAR
+    expression: XMLGET(r.raw_xml, 'END_ADJ_FLAG'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -338,7 +354,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/FIRST_PAY_DT
-    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'FIRST_PAY_DT'):"$"::VARCHAR
+    expression: XMLGET(r.raw_xml, 'FIRST_PAY_DT'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -348,7 +364,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/FIRST_SETTLE_DT
-    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'FIRST_SETTLE_DT'):"$"::VARCHAR
+    expression: XMLGET(r.raw_xml, 'FIRST_SETTLE_DT'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -358,7 +374,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/FLAG_144A
-    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'FLAG_144A'):"$"::VARCHAR
+    expression: XMLGET(r.raw_xml, 'FLAG_144A'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -368,7 +384,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/FLAG_REG_S
-    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'FLAG_REG_S'):"$"::VARCHAR
+    expression: XMLGET(r.raw_xml, 'FLAG_REG_S'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -378,8 +394,8 @@ entities:
     snowflake_type: NUMBER(18,4)
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/ISSUE_PRICE
-    expression: TRY_TO_DECIMAL(XMLGET(XMLGET(a1.value, 'BND_CORP'), 'ISSUE_PRICE'):"$"::VARCHAR,
-      18, 4)
+    expression: TRY_TO_DECIMAL(XMLGET(r.raw_xml, 'ISSUE_PRICE'):"$"::VARCHAR, 18,
+      4)
     description: null
     is_business_key: false
     semantic_entity: null
@@ -389,7 +405,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/MATURITY_DT
-    expression: XMLGET(XMLGET(a1.value, 'BND_CORP'), 'MATURITY_DT'):"$"::VARCHAR
+    expression: XMLGET(r.raw_xml, 'MATURITY_DT'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -415,7 +431,7 @@ entities:
     semantic_entity: null
     pii_category: null
     suggested_name: null
-  - name: _staged_ts
+  - name: _ingestion_ts
     snowflake_type: TIMESTAMP_NTZ
     nullable: false
     source_xpath: null
@@ -469,7 +485,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/COUNTRY_CLASSIFICATION_record/CNTRY
-    expression: XMLGET(a2.value, 'CNTRY'):"$"::VARCHAR
+    expression: XMLGET(a1.value, 'CNTRY'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -479,7 +495,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/COUNTRY_CLASSIFICATION_record/CNTRY_SRC
-    expression: XMLGET(a2.value, 'CNTRY_SRC'):"$"::VARCHAR
+    expression: XMLGET(a1.value, 'CNTRY_SRC'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -489,7 +505,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/COUNTRY_CLASSIFICATION_set/COUNTRY_CLASSIFICATION_record/CNTRY_TYPE
-    expression: XMLGET(a2.value, 'CNTRY_TYPE'):"$"::VARCHAR
+    expression: XMLGET(a1.value, 'CNTRY_TYPE'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -515,7 +531,7 @@ entities:
     semantic_entity: null
     pii_category: null
     suggested_name: null
-  - name: _staged_ts
+  - name: _ingestion_ts
     snowflake_type: TIMESTAMP_NTZ
     nullable: false
     source_xpath: null
@@ -567,7 +583,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/CUSIP2_set/CUSIP2_record/CODE
-    expression: XMLGET(a2.value, 'CODE'):"$"::VARCHAR
+    expression: XMLGET(a1.value, 'CODE'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -577,7 +593,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/CUSIP2_set/CUSIP2_record/IDENTIFIER
-    expression: XMLGET(a2.value, 'IDENTIFIER'):"$"::VARCHAR
+    expression: XMLGET(a1.value, 'IDENTIFIER'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -603,7 +619,7 @@ entities:
     semantic_entity: null
     pii_category: null
     suggested_name: null
-  - name: _staged_ts
+  - name: _ingestion_ts
     snowflake_type: TIMESTAMP_NTZ
     nullable: false
     source_xpath: null
@@ -656,7 +672,7 @@ entities:
     snowflake_type: NUMBER(18,0)
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/CUSIP_ALIAS_record/CODE
-    expression: TRY_TO_NUMBER(XMLGET(a2.value, 'CODE'):"$"::VARCHAR, 18, 0)
+    expression: TRY_TO_NUMBER(XMLGET(a1.value, 'CODE'):"$"::VARCHAR, 18, 0)
     description: null
     is_business_key: false
     semantic_entity: null
@@ -666,7 +682,7 @@ entities:
     snowflake_type: NUMBER(18,0)
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/CUSIP_ALIAS_record/IDENTIFIER
-    expression: TRY_TO_NUMBER(XMLGET(a2.value, 'IDENTIFIER'):"$"::VARCHAR, 18, 0)
+    expression: TRY_TO_NUMBER(XMLGET(a1.value, 'IDENTIFIER'):"$"::VARCHAR, 18, 0)
     description: null
     is_business_key: false
     semantic_entity: null
@@ -676,7 +692,7 @@ entities:
     snowflake_type: VARCHAR
     nullable: true
     source_xpath: /ASSETS/ASSET/BND_CORP/CUSIP_ALIAS_set/CUSIP_ALIAS_record/PURPOSE
-    expression: XMLGET(a2.value, 'PURPOSE'):"$"::VARCHAR
+    expression: XMLGET(a1.value, 'PURPOSE'):"$"::VARCHAR
     description: null
     is_business_key: false
     semantic_entity: null
@@ -702,7 +718,7 @@ entities:
     semantic_entity: null
     pii_category: null
     suggested_name: null
-  - name: _staged_ts
+  - name: _ingestion_ts
     snowflake_type: TIMESTAMP_NTZ
     nullable: false
     source_xpath: null
@@ -1037,7 +1053,7 @@ entities:
     semantic_entity: null
     pii_category: null
     suggested_name: null
-  - name: is_valid_start
+  - name: valid_start_time
     snowflake_type: TIMESTAMP_NTZ
     nullable: false
     source_xpath: null
@@ -1047,7 +1063,7 @@ entities:
     semantic_entity: null
     pii_category: null
     suggested_name: null
-  - name: is_valid_end
+  - name: valid_end_time
     snowflake_type: TIMESTAMP_NTZ
     nullable: true
     source_xpath: null
@@ -1060,26 +1076,6 @@ entities:
   - name: is_current
     snowflake_type: BOOLEAN
     nullable: false
-    source_xpath: null
-    expression: null
-    description: null
-    is_business_key: false
-    semantic_entity: null
-    pii_category: null
-    suggested_name: null
-  - name: system_start_time
-    snowflake_type: TIMESTAMP_NTZ
-    nullable: false
-    source_xpath: null
-    expression: null
-    description: null
-    is_business_key: false
-    semantic_entity: null
-    pii_category: null
-    suggested_name: null
-  - name: system_end_time
-    snowflake_type: TIMESTAMP_NTZ
-    nullable: true
     source_xpath: null
     expression: null
     description: null
@@ -1176,7 +1172,7 @@ entities:
     semantic_entity: null
     pii_category: null
     suggested_name: null
-  - name: system_start_time
+  - name: _ingestion_ts
     snowflake_type: TIMESTAMP_NTZ
     nullable: false
     source_xpath: null
@@ -1264,7 +1260,7 @@ entities:
     semantic_entity: null
     pii_category: null
     suggested_name: null
-  - name: system_start_time
+  - name: _ingestion_ts
     snowflake_type: TIMESTAMP_NTZ
     nullable: false
     source_xpath: null
@@ -1363,7 +1359,7 @@ entities:
     semantic_entity: null
     pii_category: null
     suggested_name: null
-  - name: system_start_time
+  - name: _ingestion_ts
     snowflake_type: TIMESTAMP_NTZ
     nullable: false
     source_xpath: null
@@ -1495,7 +1491,7 @@ relationships:
   layer: null
   fk_column: null
   parent_pk_column: null
-approval_status: PENDING_HUMAN_APPROVAL
+approval_status: APPROVED
 modeling_engine: rule_based
 llm_model: null
 llm_note: Claude not used (ANTHROPIC_API_KEY not set or llm.enabled=false); rule-based
